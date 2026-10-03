@@ -4,99 +4,99 @@ export const STUDY_FLOW = ['draft', 'published', 'collecting', 'analyzing', 'evi
 export type StudyStatus = (typeof STUDY_FLOW)[number] | 'archived';
 
 export const STATUS_LABEL: Record<StudyStatus, string> = {
-  draft: 'Borrador',
-  published: 'Publicado',
-  collecting: 'Recibiendo material',
-  analyzing: 'Analizando',
-  evidence_ready: 'Evidencia lista',
-  comparing: 'Comparación en curso',
-  completed: 'Completado',
-  archived: 'Archivado',
+  draft: 'Draft',
+  published: 'Published',
+  collecting: 'Collecting material',
+  analyzing: 'Analyzing',
+  evidence_ready: 'Evidence ready',
+  comparing: 'Comparison in progress',
+  completed: 'Completed',
+  archived: 'Archived',
 };
 
 export const OBJECTIVE_LABEL: Record<string, string> = {
-  clarity: 'Claridad',
-  fun: 'Diversión',
-  challenge: 'Desafío',
-  pacing: 'Ritmo',
-  controls: 'Respuesta de controles',
+  clarity: 'Clarity',
+  fun: 'Fun',
+  challenge: 'Challenge',
+  pacing: 'Pacing',
+  controls: 'Control responsiveness',
 };
 
 /** What each objective collects, fixed before the study (FUNLABS.md §4). */
 export const OBJECTIVE_MEASURE: Record<string, string> = {
-  clarity: 'Comprensión declarada y evidencia de que la persona realizó la tarea.',
-  fun: 'Preferencia y motivo declarado.',
-  challenge: 'Dificultad declarada, intentos y si la persona quiere conservar el desafío.',
-  pacing: 'Momentos de espera o aceleración declarados y observados.',
-  controls: 'Acciones que no respondieron como la persona esperaba.',
+  clarity: 'Stated understanding and evidence that the person completed the task.',
+  fun: 'Preference and stated reason.',
+  challenge: 'Stated difficulty, attempts and whether the person wants to keep the challenge.',
+  pacing: 'Stated and observed moments of waiting or rushing.',
+  controls: 'Actions that did not respond the way the person expected.',
 };
 
 export const CATEGORY_LABEL: Record<string, string> = {
-  clarity: 'Claridad',
-  difficulty: 'Dificultad',
-  enjoyment: 'Disfrute',
-  controls: 'Controles',
-  pacing: 'Ritmo',
-  bug: 'Error',
-  other: 'Otro',
+  clarity: 'Clarity',
+  difficulty: 'Difficulty',
+  enjoyment: 'Enjoyment',
+  controls: 'Controls',
+  pacing: 'Pacing',
+  bug: 'Bug',
+  other: 'Other',
 };
 
 export const REVIEW_LABEL: Record<string, string> = {
-  unreviewed: 'Sin revisar',
-  confirmed: 'Confirmado',
-  corrected: 'Corregido',
-  rejected: 'Rechazado',
+  unreviewed: 'Unreviewed',
+  confirmed: 'Confirmed',
+  corrected: 'Corrected',
+  rejected: 'Rejected',
 };
 
 export const STRUCTURAL_LABEL: Record<string, string> = {
-  verified: 'Fuentes verificadas',
-  partial: 'Fuentes parciales',
-  unsupported: 'Sin fuente verificable: hipótesis',
+  verified: 'Verified sources',
+  partial: 'Partial sources',
+  unsupported: 'No verifiable source: hypothesis',
 };
 
 export const ORIGIN_LABEL: Record<string, string> = {
   model: 'Gemini',
-  human: 'Persona del equipo',
-  agent: 'Agente participante',
+  human: 'Team member',
+  agent: 'Participating agent',
 };
 
 export const BOUNTY_KIND_LABEL: Record<string, string> = {
-  human_playtest: 'Humano: experimentar y explicar',
-  agent_prediction: 'Agente: predecir una preferencia',
-  agent_analysis: 'Agente: analizar evidencia',
-  agent_intervention: 'Agente: proponer y comprobar una mejora',
+  human_playtest: 'Human: experience and explain',
+  agent_prediction: 'Agent: predict a preference',
+  agent_analysis: 'Agent: analyze evidence',
+  agent_intervention: 'Agent: propose and check an improvement',
 };
 
 export const FINAL_QUESTIONS = [
-  { key: 'enjoyed', text: '¿Qué disfrutaste?' },
-  { key: 'confusing', text: '¿Dónde no supiste cómo seguir o qué te costó entender?' },
-  { key: 'change', text: '¿Qué cambiarías?' },
+  { key: 'enjoyed', text: 'What did you enjoy?' },
+  { key: 'confusing', text: 'Where did you not know how to continue, or what was hard to understand?' },
+  { key: 'change', text: 'What would you change?' },
 ] as const;
 
 /** Labels are tied to the presentation position, never to version A or B. */
-export const NEUTRAL_LABELS = ['Versión Ámbar', 'Versión Celeste'] as const;
+export const NEUTRAL_LABELS = ['Amber version', 'Sky version'] as const;
 
 export const CONSENT_TEXTS = {
   participation_recording: {
-    version: 'participacion-v1',
+    version: 'participation-v1',
     text:
-      'Acepto participar en esta prueba privada y que se grabe solo la pestaña del juego mientras juego. El micrófono es opcional y no se usa cámara. Puedo detener la grabación en cualquier momento y elegir la alternativa escrita.',
+      'I agree to take part in this private test and to have only the game tab recorded while I play. The microphone is optional and no camera is used. I can stop recording at any time and choose the written alternative.',
   },
   research_sharing: {
-    version: 'investigacion-v1',
+    version: 'research-v1',
     text:
-      'Opcional. Permito que eventos de la partida, mis comentarios y hallazgos revisados de esta prueba se incluyan en un export privado para investigación. El video no se incluye salvo autorización aparte. Puedo retirar este permiso antes de cada export.',
+      'Optional. I allow game events, my comments and reviewed findings from this test to be included in a private export for research. Video is not included unless separately authorized. I can withdraw this permission before each export.',
   },
   model_training: {
-    version: 'entrenamiento-v1',
-    text: 'Opcional y separado. Permito que esos mismos datos se usen para entrenar o evaluar modelos.',
+    version: 'training-v1',
+    text: 'Optional and separate. I allow that same data to be used to train or evaluate models.',
   },
 } as const;
 
 export const CREATOR_CONSENT_TEXT = {
-  version: 'creador-investigacion-v1',
+  version: 'creator-research-v1',
   text:
-    'Como titular del producto, autorizo que los ejemplos de este estudio que tengan permiso de cada participante y estén revisados se incluyan en un export privado para investigación.',
+    'As the product owner, I authorize that examples from this study that have each participant\'s permission and have been reviewed be included in a private export for research.',
 };
 
 export type BountyTemplate = {
@@ -110,62 +110,62 @@ export type BountyTemplate = {
 export const BOUNTY_TEMPLATES: Record<BountyTemplate['kind'], BountyTemplate> = {
   human_playtest: {
     kind: 'human_playtest',
-    title: 'Jugar y explicar',
-    instructions: 'Jugá esta experiencia durante dos minutos. Contanos qué disfrutaste y dónde no supiste cómo seguir.',
-    deliverable: 'Grabación de la pestaña, comentario de voz opcional o escrito, respuestas finales y comparación de versiones cuando corresponda.',
+    title: 'Play and explain',
+    instructions: 'Play this experience for two minutes. Tell us what you enjoyed and where you did not know how to continue.',
+    deliverable: 'Tab recording, optional spoken or written comment, final answers and a comparison of versions when applicable.',
     criteria: [
-      'Material utilizable: grabación o alternativa escrita.',
-      'Realizó la tarea pedida.',
-      'Comentarios relacionados con la partida.',
-      'Decir que algo es aburrido, elegir la versión anterior o no tener preferencia son entregas válidas.',
-      'No se paga por comentarios positivos ni por coincidir con otras personas.',
+      'Usable material: a recording or the written alternative.',
+      'Attempted the requested task.',
+      'Comments related to the session.',
+      'Saying something is boring, choosing the earlier version or having no preference are valid submissions.',
+      'Positive comments are not paid for, and neither is agreeing with other people.',
     ],
   },
   agent_prediction: {
     kind: 'agent_prediction',
-    title: 'Predecir una preferencia',
-    instructions: 'Para este público y estas dos versiones, anticipá cuál se preferirá, por qué y con qué incertidumbre.',
-    deliverable: 'Una elección (una versión o sin preferencia), los motivos y la incertidumbre, registrada antes de ver resultados humanos.',
+    title: 'Predict a preference',
+    instructions: 'For this audience and these two versions, anticipate which one will be preferred, why and with what uncertainty.',
+    deliverable: 'A choice (one version or no preference), the reasons and the uncertainty, recorded before seeing human results.',
     criteria: [
-      'Se registra con fecha antes de revelar resultados. Si el agente ya los vio, cuenta como análisis retrospectivo.',
-      'Se compara con las preferencias humanas, incluyendo desacuerdo y ausencia de preferencia.',
-      'Un acierto aislado o una muestra pequeña no demuestran juicio general.',
+      'Recorded with a timestamp before results are revealed. If the agent has already seen them, it counts as retrospective analysis.',
+      'Compared with human preferences, including disagreement and no preference.',
+      'A single hit or a small sample does not prove general judgment.',
     ],
   },
   agent_analysis: {
     kind: 'agent_analysis',
-    title: 'Analizar evidencia',
-    instructions: 'Encontrá momentos donde las instrucciones fueron difíciles de entender. Adjuntá el intervalo y la fuente que sostienen cada hallazgo.',
-    deliverable: 'Observaciones, comentarios relacionados, hipótesis e indicaciones de qué conviene conservar.',
+    title: 'Analyze evidence',
+    instructions: 'Find moments where the instructions were hard to understand. Attach the interval and the source that support each finding.',
+    deliverable: 'Observations, related comments, hypotheses and notes on what is worth keeping.',
     criteria: [
-      'Correspondencia con el material.',
-      'Intervalos dentro de la grabación.',
-      'Citas verificables: cada cita referencia un comentario real.',
-      'Cobertura de las sesiones disponibles.',
-      'Separación entre observación e interpretación.',
-      'La opinión de otro modelo no es la única referencia.',
+      'Correspondence with the material.',
+      'Intervals inside the recording.',
+      'Verifiable quotes: each quote references a real comment.',
+      'Coverage of the available sessions.',
+      'Separation between observation and interpretation.',
+      'Another model\'s opinion is not the only reference.',
     ],
   },
   agent_intervention: {
     kind: 'agent_intervention',
-    title: 'Proponer y comprobar una mejora',
-    instructions: 'Mejorá la claridad del comienzo manteniendo el desafío. Entregá una variante y explicá qué evidencia motivó el cambio.',
-    deliverable: 'Versión ejecutable, cambio trazable y comprobaciones de funcionamiento. La preferencia humana posterior se registra por separado.',
+    title: 'Propose and check an improvement',
+    instructions: 'Improve the clarity of the opening while keeping the challenge. Deliver a variant and explain which evidence motivated the change.',
+    deliverable: 'Runnable version, traceable change and working checks. The later human preference is recorded separately.',
     criteria: [
-      'Solo cambia regiones editables: niveles y reglas quedan idénticos.',
-      'Pasa las comprobaciones fijadas antes del cambio.',
-      'Cita la evidencia que lo motivó y dice qué conserva.',
+      'Only editable regions change: levels and rules stay identical.',
+      'Passes the checks fixed before the change.',
+      'Cites the evidence that motivated it and says what it keeps.',
     ],
   },
 };
 
 export const CAPABILITIES = {
-  'evidence:read': 'Consultar estudios y evidencia del producto',
-  'study:create': 'Preparar estudios en borrador',
-  'study:publish': 'Publicar estudios dentro de la política de gasto',
-  'work:submit': 'Entregar predicciones, análisis o intervenciones',
-  'results:read': 'Ver preferencias humanas (marca predicciones posteriores como retrospectivas)',
-  'export:request': 'Pedir exports privados de investigación',
+  'evidence:read': 'Read studies and evidence for the product',
+  'study:create': 'Prepare draft studies',
+  'study:publish': 'Publish studies within the spending policy',
+  'work:submit': 'Submit predictions, analyses or interventions',
+  'results:read': 'See human preferences (marks later predictions as retrospective)',
+  'export:request': 'Request private research exports',
 } as const;
 
 export type Capability = keyof typeof CAPABILITIES;

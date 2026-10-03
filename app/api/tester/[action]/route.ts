@@ -45,9 +45,9 @@ type Action = keyof typeof schemas;
 
 export async function POST(request: Request, ctx: { params: Promise<{ action: string }> }) {
   const { action } = await ctx.params;
-  if (!(action in schemas)) return NextResponse.json({ error: { code: 'unknown_action', message: 'Acción desconocida' } }, { status: 404 });
+  if (!(action in schemas)) return NextResponse.json({ error: { code: 'unknown_action', message: 'Unknown action' } }, { status: 404 });
   const token = bearer(request.headers.get('authorization'));
-  if (!token) return NextResponse.json({ error: { code: 'missing_token', message: 'Falta la invitación' } }, { status: 401 });
+  if (!token) return NextResponse.json({ error: { code: 'missing_token', message: 'The invite is missing' } }, { status: 401 });
   let body: unknown = {};
   try {
     body = await request.json();
@@ -55,7 +55,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ action: st
     body = {};
   }
   const parsed = schemas[action as Action].safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: { code: 'invalid_input', message: 'Datos inválidos', issues: parsed.error.issues.slice(0, 5) } }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: { code: 'invalid_input', message: 'Invalid data', issues: parsed.error.issues.slice(0, 5) } }, { status: 400 });
   const input = parsed.data as Record<string, never>;
 
   try {
@@ -120,7 +120,7 @@ export async function POST(request: Request, ctx: { params: Promise<{ action: st
       case 'withdraw': {
         const s = await testerState(worker, token);
         const res = await withdraw(worker, token);
-        if (s.ctx.assignment) await releaseAssignment(worker, s.ctx.study.id, s.ctx.assignment.id, 'La persona se retiró antes de entregar');
+        if (s.ctx.assignment) await releaseAssignment(worker, s.ctx.study.id, s.ctx.assignment.id, 'The person withdrew before submitting');
         return NextResponse.json(res);
       }
     }
@@ -128,6 +128,6 @@ export async function POST(request: Request, ctx: { params: Promise<{ action: st
   } catch (err) {
     if (err instanceof TesterError) return NextResponse.json({ error: { code: err.code, message: err.message } }, { status: err.status });
     console.error('[tester]', action, err);
-    return NextResponse.json({ error: { code: 'server_error', message: 'Algo falló de nuestro lado. Reintentar.' } }, { status: 500 });
+    return NextResponse.json({ error: { code: 'server_error', message: 'Something failed on our side. Try again.' } }, { status: 500 });
   }
 }

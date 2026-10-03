@@ -69,15 +69,15 @@ export async function comparisonSummary(client: SupabaseClient, studyId: string)
     out.reasons.push({
       participant: codes.get(r.assignment_id) ?? 'P-?',
       preferred: pref,
-      presented: `${r.first_label} primero, luego ${r.second_label}`,
+      presented: `${r.first_label} first, then ${r.second_label}`,
       reason: r.reason,
       prior_exposure: r.prior_exposure,
       created_at: r.created_at,
     });
   }
-  if (out.total > 0 && out.total < 30) out.limitations.push(`Muestra de ${out.total} ${out.total === 1 ? 'persona' : 'personas'}: describe lo que pasó en esta prueba, no permite conclusiones estadísticas ni extrapolar a un mercado.`);
-  if (out.priorExposure > 0) out.limitations.push(`${out.priorExposure} de ${out.total} ya habían jugado la versión base: conocer el puzzle puede favorecer a la segunda versión que juegan.`);
-  if (out.byOrder.baselineFirst.total !== out.byOrder.variantFirst.total) out.limitations.push('El orden de presentación no quedó balanceado.');
+  if (out.total > 0 && out.total < 30) out.limitations.push(`Sample of ${out.total} ${out.total === 1 ? 'person' : 'people'}: it describes what happened in this test and does not allow statistical conclusions or extrapolating to a market.`);
+  if (out.priorExposure > 0) out.limitations.push(`${out.priorExposure} of ${out.total} had already played the baseline version: knowing the puzzle can favor the second version they play.`);
+  if (out.byOrder.baselineFirst.total !== out.byOrder.variantFirst.total) out.limitations.push('The presentation order was not balanced.');
   return out;
 }
 
@@ -100,7 +100,7 @@ export type PredictionEvaluation = {
 /** Compares a dated prediction with the human preferences recorded afterwards. */
 export function evaluatePrediction(pred: PredictionPayload, isRetrospective: boolean, s: Pick<ComparisonSummary, 'total' | 'preferBaseline' | 'preferVariant' | 'noPreference'>): PredictionEvaluation {
   const observed = { total: s.total, baseline: s.preferBaseline, variant: s.preferVariant, none: s.noPreference };
-  if (s.total === 0) return { status: 'pending', observed, observedMajority: null, matchedMajority: null, brier: null, note: 'Todavía no hay comparaciones humanas.' };
+  if (s.total === 0) return { status: 'pending', observed, observedMajority: null, matchedMajority: null, brier: null, note: 'There are no human comparisons yet.' };
   const counts: Array<['baseline' | 'variant' | 'none', number]> = [
     ['baseline', s.preferBaseline],
     ['variant', s.preferVariant],
@@ -125,9 +125,9 @@ export function evaluatePrediction(pred: PredictionPayload, isRetrospective: boo
   }
   const matched = majority === 'tie' ? null : pred.choice === majority;
   const note = isRetrospective
-    ? 'Registrada después de ver resultados humanos: cuenta como análisis retrospectivo, no como predicción.'
+    ? 'Recorded after seeing human results: it counts as retrospective analysis, not as a prediction.'
     : majority === 'tie'
-      ? 'Las personas no coincidieron en una mayoría; la predicción no se puede comparar con un ganador.'
-      : `${matched ? 'Coincide' : 'No coincide'} con la mayoría de ${s.total}. Un acierto aislado no demuestra juicio general.`;
+      ? 'People did not agree on a majority; the prediction cannot be compared with a winner.'
+      : `${matched ? 'Matches' : 'Does not match'} the majority of ${s.total}. A single hit does not prove general judgment.`;
   return { status: isRetrospective ? 'retrospective' : 'evaluated', observed, observedMajority: majority, matchedMajority: isRetrospective ? null : matched, brier: isRetrospective ? null : brier, note };
 }

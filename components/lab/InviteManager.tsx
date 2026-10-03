@@ -13,10 +13,10 @@ export function InviteManager({ studyId, disabled }: { studyId: string; disabled
     <div className="stack">
       <form action={action} className="cluster">
         <input type="hidden" name="study_id" value={studyId} />
-        <label htmlFor="invite-count" className="small">Cantidad</label>
+        <label htmlFor="invite-count" className="small">Count</label>
         <input id="invite-count" name="count" type="number" min={1} max={20} defaultValue={3} className="input" style={{ width: 96 }} />
         <button className="btn" type="submit" disabled={pending || disabled}>
-          {pending ? 'Creando…' : 'Crear enlaces'}
+          {pending ? 'Creating…' : 'Create links'}
         </button>
       </form>
       {state.message && <p className={state.ok ? 'callout callout-warning' : 'field-error'} role={state.ok ? 'status' : 'alert'}>{state.message}</p>}
@@ -37,7 +37,7 @@ export function InviteManager({ studyId, disabled }: { studyId: string; disabled
                       setCopied(inv.token);
                     }}
                   >
-                    {copied === inv.token ? 'Copiado' : 'Copiar'}
+                    {copied === inv.token ? 'Copied' : 'Copy'}
                   </button>
                 </div>
               </li>

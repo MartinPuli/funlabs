@@ -48,18 +48,18 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
 
   beforeAll(async () => {
     worker = await workerClient();
-    const email = `agentes-${Date.now()}@funlabs.test`;
-    const u = await admin.auth.admin.createUser({ email, password: 'ensayo-tecnico-largo-123', email_confirm: true });
+    const email = `agents-${Date.now()}@funlabs.test`;
+    const u = await admin.auth.admin.createUser({ email, password: 'long-technical-rehearsal-123', email_confirm: true });
     if (u.error) throw u.error;
     ids.owner = u.data.user.id;
     userIds.push(u.data.user.id);
     // Product + study as the owner would create them.
     const userClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
-    await userClient.auth.signInWithPassword({ email, password: 'ensayo-tecnico-largo-123' });
+    await userClient.auth.signInWithPassword({ email, password: 'long-technical-rehearsal-123' });
     const { product, versionA } = await ensureGravityRoomProduct(userClient, worker, ids.owner);
     ids.product = product.id;
     ids.versionA = versionA.id;
-    const study = await createStudyDraft(userClient, worker, ids.owner, { ...demoStudyInput(), title: 'Ensayo técnico de la API de agentes' }, { isRehearsal: true });
+    const study = await createStudyDraft(userClient, worker, ids.owner, { ...demoStudyInput(), title: 'Technical rehearsal of the agent API' }, { isRehearsal: true });
     ids.study = study.id;
     await publishStudy(worker, study.id, { via: 'ui' });
     const b = await worker.from('bounties').select('id, kind').eq('study_id', study.id);
@@ -69,8 +69,8 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
     const asg = await worker.from('assignments').insert({ study_id: study.id, bounty_id: ids.human_playtest, invitation_id: inv.data!.id, participant_code: 'P-1' }).select('id').single();
     ids.assignment = asg.data!.id;
     await worker.from('consent_records').insert([
-      { study_id: study.id, assignment_id: asg.data!.id, subject: 'participant', purpose: 'participation_recording', granted: true, text_version: 'participacion-v1' },
-      { study_id: study.id, assignment_id: asg.data!.id, subject: 'participant', purpose: 'research_sharing', granted: true, text_version: 'investigacion-v1' },
+      { study_id: study.id, assignment_id: asg.data!.id, subject: 'participant', purpose: 'participation_recording', granted: true, text_version: 'participation-v1' },
+      { study_id: study.id, assignment_id: asg.data!.id, subject: 'participant', purpose: 'research_sharing', granted: true, text_version: 'research-v1' },
     ]);
     const ses = await worker.from('sessions').insert({ study_id: study.id, assignment_id: asg.data!.id, version_id: versionA.id, phase: 'playtest', neutral_label: 'Gravity Room', status: 'submitted' }).select('id').single();
     ids.session = ses.data!.id;
@@ -80,14 +80,14 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
       { study_id: study.id, session_id: ses.data!.id, seq: 2, t_ms: 23500, type: 'interact', payload: { result: 'nothing', col: 9, row: 1 } },
     ]).select('id, seq');
     ids.event1 = String(evs.data!.find((e) => e.seq === 1)!.id);
-    const fb = await worker.from('feedback').insert({ study_id: study.id, session_id: ses.data!.id, assignment_id: asg.data!.id, kind: 'moment', t_ms: 24000, body: '[ensayo técnico] no sé qué objeto puedo activar' }).select('id').single();
+    const fb = await worker.from('feedback').insert({ study_id: study.id, session_id: ses.data!.id, assignment_id: asg.data!.id, kind: 'moment', t_ms: 24000, body: '[technical rehearsal] I do not know which object I can activate' }).select('id').single();
     ids.feedback = fb.data!.id;
     await worker.from('recordings').insert({ study_id: study.id, session_id: ses.data!.id, storage_path: `${study.id}/${ses.data!.id}/recording.webm`, mime_type: 'video/webm', method: 'tab_capture', status: 'verified', duration_ms: 60000 });
     // A second study of the same product that credentials must not reach.
-    const other = await createStudyDraft(userClient, worker, ids.owner, { ...demoStudyInput(), title: 'Otro estudio' }, { isRehearsal: true });
+    const other = await createStudyDraft(userClient, worker, ids.owner, { ...demoStudyInput(), title: 'Another study' }, { isRehearsal: true });
     ids.other = other.id;
-    toks.creator = (await mint('creator_agent', 'Agente creador de ensayo', ['evidence:read', 'study:create', 'study:publish', 'work:submit', 'results:read', 'export:request'], { study: false })).token;
-    toks.creatorStudy = (await mint('creator_agent', 'Creador limitado a un estudio', ['evidence:read', 'work:submit', 'results:read'])).token;
+    toks.creator = (await mint('creator_agent', 'Rehearsal creator agent', ['evidence:read', 'study:create', 'study:publish', 'work:submit', 'results:read', 'export:request'], { study: false })).token;
+    toks.creatorStudy = (await mint('creator_agent', 'Creator limited to one study', ['evidence:read', 'work:submit', 'results:read'])).token;
   });
 
   afterAll(async () => {
@@ -117,10 +117,10 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
     expect((await call(null, 'get_study', { study_id: ids.study })).status).toBe(401);
     expect((await call('nope', 'get_study', { study_id: ids.study })).status).toBe(401);
     expect((await call(`fla_${'x'.repeat(32)}`, 'get_study', { study_id: ids.study })).status).toBe(401);
-    const rev = await mint('creator_agent', 'Revocada', ['evidence:read']);
+    const rev = await mint('creator_agent', 'Revoked', ['evidence:read']);
     await worker.from('agent_credentials').update({ revoked_at: new Date().toISOString() }).eq('id', rev.id);
     expect((await call(rev.token, 'get_study', { study_id: ids.study })).body.error.code).toBe('revoked');
-    const exp = await mint('creator_agent', 'Vencida', ['evidence:read']);
+    const exp = await mint('creator_agent', 'Expired', ['evidence:read']);
     await worker.from('agent_credentials').update({ expires_at: new Date(Date.now() - 1000).toISOString() }).eq('id', exp.id);
     expect((await call(exp.token, 'get_study', { study_id: ids.study })).body.error.code).toBe('expired');
   });
@@ -147,25 +147,25 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
 
   it('request_evidence reports gaps and proposes a draft without creating anything', async () => {
     const before = await worker.from('studies').select('id', { count: 'exact', head: true }).eq('product_id', ids.product);
-    const res = await call(toks.creator, 'request_evidence', { question: '¿Las personas entienden los controles del comienzo?', version_id: ids.versionA, allow_new_study: true });
+    const res = await call(toks.creator, 'request_evidence', { question: 'Do people understand the controls at the start?', version_id: ids.versionA, allow_new_study: true });
     expect(res.status).toBe(200);
     expect(res.body.coverage.sessions).toBeGreaterThanOrEqual(1);
     // The rehearsal study has a session, so it is compatible and flagged as a rehearsal.
     expect(res.body.compatible_studies[0].is_rehearsal).toBe(true);
-    expect(res.body.gaps.join(' ')).toMatch(/ensayos técnicos/);
-    const none = await call(toks.creator, 'request_evidence', { question: '¿Les gusta el ritmo del juego?', version_id: '11111111-1111-4111-8111-111111111111', allow_new_study: true });
+    expect(res.body.gaps.join(' ')).toMatch(/technical rehearsals/);
+    const none = await call(toks.creator, 'request_evidence', { question: 'Do people like the pacing of the game?', version_id: '11111111-1111-4111-8111-111111111111', allow_new_study: true });
     expect(none.body.compatible_studies).toEqual([]);
-    expect(none.body.gaps[0]).toMatch(/No hay estudios con material/);
+    expect(none.body.gaps[0]).toMatch(/There are no studies with material/);
     expect(none.body.draft_study.objective).toBe('pacing');
-    expect(none.body.draft_study.note).toMatch(/Nada se creó/);
+    expect(none.body.draft_study.note).toMatch(/Nothing was created/);
     const after = await worker.from('studies').select('id', { count: 'exact', head: true }).eq('product_id', ids.product);
     expect(after.count).toBe(before.count);
-    const wrong = await call(toks.creator, 'request_evidence', { question: '¿Cualquier cosa?', product: 'otro-producto' });
+    const wrong = await call(toks.creator, 'request_evidence', { question: 'Anything at all?', product: 'other-product' });
     expect(wrong.body.error.code).toBe('wrong_product');
   });
 
   it('create_study makes a draft; publish needs the owner policy', async () => {
-    const created = await call(toks.creator, 'create_study', { question: '¿Se entiende para qué sirve cada tecla?', objective: 'controls', audience: 'Personas que no jugaron antes', participants: 2, session_minutes: 3, budget_cap_usd: 25, tester_payment_usd: 5, agent_reward_usd: 2 });
+    const created = await call(toks.creator, 'create_study', { question: 'Is it clear what each key is for?', objective: 'controls', audience: 'People who have not played before', participants: 2, session_minutes: 3, budget_cap_usd: 25, tester_payment_usd: 5, agent_reward_usd: 2 });
     expect(created.status).toBe(200);
     ids.created = created.body.study_id;
     expect(created.body.status).toBe('draft');
@@ -173,7 +173,7 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
     expect(created.body.publish.requires_approval).toBe(true);
     const row = await worker.from('studies').select('created_via, is_rehearsal').eq('id', ids.created).single();
     expect(row.data?.created_via).toBe('agent_api');
-    const tooLow = await call(toks.creator, 'create_study', { question: '¿Presupuesto insuficiente para tres personas?', objective: 'fun', audience: 'Cualquiera', participants: 3, session_minutes: 3, budget_cap_usd: 5, tester_payment_usd: 5 });
+    const tooLow = await call(toks.creator, 'create_study', { question: 'Is the budget insufficient for three people?', objective: 'fun', audience: 'Anyone', participants: 3, session_minutes: 3, budget_cap_usd: 5, tester_payment_usd: 5 });
     expect(tooLow.body.error.code).toBe('budget_too_low');
     const denied = await call(toks.creator, 'publish_study', { study_id: ids.created });
     expect(denied.status).toBe(403);
@@ -191,7 +191,7 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
   });
 
   it('a participant agent sees text material only from people who authorized research', async () => {
-    const analyst = await mint('participant_agent', 'Analista de ensayo', ['evidence:read', 'work:submit'], { bounty: ids.agent_analysis });
+    const analyst = await mint('participant_agent', 'Rehearsal analyst', ['evidence:read', 'work:submit'], { bounty: ids.agent_analysis });
     toks.analyst = analyst.token;
     const forbidden = await call(analyst.token, 'create_study', {});
     expect(forbidden.status).toBe(403);
@@ -203,16 +203,16 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
     expect(ev.body.sessions[0].comments[0].feedback_id).toBe(ids.feedback);
     expect(JSON.stringify(ev.body)).not.toMatch(/storage_path|signedUrl|token=/);
     // Withdrawing research consent removes the session from the agent's view.
-    await worker.from('consent_records').insert({ study_id: ids.study, assignment_id: ids.assignment, subject: 'participant', purpose: 'research_sharing', granted: false, text_version: 'investigacion-v1' });
+    await worker.from('consent_records').insert({ study_id: ids.study, assignment_id: ids.assignment, subject: 'participant', purpose: 'research_sharing', granted: false, text_version: 'research-v1' });
     const gone = await call(analyst.token, 'get_evidence', { study_id: ids.study });
     expect(gone.body.sessions).toHaveLength(0);
-    await worker.from('consent_records').insert({ study_id: ids.study, assignment_id: ids.assignment, subject: 'participant', purpose: 'research_sharing', granted: true, text_version: 'investigacion-v1' });
+    await worker.from('consent_records').insert({ study_id: ids.study, assignment_id: ids.assignment, subject: 'participant', purpose: 'research_sharing', granted: true, text_version: 'research-v1' });
   });
 
   it('verifies an analysis against the material and pays only checkable work', async () => {
     const good = await call(toks.analyst, 'submit_agent_work', {
       study_id: ids.study, kind: 'analysis',
-      findings: [{ session_id: ids.session, start_ms: 21000, end_ms: 29000, observation: 'La persona pulsa E dos veces sin ningún objeto cerca.', feedback_id: ids.feedback, event_ids: [ids.event1], hypothesis: 'La señal del interruptor podría ser poco visible.', category: 'clarity' }],
+      findings: [{ session_id: ids.session, start_ms: 21000, end_ms: 29000, observation: 'The person presses E twice with no object nearby.', feedback_id: ids.feedback, event_ids: [ids.event1], hypothesis: 'The switch cue may be hard to see.', category: 'clarity' }],
     });
     expect(good.status).toBe(200);
     expect(good.body.evaluation.valid).toBe(true);
@@ -220,14 +220,14 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
     expect(good.body.reward.paid).toBe(true);
     const stored = await worker.from('evidence').select('origin, human_statement, structural_status').eq('id', good.body.evidence_ids[0]).single();
     expect(stored.data?.origin).toBe('agent');
-    expect(stored.data?.human_statement).toBe('[ensayo técnico] no sé qué objeto puedo activar'); // verbatim from the comment, never the agent's text
-    const dup = await call(toks.analyst, 'submit_agent_work', { study_id: ids.study, kind: 'analysis', findings: [{ session_id: ids.session, start_ms: 1000, end_ms: 2000, observation: 'Otra vez' }] });
+    expect(stored.data?.human_statement).toBe('[technical rehearsal] I do not know which object I can activate'); // verbatim from the comment, never the agent's text
+    const dup = await call(toks.analyst, 'submit_agent_work', { study_id: ids.study, kind: 'analysis', findings: [{ session_id: ids.session, start_ms: 1000, end_ms: 2000, observation: 'Again' }] });
     expect(dup.body.error.code).toBe('already_submitted');
     // A second analyst invents a comment and an event.
-    const liar = await mint('participant_agent', 'Analista que inventa', ['evidence:read', 'work:submit'], { bounty: ids.agent_analysis });
+    const liar = await mint('participant_agent', 'Analyst that invents', ['evidence:read', 'work:submit'], { bounty: ids.agent_analysis });
     const bad = await call(liar.token, 'submit_agent_work', {
       study_id: ids.study, kind: 'analysis',
-      findings: [{ session_id: ids.session, start_ms: 21000, end_ms: 29000, observation: 'La persona dijo algo muy específico.', feedback_id: '99999999-9999-4999-8999-999999999999', event_ids: ['424242'], hypothesis: 'Es una invención.' }],
+      findings: [{ session_id: ids.session, start_ms: 21000, end_ms: 29000, observation: 'The person said something very specific.', feedback_id: '99999999-9999-4999-8999-999999999999', event_ids: ['424242'], hypothesis: 'It is an invention.' }],
     });
     expect(bad.status).toBe(200);
     expect(bad.body.evaluation.valid).toBe(false);
@@ -242,20 +242,20 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
   it('records the creator agent’s intervention, checks it, and dates predictions before results', async () => {
     const evId = (await worker.from('evidence').select('id').eq('study_id', ids.study).eq('origin', 'agent').limit(1)).data![0].id;
     // Before any variant exists a prediction is refused. (Asked first: the DB trigger wakes the job runner within seconds.)
-    const predictor = await mint('participant_agent', 'Predictor de ensayo', ['evidence:read', 'work:submit'], { bounty: ids.agent_prediction });
-    const early = await call(predictor.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'variant', reasons: 'La señal naranja guía al interruptor.', uncertainty: 'Puede reducir el desafío.' } });
+    const predictor = await mint('participant_agent', 'Rehearsal predictor', ['evidence:read', 'work:submit'], { bounty: ids.agent_prediction });
+    const early = await call(predictor.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'variant', reasons: 'The orange cue guides people to the switch.', uncertainty: 'It may reduce the challenge.' } });
     expect(early.body.error.code).toBe('variant_not_ready');
     const find = "ctx.fillStyle = on ? palette.ledOn : palette.ledOff;";
     const out = await call(toks.creator, 'submit_agent_work', {
       study_id: ids.study, kind: 'intervention',
-      intervention: { summary: 'El LED apagado se ve naranja para marcar qué se puede activar.', rationale: 'Una persona no supo qué objeto activar.', evidence_ids: [evId], preserve: 'Niveles, física y puzzle.', edits: [{ find, replace: "ctx.fillStyle = on ? palette.ledOn : '#ffb347';", reason: 'Señal visible' }] },
+      intervention: { summary: 'The unlit LED looks orange to mark what can be activated.', rationale: 'A person did not know which object to activate.', evidence_ids: [evId], preserve: 'Levels, physics and puzzle.', edits: [{ find, replace: "ctx.fillStyle = on ? palette.ledOn : '#ffb347';", reason: 'Visible cue' }] },
     });
     expect(out.status).toBe(200);
     ids.variant = out.body.version_id;
     // Out-of-scope edits are refused with the reasons.
     const scope = await call(toks.creator, 'submit_agent_work', {
       study_id: ids.study, kind: 'intervention',
-      intervention: { summary: 'Intento cambiar la gravedad.', rationale: 'Probar que el alcance se verifica.', evidence_ids: [evId], edits: [{ find: 'var G = 0.5, MAX_VY = 8.5;', replace: 'var G = 0.1, MAX_VY = 8.5;' }] },
+      intervention: { summary: 'Attempt to change gravity.', rationale: 'Prove that the scope is verified.', evidence_ids: [evId], edits: [{ find: 'var G = 0.5, MAX_VY = 8.5;', replace: 'var G = 0.1, MAX_VY = 8.5;' }] },
     });
     expect(scope.status).toBe(422);
     expect(scope.body.error.code).toBe('scope_violation');
@@ -268,26 +268,26 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
     }
     const v = await worker.from('versions').select('status').eq('id', ids.variant).single();
     expect(v.data?.status).toBe('ready');
-    const pred = await call(predictor.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'variant', probabilities: { baseline: 0.2, variant: 0.6, none: 0.2 }, reasons: 'La señal naranja guía al interruptor sin cambiar el puzzle.', uncertainty: 'Con pocas personas el resultado puede ser un empate.' } });
+    const pred = await call(predictor.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'variant', probabilities: { baseline: 0.2, variant: 0.6, none: 0.2 }, reasons: 'The orange cue guides people to the switch without changing the puzzle.', uncertainty: 'With few people the result may be a tie.' } });
     expect(pred.status).toBe(200);
     expect(pred.body.is_retrospective).toBe(false);
     expect(pred.body.reward.paid).toBe(true);
     expect(pred.body.evaluation.status).toBe('pending');
-    const second = await call(predictor.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'baseline', reasons: 'Cambiar de opinión después de ver el primer intento.', uncertainty: 'Ninguna.' } });
+    const second = await call(predictor.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'baseline', reasons: 'Changing my mind after seeing the first attempt.', uncertainty: 'None.' } });
     expect(second.body.error.code).toBe('already_submitted'); // one prediction per credential: no cherry-picking
     // Human results appear → later predictions are retrospective and unpaid.
     const cmp = await call(toks.creator, 'compare_versions', { study_id: ids.study });
-    expect(cmp.body.status).toBe('pendiente');
-    await worker.from('comparisons').insert({ study_id: ids.study, assignment_id: ids.assignment, first_version_id: ids.versionA, second_version_id: ids.variant, first_label: 'Versión Ámbar', second_label: 'Versión Celeste', choice: 'second', preferred_version_id: ids.variant, reason: '[ensayo técnico] se ve mejor qué activar', prior_exposure: true });
-    const late = await mint('participant_agent', 'Predictor tardío', ['evidence:read', 'work:submit'], { bounty: ids.agent_prediction });
-    const retro = await call(late.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'variant', reasons: 'Después de que existen resultados humanos.', uncertainty: 'Ya hay datos.' } });
+    expect(cmp.body.status).toBe('pending');
+    await worker.from('comparisons').insert({ study_id: ids.study, assignment_id: ids.assignment, first_version_id: ids.versionA, second_version_id: ids.variant, first_label: 'Amber version', second_label: 'Sky version', choice: 'second', preferred_version_id: ids.variant, reason: '[technical rehearsal] it is clearer what to activate', prior_exposure: true });
+    const late = await mint('participant_agent', 'Late predictor', ['evidence:read', 'work:submit'], { bounty: ids.agent_prediction });
+    const retro = await call(late.token, 'submit_agent_work', { study_id: ids.study, kind: 'prediction', prediction: { choice: 'variant', reasons: 'After human results exist.', uncertainty: 'There is already data.' } });
     expect(retro.body.is_retrospective).toBe(true);
     expect(retro.body.reward.paid).toBe(false);
     expect(retro.body.evaluation.status).toBe('retrospective');
     const shown = await call(toks.creator, 'compare_versions', { study_id: ids.study });
     expect(shown.body.denominator).toBe(1);
     expect(shown.body.prefer_variant).toBe(1);
-    expect(shown.body.limitations.join(' ')).toMatch(/Muestra de 1/);
+    expect(shown.body.limitations.join(' ')).toMatch(/Sample of 1/);
     const seen = await worker.from('agent_credentials').select('labels_seen_at').eq('token_hash', (await import('../../lib/tokens.ts')).hashToken(toks.creator)).single();
     expect(seen.data?.labels_seen_at).not.toBeNull();
   });
@@ -307,11 +307,11 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
   });
 
   it('export_dataset is blocked until the owner and the participant authorized it', async () => {
-    const blocked = await call(toks.creator, 'export_dataset', { study_id: ids.study, purpose: 'Evaluar predicciones de preferencia' });
+    const blocked = await call(toks.creator, 'export_dataset', { study_id: ids.study, purpose: 'Evaluate preference predictions' });
     expect(blocked.body.status).toBe('blocked');
-    expect(blocked.body.blocked_reason).toMatch(/titular del producto/);
+    expect(blocked.body.blocked_reason).toMatch(/product owner/);
     await worker.from('studies').update({ creator_research_consent: true, creator_research_consent_at: new Date().toISOString() }).eq('id', ids.study);
-    const ok = await call(toks.creator, 'export_dataset', { study_id: ids.study, purpose: 'Evaluar predicciones de preferencia', fields: ['versions', 'predictions', 'comments', 'evidence', 'comparisons'] });
+    const ok = await call(toks.creator, 'export_dataset', { study_id: ids.study, purpose: 'Evaluate preference predictions', fields: ['versions', 'predictions', 'comments', 'evidence', 'comparisons'] });
     expect(ok.body.status).toBe('preparing');
     await runJobs(worker, { kinds: ['export_dataset'], maxJobs: 3, deadlineMs: 60_000 });
     const done = await call(toks.creator, 'get_export', { export_id: ok.body.export_id });
@@ -324,7 +324,7 @@ describe.skipIf(!reachable || !dbUp)('agent API and MCP', () => {
     // Unreviewed findings never enter the export.
     expect(file.evidence ?? []).toEqual([]);
     expect(file.excluded.evidence_unreviewed).toBeGreaterThan(0);
-    expect(file.excluded.raw_media).toBe('no incluido');
+    expect(file.excluded.raw_media).toBe('not included');
     expect(file.predictions.some((p: { is_retrospective: boolean }) => p.is_retrospective)).toBe(true);
   });
 

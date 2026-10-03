@@ -173,7 +173,7 @@ begin
   if private.is_worker() then return new; end if;
   if new.assignment_id <> old.assignment_id or new.phase <> old.phase or new.auto_checks <> old.auto_checks
      or new.created_at <> old.created_at or new.study_id <> old.study_id then
-    raise exception 'Solo se puede registrar la evaluación de la entrega' using errcode = 'P0001';
+    raise exception 'Only the evaluation of the submission can be recorded' using errcode = 'P0001';
   end if;
   new.reviewed_at := now();
   return new;
@@ -306,10 +306,10 @@ declare
   v_existing uuid;
 begin
   if not private.is_worker() then
-    raise exception 'Solo el backend reserva presupuesto' using errcode = '42501';
+    raise exception 'Only the backend reserves budget' using errcode = '42501';
   end if;
   if p_kind not in ('reservation', 'agent_reward', 'analysis_cost', 'operation_cost') then
-    raise exception 'Tipo de gasto inválido: %', p_kind using errcode = '22023';
+    raise exception 'Invalid spend type: %', p_kind using errcode = '22023';
   end if;
   select id into v_existing from public.budget_entries where idempotency_key = p_key;
   if found then
@@ -317,7 +317,7 @@ begin
   end if;
   select budget_cap_cents into v_cap from public.studies where id = p_study for update;
   if not found then
-    raise exception 'Estudio inexistente' using errcode = 'P0002';
+    raise exception 'Study does not exist' using errcode = 'P0002';
   end if;
   select coalesce(sum(case kind when 'release' then -amount_cents when 'contribution' then 0 else amount_cents end), 0)
     into v_committed from public.budget_entries where study_id = p_study;
@@ -342,7 +342,7 @@ set search_path = ''
 as $$
 begin
   if not private.is_worker() then
-    raise exception 'Solo el backend toma trabajos' using errcode = '42501';
+    raise exception 'Only the backend claims jobs' using errcode = '42501';
   end if;
   -- Leases older than 10 minutes are considered abandoned.
   update public.jobs
@@ -380,7 +380,7 @@ declare
   j public.jobs;
 begin
   if not private.is_worker() then
-    raise exception 'Solo el backend cierra trabajos' using errcode = '42501';
+    raise exception 'Only the backend finishes jobs' using errcode = '42501';
   end if;
   update public.jobs
      set status = case when p_ok then 'succeeded' when attempts >= max_attempts then 'failed' else 'queued' end,

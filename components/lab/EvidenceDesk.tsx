@@ -34,23 +34,23 @@ type DeskFeedback = { id: string; kind: string; t: number | null; question: stri
 type Run = { id: string; provider: string; model: string; promptVersion: string; status: string; error: string | null; counts: Record<string, number> | null; coverage: { summary: string; gaps: string[] } | null; startedAt: string };
 
 const EVENT_LABEL: Record<string, string> = {
-  game_start: 'Empieza el juego',
-  level_start: 'Empieza una sala',
-  flip: 'Invierte la gravedad',
-  flip_denied: 'Intenta invertir en el aire',
-  land: 'Se apoya',
-  interact: 'Pulsa E',
-  switch_on: 'Activa un interruptor',
-  door_open: 'Se abre la puerta',
-  death: 'Cae en pinchos',
-  respawn: 'Reaparece',
-  restart: 'Reinicia la sala',
-  level_complete: 'Supera la sala',
-  game_complete: 'Termina el juego',
-  idle: 'Seis segundos sin tocar nada',
-  move: 'Cambia de dirección',
-  hidden: 'Pestaña oculta',
-  visible: 'Pestaña visible',
+  game_start: 'Game starts',
+  level_start: 'Room starts',
+  flip: 'Flips gravity',
+  flip_denied: 'Tries to flip in mid-air',
+  land: 'Lands',
+  interact: 'Presses E',
+  switch_on: 'Activates a switch',
+  door_open: 'Door opens',
+  death: 'Falls onto spikes',
+  respawn: 'Respawns',
+  restart: 'Restarts the room',
+  level_complete: 'Clears the room',
+  game_complete: 'Finishes the game',
+  idle: 'Six seconds without touching anything',
+  move: 'Changes direction',
+  hidden: 'Tab hidden',
+  visible: 'Tab visible',
 };
 
 const MARK_EVENTS = new Set(['death', 'switch_on', 'door_open', 'level_complete', 'game_complete', 'idle', 'restart', 'flip_denied', 'interact']);
@@ -129,12 +129,12 @@ export function EvidenceDesk(props: {
     <div className="stack" style={{ ['--gap' as string]: 'var(--s-5)' }}>
       <div className="split">
         <label className="field" style={{ minWidth: 280 }}>
-          <span className="field-label">Sesión</span>
-          <select className="select" value={props.session.id} onChange={(e) => router.push(`/lab/estudios/${props.studyId}/evidencia?sesion=${e.target.value}`)}>
+          <span className="field-label">Session</span>
+          <select className="select" value={props.session.id} onChange={(e) => router.push(`/lab/studies/${props.studyId}/evidence?session=${e.target.value}`)}>
             {props.sessions.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.label}
-                {s.hasRecording ? '' : ' (sin grabación)'}
+                {s.hasRecording ? '' : ' (no recording)'}
               </option>
             ))}
           </select>
@@ -146,36 +146,36 @@ export function EvidenceDesk(props: {
         <div className="desk-main stack" style={{ ['--gap' as string]: 'var(--s-3)' }}>
           <div className="desk-video">
             {props.session.videoUrl ? (
-              <video ref={video} src={props.session.videoUrl} controls preload="metadata" playsInline aria-label={`Grabación de ${props.session.label}`} />
+              <video ref={video} src={props.session.videoUrl} controls preload="metadata" playsInline aria-label={`Recording of ${props.session.label}`} />
             ) : (
               <div className="desk-novideo">
                 <p>
-                  <strong>Sin medio para esta sesión.</strong>{' '}
-                  {props.session.recordingStatus === 'failed' ? 'La subida falló.' : 'La persona usó la alternativa escrita: la evidencia se apoya en eventos y comentarios.'}
+                  <strong>No media for this session.</strong>{' '}
+                  {props.session.recordingStatus === 'failed' ? 'The upload failed.' : 'The person used the written alternative: the evidence relies on events and comments.'}
                 </p>
               </div>
             )}
           </div>
           <div className="small muted cluster">
             <span className="mono">{mmss(now)} / {mmss(total)}</span>
-            {props.session.method && <span>Captura: {props.session.method === 'tab_capture' ? 'pestaña' : props.session.method === 'manual_upload' ? 'subida manual' : props.session.method.replace('_capture', '')}</span>}
-            {props.session.hasAudio && <span>Con voz</span>}
+            {props.session.method && <span>Capture: {props.session.method === 'tab_capture' ? 'tab' : props.session.method === 'manual_upload' ? 'manual upload' : props.session.method.replace('_capture', '')}</span>}
+            {props.session.hasAudio && <span>With voice</span>}
           </div>
 
           <Timeline total={total} now={now} events={props.events} feedback={props.feedback} evidence={props.evidence} selected={selected} onSeek={seek} onSelect={(id, ms) => { setSelected(id); seek(ms); }} />
 
           <details className="panel panel-tight" open={showEvents} onToggle={(e) => setShowEvents((e.target as HTMLDetailsElement).open)}>
-            <summary className="small"><strong>Eventos y comentarios en texto</strong> ({props.events.filter((e) => MARK_EVENTS.has(e.type)).length} eventos, {props.feedback.length} comentarios)</summary>
+            <summary className="small"><strong>Events and comments as text</strong> ({props.events.filter((e) => MARK_EVENTS.has(e.type)).length} events, {props.feedback.length} comments)</summary>
             {showEvents && (
               <ul className="event-list">
                 {[
-                  ...props.events.filter((e) => MARK_EVENTS.has(e.type)).map((e) => ({ t: e.t, key: `e${e.id}`, text: `${EVENT_LABEL[e.type] ?? e.type}${e.type === 'interact' ? ` (${e.payload.result === 'nothing' ? 'sin objeto cerca' : e.payload.result === 'switch_on' ? 'activa' : 'ya activo'})` : ''}${e.payload.level ? `, sala ${e.payload.level}` : ''}` })),
-                  ...props.feedback.filter((f) => f.t !== null).map((f) => ({ t: f.t as number, key: f.id, text: `Comentario: “${f.body}”` })),
+                  ...props.events.filter((e) => MARK_EVENTS.has(e.type)).map((e) => ({ t: e.t, key: `e${e.id}`, text: `${EVENT_LABEL[e.type] ?? e.type}${e.type === 'interact' ? ` (${e.payload.result === 'nothing' ? 'no object nearby' : e.payload.result === 'switch_on' ? 'activates' : 'already active'})` : ''}${e.payload.level ? `, room ${e.payload.level}` : ''}` })),
+                  ...props.feedback.filter((f) => f.t !== null).map((f) => ({ t: f.t as number, key: f.id, text: `Comment: “${f.body}”` })),
                 ]
                   .sort((a, b) => a.t - b.t)
                   .map((row) => (
                     <li key={row.key}>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => seek(row.t)} aria-label={`Ir a ${mmss(row.t)}: ${row.text}`}>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => seek(row.t)} aria-label={`Go to ${mmss(row.t)}: ${row.text}`}>
                         <span className="mono">{mmss(row.t)}</span>
                       </button>{' '}
                       {row.text}
@@ -189,26 +189,26 @@ export function EvidenceDesk(props: {
           <ManualFinding studyId={props.studyId} sessionId={props.session.id} now={now} feedback={props.feedback} onSaved={() => router.refresh()} />
         </div>
 
-        <aside className="desk-side stack" aria-label="Hallazgos">
+        <aside className="desk-side stack" aria-label="Findings">
           <div className="split">
-            <h2 className="section-title" style={{ fontSize: 20 }}>Hallazgos ({props.evidence.length})</h2>
+            <h2 className="section-title" style={{ fontSize: 20 }}>Findings ({props.evidence.length})</h2>
             <label className="small cluster" style={{ ['--gap' as string]: '6px' }}>
-              <span>Mostrar</span>
+              <span>Show</span>
               <select className="select" style={{ width: 'auto', minHeight: 36 }} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
-                <option value="all">Todos</option>
-                <option value="unreviewed">Sin revisar</option>
-                <option value="preserve">Para conservar</option>
-                <option value="unsupported">Sin fuente verificable</option>
+                <option value="all">All</option>
+                <option value="unreviewed">Unreviewed</option>
+                <option value="preserve">To keep</option>
+                <option value="unsupported">No verifiable source</option>
               </select>
             </label>
           </div>
           {props.evidence.length === 0 && (
             <p className="empty">
               {latestRun?.status === 'running'
-                ? 'Análisis pendiente de revisión: Gemini está procesando la sesión.'
+                ? 'Analysis in progress: Gemini is processing the session.'
                 : latestRun?.status === 'succeeded'
-                  ? 'El análisis no propuso hallazgos para esta sesión. Podés agregar uno a mano.'
-                  : 'No hay evidencia para esta sesión todavía.'}
+                  ? 'The analysis proposed no findings for this session. You can add one by hand.'
+                  : 'There is no evidence for this session yet.'}
             </p>
           )}
           <ol className="stack" style={{ listStyle: 'none', margin: 0, padding: 0, ['--gap' as string]: 'var(--s-3)' }}>
@@ -240,11 +240,11 @@ export function EvidenceDesk(props: {
           </ol>
           {isBaseline && props.evidence.length > 0 && (
             <div className="panel panel-tight stack desk-intervene" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-              <strong>Intervenir con Claude</strong>
+              <strong>Intervene with Claude</strong>
               <p className="small muted">
                 {props.canIntervene
-                  ? 'Elegí los hallazgos que motivan el cambio. Claude modifica una copia de la versión base solo en sus regiones editables; la variante llega a las personas si pasa las comprobaciones fijadas.'
-                  : 'Publicá el estudio para fijar las comprobaciones antes de intervenir.'}
+                  ? 'Choose the findings that motivate the change. Claude edits a copy of the baseline version only in its editable regions; the variant reaches people only if it passes the fixed checks.'
+                  : 'Publish the study to fix the checks before intervening.'}
               </p>
               <button
                 type="button"
@@ -260,13 +260,13 @@ export function EvidenceDesk(props: {
                         await fetch('/api/jobs/run', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ study_id: props.studyId }) });
                       } finally {
                         setProcessing(false);
-                        router.push(`/lab/estudios/${props.studyId}/versiones`);
+                        router.push(`/lab/studies/${props.studyId}/versions`);
                       }
                     }
                   })
                 }
               >
-                {pending ? 'Encolando…' : processing ? 'Claude está trabajando…' : `Proponer variante (${chosen.size})`}
+                {pending ? 'Queuing…' : processing ? 'Claude is working…' : `Propose variant (${chosen.size})`}
               </button>
               {interventionMsg?.message && <span className={interventionMsg.ok ? 'small' : 'field-error'} role={interventionMsg.ok ? 'status' : 'alert'}>{interventionMsg.message}</span>}
             </div>
@@ -280,7 +280,7 @@ export function EvidenceDesk(props: {
 function Timeline({ total, now, events, feedback, evidence, selected, onSeek, onSelect }: { total: number; now: number; events: DeskEvent[]; feedback: DeskFeedback[]; evidence: DeskEvidence[]; selected: string | null; onSeek: (ms: number) => void; onSelect: (id: string, ms: number) => void }) {
   const pct = (ms: number) => `${Math.min(100, Math.max(0, (ms / Math.max(total, 1)) * 100))}%`;
   return (
-    <div className="timeline" aria-label="Línea de tiempo de la sesión">
+    <div className="timeline" aria-label="Session timeline">
       <div className="timeline-track" onClick={(e) => {
         const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
         onSeek(Math.round(((e.clientX - rect.left) / rect.width) * total));
@@ -297,8 +297,8 @@ function Timeline({ total, now, events, feedback, evidence, selected, onSeek, on
               ev.stopPropagation();
               onSelect(e.id, e.start);
             }}
-            aria-label={`Hallazgo de ${mmss(e.start)} a ${mmss(e.end)}: ${e.observation}`}
-            title={`${mmss(e.start)} a ${mmss(e.end)}`}
+            aria-label={`Finding from ${mmss(e.start)} to ${mmss(e.end)}: ${e.observation}`}
+            title={`${mmss(e.start)} to ${mmss(e.end)}`}
           />
         ))}
         {events.filter((e) => MARK_EVENTS.has(e.type)).map((e) => (
@@ -310,11 +310,11 @@ function Timeline({ total, now, events, feedback, evidence, selected, onSeek, on
         <span className="timeline-now" style={{ left: pct(now) }} aria-hidden="true" />
       </div>
       <div className="timeline-legend small muted">
-        <span><i style={{ background: 'var(--error)' }} /> caída</span>
-        <span><i style={{ background: 'var(--success)' }} /> progreso</span>
-        <span><i style={{ background: 'var(--warning)' }} /> duda o espera</span>
-        <span><i className="legend-comment" /> comentario</span>
-        <span><i className="legend-band" /> hallazgo</span>
+        <span><i style={{ background: 'var(--error)' }} /> fall</span>
+        <span><i style={{ background: 'var(--success)' }} /> progress</span>
+        <span><i style={{ background: 'var(--warning)' }} /> hesitation or waiting</span>
+        <span><i className="legend-comment" /> comment</span>
+        <span><i className="legend-band" /> finding</span>
       </div>
     </div>
   );
@@ -345,39 +345,39 @@ function EvidenceMoment({ e, studyId, selected, onView, eventsById, feedbackById
   return (
     <article className="moment" data-selected={selected || undefined} aria-labelledby={`m-${e.id}`}>
       <header className="split" style={{ gap: 8 }}>
-        <button type="button" id={`m-${e.id}`} className="btn btn-sm" onClick={onView} aria-label={`Ver momento ${mmss(e.start)} a ${mmss(e.end)}`}>
-          <span className="mono">{mmss(e.start)} a {mmss(e.end)}</span> Ver momento
+        <button type="button" id={`m-${e.id}`} className="btn btn-sm" onClick={onView} aria-label={`View moment ${mmss(e.start)} to ${mmss(e.end)}`}>
+          <span className="mono">{mmss(e.start)} to {mmss(e.end)}</span> View moment
         </button>
         <span className="cluster" style={{ ['--gap' as string]: '6px' }}>
           <span className="tag">{CATEGORY_LABEL[e.category] ?? e.category}</span>
-          {e.preserve && <span className="tag tag-success">Conservar</span>}
+          {e.preserve && <span className="tag tag-success">Keep</span>}
         </span>
       </header>
       <dl className="moment-body">
-        <dt>Observación</dt>
+        <dt>Observation</dt>
         <dd>{e.current?.observation ?? e.observation}</dd>
-        <dt>Declaración humana</dt>
-        <dd>{e.humanStatement ? <q>{e.humanStatement}</q> : <span className="muted">Sin comentario humano</span>}</dd>
+        <dt>Human statement</dt>
+        <dd>{e.humanStatement ? <q>{e.humanStatement}</q> : <span className="muted">No human comment</span>}</dd>
         {hyp && (
           <>
-            <dt>Hipótesis</dt>
-            <dd>{hyp}{e.alternative && <span className="muted"> Alternativa: {e.alternative}</span>}</dd>
+            <dt>Hypothesis</dt>
+            <dd>{hyp}{e.alternative && <span className="muted"> Alternative: {e.alternative}</span>}</dd>
           </>
         )}
         {nextTest && (
           <>
-            <dt>Prueba siguiente</dt>
+            <dt>Next test</dt>
             <dd>{nextTest}</dd>
           </>
         )}
       </dl>
       <div className="cluster small" style={{ ['--gap' as string]: '6px' }}>
         <span className={`tag ${e.structural === 'verified' ? 'tag-success' : e.structural === 'partial' ? 'tag-warning' : 'tag-error'}`}>{STRUCTURAL_LABEL[e.structural]}</span>
-        <span className="tag tag-outline">Origen: {ORIGIN_LABEL[e.origin] ?? e.origin}{e.generatedBy && typeof e.generatedBy.model === 'string' ? ` (${e.generatedBy.model})` : ''}</span>
+        <span className="tag tag-outline">Origin: {ORIGIN_LABEL[e.origin] ?? e.origin}{e.generatedBy && typeof e.generatedBy.model === 'string' ? ` (${e.generatedBy.model})` : ''}</span>
         <span className={`tag ${e.review === 'confirmed' ? 'tag-success' : e.review === 'rejected' ? 'tag-error' : e.review === 'corrected' ? 'tag-warning' : 'tag-outline'}`}>{REVIEW_LABEL[e.review]}</span>
       </div>
       <details className="small">
-        <summary>Fuentes ({e.sources.length})</summary>
+        <summary>Sources ({e.sources.length})</summary>
         <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
           {e.sources.map((s) => {
             const ev = s.kind === 'game_event' ? eventsById.get(s.sourceId) : undefined;
@@ -385,9 +385,9 @@ function EvidenceMoment({ e, studyId, selected, onView, eventsById, feedbackById
             return (
               <li key={s.id}>
                 {s.verified ? '✓ ' : '✗ '}
-                {s.kind === 'recording' && `Grabación desde ${mmss(s.t)}`}
-                {s.kind === 'game_event' && `Evento ${ev ? EVENT_LABEL[ev.type] ?? ev.type : s.sourceId} en ${mmss(s.t)}`}
-                {s.kind === 'feedback' && `Comentario${fb?.t !== null && fb?.t !== undefined ? ` en ${mmss(fb.t)}` : ' final'}`}
+                {s.kind === 'recording' && `Recording from ${mmss(s.t)}`}
+                {s.kind === 'game_event' && `Event ${ev ? EVENT_LABEL[ev.type] ?? ev.type : s.sourceId} at ${mmss(s.t)}`}
+                {s.kind === 'feedback' && `Comment${fb?.t !== null && fb?.t !== undefined ? ` at ${mmss(fb.t)}` : ' (final answer)'}`}
                 {!s.verified && s.note && <span className="muted">: {s.note}</span>}
               </li>
             );
@@ -395,15 +395,15 @@ function EvidenceMoment({ e, studyId, selected, onView, eventsById, feedbackById
         </ul>
       </details>
       {participantNotes.map((r) => (
-        <p key={r.id} className="callout small">La persona corrigió la interpretación: {r.note}</p>
+        <p key={r.id} className="callout small">The person corrected the interpretation: {r.note}</p>
       ))}
       {e.reviews.filter((r) => r.reviewer_kind === 'creator').length > 0 && (
         <details className="small">
-          <summary>Historial de revisión</summary>
+          <summary>Review history</summary>
           <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
             {e.reviews.filter((r) => r.reviewer_kind === 'creator').map((r) => (
               <li key={r.id}>
-                {REVIEW_LABEL[r.action === 'confirm' ? 'confirmed' : r.action === 'reject' ? 'rejected' : 'corrected']} el {new Date(r.created_at).toLocaleString('es-AR')}
+                {REVIEW_LABEL[r.action === 'confirm' ? 'confirmed' : r.action === 'reject' ? 'rejected' : 'corrected']} on {new Date(r.created_at).toLocaleString('en-US')}
                 {r.note ? `: ${r.note}` : ''}
               </li>
             ))}
@@ -411,40 +411,40 @@ function EvidenceMoment({ e, studyId, selected, onView, eventsById, feedbackById
         </details>
       )}
       <div className="cluster" style={{ ['--gap' as string]: '6px' }}>
-        <button type="button" className="btn btn-sm" disabled={pending} onClick={() => act('confirm')}>Confirmar</button>
-        <button type="button" className="btn btn-sm" disabled={pending} onClick={() => setMode(mode === 'correct' ? null : 'correct')} aria-expanded={mode === 'correct'}>Corregir</button>
-        <button type="button" className="btn btn-sm" disabled={pending} onClick={() => setMode(mode === 'reject' ? null : 'reject')} aria-expanded={mode === 'reject'}>Rechazar</button>
+        <button type="button" className="btn btn-sm" disabled={pending} onClick={() => act('confirm')}>Confirm</button>
+        <button type="button" className="btn btn-sm" disabled={pending} onClick={() => setMode(mode === 'correct' ? null : 'correct')} aria-expanded={mode === 'correct'}>Correct</button>
+        <button type="button" className="btn btn-sm" disabled={pending} onClick={() => setMode(mode === 'reject' ? null : 'reject')} aria-expanded={mode === 'reject'}>Reject</button>
         {selectable && (
           <label className="small cluster" style={{ ['--gap' as string]: '6px', marginLeft: 'auto' }}>
             <input type="checkbox" checked={chosen} onChange={(ev) => onChoose(ev.target.checked)} style={{ width: 20, height: 20 }} />
-            Motiva el cambio
+            Motivates the change
           </label>
         )}
       </div>
       {mode === 'correct' && (
         <div className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
           <label className="field small">
-            <span className="field-label">Hipótesis corregida</span>
+            <span className="field-label">Corrected hypothesis</span>
             <textarea className="textarea" rows={2} value={fix.hypothesis} onChange={(ev) => setFix({ ...fix, hypothesis: ev.target.value })} />
           </label>
           <label className="field small">
-            <span className="field-label">Prueba siguiente</span>
+            <span className="field-label">Next test</span>
             <textarea className="textarea" rows={2} value={fix.next_test} onChange={(ev) => setFix({ ...fix, next_test: ev.target.value })} />
           </label>
           <label className="field small">
-            <span className="field-label">Nota</span>
+            <span className="field-label">Note</span>
             <input className="input" value={note} onChange={(ev) => setNote(ev.target.value)} />
           </label>
-          <div><button type="button" className="btn btn-sm btn-primary" disabled={pending} onClick={() => act('correct')}>Guardar corrección</button></div>
+          <div><button type="button" className="btn btn-sm btn-primary" disabled={pending} onClick={() => act('correct')}>Save correction</button></div>
         </div>
       )}
       {mode === 'reject' && (
         <div className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
           <label className="field small">
-            <span className="field-label">Motivo del rechazo</span>
+            <span className="field-label">Reason for rejecting</span>
             <textarea className="textarea" rows={2} value={note} onChange={(ev) => setNote(ev.target.value)} />
           </label>
-          <div><button type="button" className="btn btn-sm btn-danger" disabled={pending || !note.trim()} onClick={() => act('reject')}>Rechazar hallazgo</button></div>
+          <div><button type="button" className="btn btn-sm btn-danger" disabled={pending || !note.trim()} onClick={() => act('reject')}>Reject finding</button></div>
         </div>
       )}
       {msg && !msg.ok && <p className="field-error" role="alert">{msg.message}</p>}
@@ -461,14 +461,14 @@ function RunInfo({ run, studyId, sessionId, submitted }: { run: Run | undefined;
       {run ? (
         <>
           <span>
-            Último análisis: <strong>{run.status === 'succeeded' ? 'terminado' : run.status === 'running' ? 'en curso' : 'falló'}</strong> con {run.model} ({run.provider === 'gemini-api' ? 'Gemini API' : run.provider === 'ai-gateway' ? 'Vercel AI Gateway' : run.provider}), {run.promptVersion}
+            Latest analysis: <strong>{run.status === 'succeeded' ? 'done' : run.status === 'running' ? 'running' : 'failed'}</strong> with {run.model} ({run.provider === 'gemini-api' ? 'Gemini API' : run.provider === 'ai-gateway' ? 'Vercel AI Gateway' : run.provider}), {run.promptVersion}
           </span>
-          {run.counts && <span className="muted">Verificados {run.counts.verified ?? 0}, parciales {run.counts.partial ?? 0}, sin fuente {run.counts.unsupported ?? 0}</span>}
-          {run.coverage?.summary && <span className="muted">Cobertura: {run.coverage.summary}</span>}
+          {run.counts && <span className="muted">Verified {run.counts.verified ?? 0}, partial {run.counts.partial ?? 0}, unsupported {run.counts.unsupported ?? 0}</span>}
+          {run.coverage?.summary && <span className="muted">Coverage: {run.coverage.summary}</span>}
           {run.error && <span className="field-error">{run.error}</span>}
         </>
       ) : (
-        <span className="muted">{submitted ? 'Análisis pendiente.' : 'La sesión todavía no se entregó.'}</span>
+        <span className="muted">{submitted ? 'Analysis pending.' : 'The session has not been submitted yet.'}</span>
       )}
       {submitted && (
         <span>
@@ -491,7 +491,7 @@ function RunInfo({ run, studyId, sessionId, submitted }: { run: Run | undefined;
               })
             }
           >
-            {processing ? 'Analizando…' : run ? 'Analizar de nuevo' : 'Analizar ahora'}
+            {processing ? 'Analyzing…' : run ? 'Analyze again' : 'Analyze now'}
           </button>
         </span>
       )}
@@ -502,10 +502,10 @@ function RunInfo({ run, studyId, sessionId, submitted }: { run: Run | undefined;
 function FinalAnswers({ feedback }: { feedback: DeskFeedback[] }) {
   const answers = feedback.filter((f) => f.kind === 'answer');
   if (!answers.length) return null;
-  const Q: Record<string, string> = { enjoyed: '¿Qué disfrutaste?', confusing: '¿Dónde no supiste cómo seguir?', change: '¿Qué cambiarías?' };
+  const Q: Record<string, string> = { enjoyed: 'What did you enjoy?', confusing: 'Where did you not know how to continue?', change: 'What would you change?' };
   return (
-    <section className="panel panel-tight stack" style={{ ['--gap' as string]: 'var(--s-2)' }} aria-label="Respuestas finales">
-      <h3>Respuestas finales</h3>
+    <section className="panel panel-tight stack" style={{ ['--gap' as string]: 'var(--s-2)' }} aria-label="Final answers">
+      <h3>Final answers</h3>
       {answers.map((a) => (
         <p key={a.id} className="small">
           <strong>{Q[a.question ?? ''] ?? a.question}</strong> <q>{a.body}</q>
@@ -525,25 +525,25 @@ function ManualFinding({ studyId, sessionId, now, feedback, onSaved }: { studyId
   const [endMs, setEnd] = useState(5000);
   return (
     <details className="panel panel-tight">
-      <summary><strong>Agregar hallazgo propio</strong></summary>
+      <summary><strong>Add your own finding</strong></summary>
       <form action={action} className="stack" style={{ ['--gap' as string]: 'var(--s-3)', marginTop: 12 }}>
         <input type="hidden" name="study_id" value={studyId} />
         <input type="hidden" name="session_id" value={sessionId} />
         <input type="hidden" name="start_ms" value={startMs} />
         <input type="hidden" name="end_ms" value={endMs} />
         <div className="cluster small">
-          <span>Intervalo <span className="mono">{mmss(startMs)} a {mmss(endMs)}</span></span>
-          <button type="button" className="btn btn-sm" onClick={() => setStart(now)}>Inicio = tiempo actual</button>
-          <button type="button" className="btn btn-sm" onClick={() => setEnd(Math.max(now, startMs + 1000))}>Fin = tiempo actual</button>
+          <span>Interval <span className="mono">{mmss(startMs)} to {mmss(endMs)}</span></span>
+          <button type="button" className="btn btn-sm" onClick={() => setStart(now)}>Start = current time</button>
+          <button type="button" className="btn btn-sm" onClick={() => setEnd(Math.max(now, startMs + 1000))}>End = current time</button>
         </div>
         <label className="field">
-          <span className="field-label">Observación (qué ocurrió)</span>
+          <span className="field-label">Observation (what happened)</span>
           <textarea name="observation" className="textarea" rows={2} required />
         </label>
         <label className="field">
-          <span className="field-label">Comentario de la persona que lo respalda</span>
+          <span className="field-label">Comment from the person that supports it</span>
           <select name="feedback_id" className="select" defaultValue="">
-            <option value="">Sin comentario humano</option>
+            <option value="">No human comment</option>
             {feedback.map((f) => (
               <option key={f.id} value={f.id}>
                 {f.t !== null ? `${mmss(f.t)} ` : 'Final: '}
@@ -553,27 +553,27 @@ function ManualFinding({ studyId, sessionId, now, feedback, onSaved }: { studyId
           </select>
         </label>
         <label className="field">
-          <span className="field-label">Hipótesis (opcional)</span>
+          <span className="field-label">Hypothesis (optional)</span>
           <input name="hypothesis" className="input" />
         </label>
         <label className="field">
-          <span className="field-label">Prueba siguiente (opcional)</span>
+          <span className="field-label">Next test (optional)</span>
           <input name="next_test" className="input" />
         </label>
         <div className="cluster">
           <label className="field" style={{ minWidth: 200 }}>
-            <span className="field-label">Categoría</span>
+            <span className="field-label">Category</span>
             <select name="category" className="select" defaultValue="clarity">
               {Object.entries(CATEGORY_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </label>
           <label className="choice" style={{ alignSelf: 'end' }}>
             <input type="checkbox" name="preserve" />
-            <span>Conservar (la persona lo disfrutó)</span>
+            <span>Keep (the person enjoyed it)</span>
           </label>
         </div>
         {state.message && <p className={state.ok ? 'small' : 'field-error'} role={state.ok ? 'status' : 'alert'}>{state.message}</p>}
-        <div><button className="btn" type="submit" disabled={pending}>{pending ? 'Guardando…' : 'Guardar hallazgo'}</button></div>
+        <div><button className="btn" type="submit" disabled={pending}>{pending ? 'Saving…' : 'Save finding'}</button></div>
       </form>
     </details>
   );

@@ -22,7 +22,7 @@ export async function proxy(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
   if (!data.user && request.nextUrl.pathname.startsWith('/lab')) {
     const url = request.nextUrl.clone();
-    url.pathname = '/entrar';
+    url.pathname = '/sign-in';
     url.searchParams.set('next', request.nextUrl.pathname);
     return NextResponse.redirect(url);
   }
@@ -30,5 +30,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/lab/:path*', '/entrar', '/auth/:path*'],
+  matcher: ['/lab/:path*', '/sign-in', '/auth/:path*'],
 };

@@ -31,9 +31,9 @@ async function handle(msg: Rpc, token: string | null): Promise<unknown | null> {
       return rpcResult(msg.id, {
         protocolVersion: SUPPORTED.includes(asked) ? asked : SUPPORTED[0],
         capabilities: { tools: { listChanged: false } },
-        serverInfo: { name: 'funlabs', title: 'FUNLABS: evidencia humana para tu agente', version: '0.1.0' },
+        serverInfo: { name: 'funlabs', title: 'FUNLABS: human evidence for your agent', version: '0.1.0' },
         instructions:
-          'Herramientas para pedir evidencia de pruebas con personas, preparar estudios, entregar trabajo de agente y comparar versiones. Autenticá cada pedido con una credencial de trabajo (Authorization: Bearer fla_...). Los pagos están en modo prueba.',
+          'Tools to request evidence from playtests with people, prepare studies, submit agent work and compare versions. Authenticate every request with a work credential (Authorization: Bearer fla_...). Payments are in test mode.',
       });
     }
     case 'notifications/initialized':
@@ -45,7 +45,7 @@ async function handle(msg: Rpc, token: string | null): Promise<unknown | null> {
       return rpcResult(msg.id, {
         tools: toolCatalog().map((t) => ({
           name: t.name,
-          description: `${t.description} (capacidad: ${t.capability})`,
+          description: `${t.description} (capability: ${t.capability})`,
           inputSchema: { type: 'object', ...(t.input_schema as object) },
           annotations: { readOnlyHint: ['request_evidence', 'get_study', 'get_evidence', 'get_moment', 'compare_versions', 'get_export'].includes(t.name) },
         })),
@@ -53,7 +53,7 @@ async function handle(msg: Rpc, token: string | null): Promise<unknown | null> {
     case 'tools/call': {
       const name = String((msg.params as { name?: string } | undefined)?.name ?? '');
       const args = (msg.params as { arguments?: unknown } | undefined)?.arguments ?? {};
-      if (!TOOL_BY_NAME.has(name)) return rpcError(msg.id, -32602, `Herramienta desconocida: ${name}`);
+      if (!TOOL_BY_NAME.has(name)) return rpcError(msg.id, -32602, `Unknown tool: ${name}`);
       try {
         const worker = await workerClient();
         const actor = await authenticateAgent(worker, token);
@@ -65,23 +65,23 @@ async function handle(msg: Rpc, token: string | null): Promise<unknown | null> {
           return rpcResult(msg.id, { content: [{ type: 'text', text: JSON.stringify(body) }], structuredContent: body, isError: true });
         }
         console.error('[mcp]', err);
-        return rpcResult(msg.id, { content: [{ type: 'text', text: 'Falló de nuestro lado. Reintentar.' }], isError: true });
+        return rpcResult(msg.id, { content: [{ type: 'text', text: 'Something failed on our side. Try again.' }], isError: true });
       }
     }
     default:
-      return isNotification ? null : rpcError(msg.id, -32601, `Método no soportado: ${msg.method}`);
+      return isNotification ? null : rpcError(msg.id, -32601, `Unsupported method: ${msg.method}`);
   }
 }
 
 export async function POST(request: Request) {
   const origin = request.headers.get('origin');
   // Browsers must not drive this endpoint with ambient credentials; agents send no Origin.
-  if (origin && origin !== new URL(request.url).origin) return NextResponse.json(rpcError(null, -32000, 'Origen no permitido'), { status: 403 });
+  if (origin && origin !== new URL(request.url).origin) return NextResponse.json(rpcError(null, -32000, 'Origin not allowed'), { status: 403 });
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(rpcError(null, -32700, 'JSON inválido'), { status: 400 });
+    return NextResponse.json(rpcError(null, -32700, 'Invalid JSON'), { status: 400 });
   }
   const token = bearer(request.headers.get('authorization'));
   const batch = Array.isArray(body);
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
   const responses: unknown[] = [];
   for (const m of messages) {
     if (!m || m.jsonrpc !== '2.0' || typeof m.method !== 'string') {
-      responses.push(rpcError((m as Rpc | undefined)?.id, -32600, 'Pedido inválido'));
+      responses.push(rpcError((m as Rpc | undefined)?.id, -32600, 'Invalid request'));
       continue;
     }
     const r = await handle(m, token);

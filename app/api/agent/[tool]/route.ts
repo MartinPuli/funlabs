@@ -12,14 +12,14 @@ function errorResponse(err: unknown) {
     return NextResponse.json({ error: { code: err.code, message: err.message, ...(err.details ? { details: err.details } : {}) } }, { status: err.status });
   }
   console.error('[agent]', err);
-  return NextResponse.json({ error: { code: 'server_error', message: 'Falló de nuestro lado. Reintentar.' } }, { status: 500 });
+  return NextResponse.json({ error: { code: 'server_error', message: 'Something failed on our side. Try again.' } }, { status: 500 });
 }
 
 /** REST form of a tool: POST /api/agent/<tool> with `Authorization: Bearer fla_...` and a JSON body. */
 export async function POST(request: Request, ctx: { params: Promise<{ tool: string }> }) {
   const { tool } = await ctx.params;
   try {
-    if (!TOOL_BY_NAME.has(tool)) throw new AgentError('unknown_tool', `Herramienta desconocida: ${tool}`, 404);
+    if (!TOOL_BY_NAME.has(tool)) throw new AgentError('unknown_tool', `Unknown tool: ${tool}`, 404);
     const worker = await workerClient();
     const actor = await authenticateAgent(worker, bearer(request.headers.get('authorization')));
     let body: unknown = {};

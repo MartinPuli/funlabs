@@ -17,19 +17,19 @@ export type ActionState = { ok: boolean; message?: string; errors?: Record<strin
 async function requireUser() {
   const supabase = await createUserClient();
   const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect('/entrar');
+  if (!data.user) redirect('/sign-in');
   return { supabase, user: data.user };
 }
 
 /** Membership check through RLS: the study must be visible and workable. */
 async function requireStudy(studyId: string, roles: Array<'owner' | 'collaborator' | 'researcher'> = ['owner', 'collaborator']) {
   const { supabase, user } = await requireUser();
-  if (!/^[0-9a-f-]{36}$/i.test(studyId)) throw new Error('Estudio inválido');
+  if (!/^[0-9a-f-]{36}$/i.test(studyId)) throw new Error('Invalid study');
   const study = await supabase.from('studies').select('*').eq('id', studyId).maybeSingle();
-  if (!study.data) throw new Error('No tenés acceso a este estudio');
+  if (!study.data) throw new Error('You do not have access to this study');
   const member = await supabase.from('study_members').select('role').eq('study_id', studyId).eq('user_id', user.id).maybeSingle();
   const role = (member.data?.role ?? (study.data.owner_id === user.id ? 'owner' : null)) as 'owner' | 'collaborator' | 'researcher' | null;
-  if (!role || !roles.includes(role)) throw new Error('Tu rol no permite esta acción');
+  if (!role || !roles.includes(role)) throw new Error('Your role does not allow this action');
   return { supabase, user, study: study.data, role };
 }
 
@@ -37,7 +37,7 @@ function fail(message: string, errors?: Record<string, string>): ActionState {
   return { ok: false, message, errors };
 }
 
-const refresh = (studyId: string) => revalidatePath(`/lab/estudios/${studyId}`, 'layout');
+const refresh = (studyId: string) => revalidatePath(`/lab/studies/${studyId}`, 'layout');
 
 // --------------------------------------------------------------- studies
 
@@ -45,19 +45,19 @@ export async function createDemoStudy(): Promise<void> {
   const { supabase, user } = await requireUser();
   const worker = await workerClient();
   const study = await createStudyDraft(supabase, worker, user.id, demoStudyInput(), { createdVia: 'ui' });
-  redirect(`/lab/estudios/${study.id}`);
+  redirect(`/lab/studies/${study.id}`);
 }
 
 const StudySchema = z.object({
-  title: z.string().trim().min(3, 'Escribí un título de al menos 3 caracteres').max(140),
-  question: z.string().trim().min(10, 'La pregunta necesita al menos 10 caracteres').max(1000),
-  objective: z.enum(['clarity', 'fun', 'challenge', 'pacing', 'controls'], { message: 'Elegí un objetivo' }),
+  title: z.string().trim().min(3, 'Write a title of at least 3 characters').max(140),
+  question: z.string().trim().min(10, 'The question needs at least 10 characters').max(1000),
+  objective: z.enum(['clarity', 'fun', 'challenge', 'pacing', 'controls'], { message: 'Choose an objective' }),
   objective_detail: z.string().trim().max(500).optional().default(''),
-  audience: z.string().trim().min(3, 'Describí el público').max(500),
-  task: z.string().trim().min(10, 'Describí la tarea de la persona').max(1000),
-  participants_target: z.coerce.number().int().min(1, 'Mínimo 1 persona').max(50, 'Máximo 50 personas'),
-  session_minutes: z.coerce.number().int().min(1, 'Mínimo 1 minuto').max(30, 'Máximo 30 minutos'),
-  budget_cap: z.coerce.number().min(0, 'No puede ser negativo').max(10000),
+  audience: z.string().trim().min(3, 'Describe the audience').max(500),
+  task: z.string().trim().min(10, 'Describe the task for the person').max(1000),
+  participants_target: z.coerce.number().int().min(1, 'Minimum 1 person').max(50, 'Maximum 50 people'),
+  session_minutes: z.coerce.number().int().min(1, 'Minimum 1 minute').max(30, 'Maximum 30 minutes'),
+  budget_cap: z.coerce.number().min(0, 'Cannot be negative').max(10000),
   tester_payment: z.coerce.number().min(0).max(1000),
   agent_reward: z.coerce.number().min(0).max(1000).optional().default(0),
   client_contribution: z.coerce.number().min(0).max(10000).optional().default(0),
@@ -68,11 +68,11 @@ export async function createStudy(_prev: ActionState, form: FormData): Promise<A
   if (!parsed.success) {
     const errors: Record<string, string> = {};
     for (const issue of parsed.error.issues) errors[String(issue.path[0])] = issue.message;
-    return fail('Revisá los campos marcados.', errors);
+    return fail('Check the highlighted fields.', errors);
   }
   const v = parsed.data;
   if (v.tester_payment * v.participants_target > v.budget_cap) {
-    return fail('El límite de gasto no cubre el pago a todas las personas.', { budget_cap: `Necesitás al menos ${(v.tester_payment * v.participants_target).toFixed(2)} para ${v.participants_target} personas.` });
+    return fail('The spending cap does not cover payment for everyone.', { budget_cap: `You need at least ${(v.tester_payment * v.participants_target).toFixed(2)} for ${v.participants_target} people.` });
   }
   const { supabase, user } = await requireUser();
   const worker = await workerClient();
@@ -96,23 +96,23 @@ export async function createStudy(_prev: ActionState, form: FormData): Promise<A
     });
     id = study.id;
   } catch (err) {
-    return fail(err instanceof Error ? err.message : 'No se pudo guardar el borrador.');
+    return fail(err instanceof Error ? err.message : 'Could not save the draft.');
   }
-  redirect(`/lab/estudios/${id}`);
+  redirect(`/lab/studies/${id}`);
 }
 
 export async function publishStudyAction(studyId: string): Promise<ActionState> {
   const { study, user } = await requireStudy(studyId, ['owner']);
-  if (study.status !== 'draft') return fail('El estudio ya fue publicado.');
+  if (study.status !== 'draft') return fail('The study has already been published.');
   const worker = await workerClient();
   try {
     await publishStudy(worker, studyId, { userId: user.id, via: 'ui' });
   } catch (err) {
     if (err instanceof PublishError) return fail(err.problems.join(' '));
-    return fail(err instanceof Error ? err.message : 'No se pudo publicar.');
+    return fail(err instanceof Error ? err.message : 'Could not publish.');
   }
   refresh(studyId);
-  return { ok: true, message: 'Estudio publicado. Las comprobaciones quedaron fijadas.' };
+  return { ok: true, message: 'Study published. The checks are now fixed.' };
 }
 
 export async function deleteDraftStudy(studyId: string): Promise<void> {
@@ -127,13 +127,13 @@ export async function setStudyPhase(studyId: string, phase: 'comparing' | 'compl
   if (phase === 'comparing') {
     const sv = await worker.from('study_versions').select('role, versions(status)').eq('study_id', studyId).eq('role', 'variant');
     const ready = (sv.data ?? []).some((r) => (r.versions as unknown as { status: string } | null)?.status === 'ready');
-    if (!ready) return fail('Todavía no hay una variante que haya pasado sus comprobaciones.');
-    if (!['evidence_ready', 'analyzing', 'collecting'].includes(study.status)) return fail('La comparación se abre después de recibir evidencia.');
+    if (!ready) return fail('There is no variant yet that has passed its checks.');
+    if (!['evidence_ready', 'analyzing', 'collecting'].includes(study.status)) return fail('The comparison opens after evidence has been received.');
   }
-  if (phase === 'completed' && study.status === 'draft') return fail('Un borrador no se puede completar.');
+  if (phase === 'completed' && study.status === 'draft') return fail('A draft cannot be completed.');
   await worker.from('studies').update({ status: phase, ...(phase === 'completed' ? { completed_at: new Date().toISOString() } : {}) }).eq('id', studyId);
   refresh(studyId);
-  return { ok: true, message: phase === 'comparing' ? 'Comparación abierta: las personas ven la nueva tarea en su mismo enlace.' : 'Estudio completado.' };
+  return { ok: true, message: phase === 'comparing' ? 'Comparison open: people see the new task on their same link.' : 'Study completed.' };
 }
 
 // ----------------------------------------------------------- invitations
@@ -142,13 +142,13 @@ export async function createInvitesAction(_prev: ActionState, form: FormData): P
   const studyId = String(form.get('study_id') ?? '');
   const count = Math.max(1, Math.min(20, Number(form.get('count') ?? 1)));
   const { supabase, user, study } = await requireStudy(studyId);
-  if (study.status === 'draft') return fail('Publicá el estudio antes de invitar personas.');
+  if (study.status === 'draft') return fail('Publish the study before inviting people.');
   try {
     const invites = await createInvitations(supabase, user.id, studyId, count);
     refresh(studyId);
-    return { ok: true, message: 'Copiá los enlaces ahora: por seguridad no se vuelven a mostrar.', data: { invites } };
+    return { ok: true, message: 'Copy the links now: for security they are not shown again.', data: { invites } };
   } catch (err) {
-    return fail(err instanceof Error ? err.message : 'No se pudieron crear las invitaciones.');
+    return fail(err instanceof Error ? err.message : 'Could not create the invites.');
   }
 }
 
@@ -164,15 +164,15 @@ export async function revokeInvite(studyId: string, inviteId: string): Promise<A
 export async function reviewDelivery(studyId: string, deliveryId: string, valid: boolean, note: string): Promise<ActionState> {
   const { supabase, user } = await requireStudy(studyId);
   const d = await supabase.from('deliveries').select('id, assignment_id, phase, study_id, status').eq('id', deliveryId).eq('study_id', studyId).single();
-  if (d.error) return fail('Entrega no encontrada.');
-  if (d.data.status !== 'submitted') return fail('Esta entrega ya fue evaluada.');
-  if (!valid && !note.trim()) return fail('Explicá el motivo: la persona puede pedir revisión.');
+  if (d.error) return fail('Submission not found.');
+  if (d.data.status !== 'submitted') return fail('This submission has already been reviewed.');
+  if (!valid && !note.trim()) return fail('Explain the reason: the person can ask for a review.');
   const upd = await supabase.from('deliveries').update({ status: valid ? 'valid' : 'invalid', note: note.trim() || null, reviewed_by: user.id }).eq('id', deliveryId);
   if (upd.error) return fail(upd.error.message);
   const worker = await workerClient();
   const settled = await settleDelivery(worker, d.data as { id: string; assignment_id: string; phase: 'playtest' | 'comparison'; study_id: string }, valid, note.trim());
   refresh(studyId);
-  return { ok: true, message: valid ? `Entrega válida. Pago registrado en modo prueba (${(settled.amount / 100).toFixed(2)}).` : 'Entrega marcada como no utilizable. La reserva se liberó.' };
+  return { ok: true, message: valid ? `Valid submission. Payout recorded in test mode (${(settled.amount / 100).toFixed(2)}).` : 'Submission marked as not usable. The reservation was released.' };
 }
 
 // -------------------------------------------------------------- evidence
@@ -180,8 +180,8 @@ export async function reviewDelivery(studyId: string, deliveryId: string, valid:
 export async function reviewEvidence(studyId: string, evidenceId: string, action: 'confirm' | 'correct' | 'reject', note: string, corrected?: Record<string, string>): Promise<ActionState> {
   const { supabase, user } = await requireStudy(studyId);
   const clean = corrected ? Object.fromEntries(Object.entries(corrected).filter(([k, v]) => ['hypothesis', 'alternative', 'next_test', 'observation'].includes(k) && v.trim()).map(([k, v]) => [k, v.trim().slice(0, 2000)])) : undefined;
-  if (action === 'correct' && (!clean || Object.keys(clean).length === 0)) return fail('Escribí la corrección.');
-  if (action === 'reject' && !note.trim()) return fail('Contá por qué se rechaza: queda en el historial.');
+  if (action === 'correct' && (!clean || Object.keys(clean).length === 0)) return fail('Write the correction.');
+  if (action === 'reject' && !note.trim()) return fail('Say why it is rejected: it stays in the history.');
   const ins = await supabase.from('evidence_reviews').insert({ evidence_id: evidenceId, study_id: studyId, reviewer_id: user.id, reviewer_kind: 'creator', action, note: note.trim() || null, corrected: clean ?? null });
   if (ins.error) return fail(ins.error.message);
   refresh(studyId);
@@ -193,7 +193,7 @@ const FindingSchema = z.object({
   session_id: z.string().uuid(),
   start_ms: z.coerce.number().int().min(0),
   end_ms: z.coerce.number().int().min(1),
-  observation: z.string().trim().min(3, 'Describí qué ocurrió').max(2000),
+  observation: z.string().trim().min(3, 'Describe what happened').max(2000),
   feedback_id: z.string().uuid().optional().or(z.literal('')),
   hypothesis: z.string().trim().max(2000).optional().default(''),
   next_test: z.string().trim().max(2000).optional().default(''),
@@ -204,12 +204,12 @@ const FindingSchema = z.object({
 /** A finding written by a person of the team, with the same structure and checks. */
 export async function addHumanFinding(_prev: ActionState, form: FormData): Promise<ActionState> {
   const parsed = FindingSchema.safeParse(Object.fromEntries(form.entries()));
-  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? 'Datos inválidos');
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? 'Invalid data');
   const v = parsed.data;
-  if (v.end_ms <= v.start_ms) return fail('El final del intervalo debe ser posterior al inicio.');
+  if (v.end_ms <= v.start_ms) return fail('The end of the interval must be after the start.');
   const { supabase, user } = await requireStudy(v.study_id);
   const session = await supabase.from('sessions').select('id, version_id').eq('id', v.session_id).eq('study_id', v.study_id).single();
-  if (session.error) return fail('Sesión no encontrada.');
+  if (session.error) return fail('Session not found.');
   const rec = await supabase.from('recordings').select('id, duration_ms').eq('session_id', v.session_id).maybeSingle();
   const inside = !rec.data?.duration_ms || v.end_ms <= rec.data.duration_ms + 2000;
   const ev = await supabase
@@ -229,7 +229,7 @@ export async function addHumanFinding(_prev: ActionState, form: FormData): Promi
       category: v.category,
       preserve: v.preserve === 'on',
       structural_status: inside ? (v.feedback_id ? 'verified' : 'partial') : 'unsupported',
-      generated_by: { provider: 'persona', reviewer_id: user.id },
+      generated_by: { provider: 'human', reviewer_id: user.id },
     })
     .select('id')
     .single();
@@ -239,7 +239,7 @@ export async function addHumanFinding(_prev: ActionState, form: FormData): Promi
   const worker = await workerClient();
   await syncStudyStatus(worker, v.study_id);
   refresh(v.study_id);
-  return { ok: true, message: 'Hallazgo agregado.' };
+  return { ok: true, message: 'Finding added.' };
 }
 
 // ------------------------------------------------------------------ jobs
@@ -250,26 +250,26 @@ export async function requestAnalysis(studyId: string, sessionId: string): Promi
   const prev = await worker.from('jobs').select('id', { count: 'exact', head: true }).eq('kind', 'analyze_session').like('idempotency_key', `analyze:${sessionId}:%`);
   const job = await enqueueJob(worker, { studyId, kind: 'analyze_session', key: `analyze:${sessionId}:v${(prev.count ?? 0) + 1}`, input: { session_id: sessionId }, createdBy: user.id });
   refresh(studyId);
-  return { ok: true, message: 'Análisis en cola.', data: { job_id: job.id } };
+  return { ok: true, message: 'Analysis queued.', data: { job_id: job.id } };
 }
 
 export async function retryJobAction(studyId: string, jobId: string): Promise<ActionState> {
   await requireStudy(studyId);
   const worker = await workerClient();
   const job = await worker.from('jobs').select('study_id').eq('id', jobId).single();
-  if (job.data?.study_id !== studyId) return fail('Trabajo no encontrado.');
+  if (job.data?.study_id !== studyId) return fail('Job not found.');
   await retryJob(worker, jobId);
   refresh(studyId);
-  return { ok: true, message: 'Trabajo reintentado.' };
+  return { ok: true, message: 'Job retried.' };
 }
 
 export async function requestIntervention(studyId: string, evidenceIds: string[]): Promise<ActionState> {
   const { user, study } = await requireStudy(studyId, ['owner']);
-  if (!study.check_suite_id) return fail('Publicá el estudio antes de intervenir: las comprobaciones se fijan al publicar.');
-  if (!evidenceIds.length) return fail('Elegí al menos un hallazgo que motive el cambio.');
+  if (!study.check_suite_id) return fail('Publish the study before intervening: checks are fixed when you publish.');
+  if (!evidenceIds.length) return fail('Choose at least one finding that motivates the change.');
   const worker = await workerClient();
   const base = await worker.from('study_versions').select('version_id').eq('study_id', studyId).eq('role', 'baseline').single();
-  if (base.error) return fail('Falta la versión base.');
+  if (base.error) return fail('The baseline version is missing.');
   const ids = [...new Set(evidenceIds)].sort();
   const job = await enqueueJob(worker, {
     studyId,
@@ -280,14 +280,14 @@ export async function requestIntervention(studyId: string, evidenceIds: string[]
     createdBy: user.id,
   });
   refresh(studyId);
-  return { ok: true, message: 'Claude está preparando una variante acotada.', data: { job_id: job.id } };
+  return { ok: true, message: 'Claude is preparing a scoped variant.', data: { job_id: job.id } };
 }
 
 // ---------------------------------------------------------------- agents
 
 const CredentialSchema = z.object({
   study_id: z.string().uuid(),
-  label: z.string().trim().min(2, 'Nombrá la credencial').max(80),
+  label: z.string().trim().min(2, 'Name the credential').max(80),
   kind: z.enum(['creator_agent', 'participant_agent']),
   bounty_id: z.string().uuid().optional().or(z.literal('')),
   days: z.coerce.number().int().min(1).max(30),
@@ -296,15 +296,15 @@ const CredentialSchema = z.object({
 
 export async function createCredentialAction(_prev: ActionState, form: FormData): Promise<ActionState> {
   const parsed = CredentialSchema.safeParse(Object.fromEntries(form.entries()));
-  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? 'Datos inválidos');
+  if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? 'Invalid data');
   const v = parsed.data;
   const caps = form.getAll('capabilities').map(String).filter((c): c is Capability => c in CAPABILITIES);
-  if (!caps.length) return fail('Elegí al menos una capacidad.');
-  if (v.kind === 'participant_agent' && !v.bounty_id) return fail('Un agente participante trabaja sobre un bounty: elegilo.');
+  if (!caps.length) return fail('Choose at least one capability.');
+  if (v.kind === 'participant_agent' && !v.bounty_id) return fail('A participating agent works on a bounty: choose one.');
   const { user, study } = await requireStudy(v.study_id, ['owner']);
   if (v.kind === 'participant_agent') {
     const b = await (await workerClient()).from('bounties').select('id, kind').eq('id', v.bounty_id).eq('study_id', v.study_id).maybeSingle();
-    if (!b.data || !['agent_prediction', 'agent_analysis'].includes(b.data.kind)) return fail('El bounty elegido no admite agentes participantes en el MVP.');
+    if (!b.data || !['agent_prediction', 'agent_analysis'].includes(b.data.kind)) return fail('The chosen bounty does not accept participating agents in the MVP.');
   }
   const t = newToken('fla');
   const studyScoped = v.kind === 'participant_agent' || v.scope === 'study';
@@ -325,7 +325,7 @@ export async function createCredentialAction(_prev: ActionState, form: FormData)
   });
   if (ins.error) return fail(ins.error.message);
   refresh(v.study_id);
-  return { ok: true, message: 'Copiá el token ahora: no se vuelve a mostrar.', data: { token: t.token } };
+  return { ok: true, message: 'Copy the token now: it is not shown again.', data: { token: t.token } };
 }
 
 export async function revokeCredential(studyId: string, credentialId: string): Promise<ActionState> {
@@ -343,7 +343,7 @@ export async function setSpendingPolicy(studyId: string, agentCanPublish: boolea
     .eq('id', study.product_id);
   if (upd.error) return fail(upd.error.message);
   refresh(studyId);
-  return { ok: true, message: 'Política de gasto guardada.' };
+  return { ok: true, message: 'Spending policy saved.' };
 }
 
 // ------------------------------------------------------------- research
@@ -363,21 +363,21 @@ export async function requestExportAction(_prev: ActionState, form: FormData): P
   const purpose = String(form.get('purpose') ?? '').trim();
   const format = form.get('format') === 'jsonl' ? 'jsonl' : 'json';
   const fields = form.getAll('fields').map(String).filter((f) => (EXPORT_FIELDS as readonly string[]).includes(f));
-  if (purpose.length < 5) return fail('Describí la finalidad del export.', { purpose: 'Mínimo 5 caracteres.' });
-  if (!fields.length) return fail('Elegí al menos un campo.');
+  if (purpose.length < 5) return fail('Describe the purpose of the export.', { purpose: 'Minimum 5 characters.' });
+  if (!fields.length) return fail('Choose at least one field.');
   const { user } = await requireStudy(studyId, ['owner', 'collaborator', 'researcher']);
   const worker = await workerClient();
   const exp = await requestExport(worker, { studyId, userId: user.id, purpose, fields, format, via: 'ui' });
   refresh(studyId);
-  if (exp.status === 'blocked') return fail(`Export bloqueado: ${exp.blocked_reason}`);
-  return { ok: true, message: 'Export en preparación.', data: { export_id: exp.id } };
+  if (exp.status === 'blocked') return fail(`Export blocked: ${exp.blocked_reason}`);
+  return { ok: true, message: 'Export being prepared.', data: { export_id: exp.id } };
 }
 
 export async function exportDownloadUrl(studyId: string, exportId: string): Promise<ActionState> {
   const { supabase } = await requireStudy(studyId, ['owner', 'collaborator', 'researcher']);
   const exp = await supabase.from('dataset_exports').select('storage_path, status, expires_at').eq('id', exportId).eq('study_id', studyId).single();
-  if (exp.error || exp.data.status !== 'ready' || !exp.data.storage_path) return fail('El export no está listo.');
-  if (exp.data.expires_at && new Date(exp.data.expires_at).getTime() < Date.now()) return fail('El export venció. Pedí uno nuevo.');
+  if (exp.error || exp.data.status !== 'ready' || !exp.data.storage_path) return fail('The export is not ready.');
+  if (exp.data.expires_at && new Date(exp.data.expires_at).getTime() < Date.now()) return fail('The export expired. Request a new one.');
   const signed = await supabase.storage.from('exports').createSignedUrl(exp.data.storage_path, 300, { download: true });
   if (signed.error) return fail(signed.error.message);
   return { ok: true, data: { url: signed.data.signedUrl } };

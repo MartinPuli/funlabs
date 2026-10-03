@@ -37,7 +37,7 @@ export function LiveRefresh({ studyId }: { studyId: string }) {
 
   return (
     <span className="small muted" aria-live="polite">
-      {state === 'live' ? 'Actualización en vivo' : state === 'connecting' ? 'Conectando…' : 'Sin actualización en vivo: recargá para ver cambios'}
+      {state === 'live' ? 'Live updates' : state === 'connecting' ? 'Connecting…' : 'No live updates: reload to see changes'}
     </span>
   );
 }

@@ -34,7 +34,7 @@ export function parseRegions(source: string): { regions: Region[]; errors: strin
     const name = m[3];
     if (edge === 'start') {
       if (open) {
-        errors.push(`La región ${open.kind}:${open.name} no se cerró antes de abrir ${kind}:${name}`);
+        errors.push(`Region ${open.kind}:${open.name} was not closed before opening ${kind}:${name}`);
         continue;
       }
       open = { kind, name, start: m.index, contentStart: m.index + m[0].length };
@@ -47,11 +47,11 @@ export function parseRegions(source: string): { regions: Region[]; errors: strin
       open = null;
     }
   }
-  if (open) errors.push(`La región ${open.kind}:${open.name} no tiene cierre`);
+  if (open) errors.push(`Region ${open.kind}:${open.name} has no closing marker`);
   const seen = new Set<string>();
   for (const r of regions) {
     const key = `${r.kind}:${r.name}`;
-    if (seen.has(key)) errors.push(`Región duplicada ${key}`);
+    if (seen.has(key)) errors.push(`Duplicate region ${key}`);
     seen.add(key);
   }
   return { regions, errors };
@@ -92,14 +92,14 @@ export function compareScope(baseline: string, candidate: string): ScopeComparis
   const cand = parseRegions(candidate);
   const errors = [...base.errors.map((e) => `Base: ${e}`), ...cand.errors.map((e) => `Variante: ${e}`)];
   const sig = (rs: Region[]) => rs.map((r) => `${r.kind}:${r.name}`).join(',');
-  if (sig(base.regions) !== sig(cand.regions)) errors.push('Las regiones marcadas no coinciden con la versión base');
+  if (sig(base.regions) !== sig(cand.regions)) errors.push('The marked regions do not match the baseline version');
   if (frameOf(baseline, base.regions) !== frameOf(candidate, cand.regions)) {
-    errors.push('Hay cambios fuera de las regiones editables');
+    errors.push('There are changes outside the editable regions');
   }
   const baseLocked = lockedDigests(baseline, base.regions);
   const candLocked = lockedDigests(candidate, cand.regions);
   for (const [name, digest] of Object.entries(baseLocked)) {
-    if (candLocked[name] !== digest) errors.push(`La región bloqueada "${name}" cambió`);
+    if (candLocked[name] !== digest) errors.push(`Locked region "${name}" changed`);
   }
   const changedEditable: string[] = [];
   for (const r of base.regions) {

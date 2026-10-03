@@ -29,35 +29,35 @@ function countOccurrences(haystack: string, needle: string): number[] {
  */
 export function applyScopedEdits(baseline: string, edits: Edit[]): PatchResult {
   const errors: string[] = [];
-  if (!Array.isArray(edits) || edits.length === 0) return { ok: false, errors: ['La intervención no contiene cambios'] };
+  if (!Array.isArray(edits) || edits.length === 0) return { ok: false, errors: ['The intervention contains no changes'] };
   if (edits.length > PATCH_LIMITS.maxEdits) return { ok: false, errors: [`Demasiados cambios (${edits.length} > ${PATCH_LIMITS.maxEdits})`] };
 
   let current = baseline;
   const applied: AppliedEdit[] = [];
   for (let i = 0; i < edits.length; i++) {
     const e = edits[i];
-    if (typeof e?.find !== 'string' || typeof e?.replace !== 'string') { errors.push(`Cambio ${i + 1}: formato inválido`); continue; }
-    if (!e.find.length) { errors.push(`Cambio ${i + 1}: el texto a buscar está vacío`); continue; }
-    if (e.find.length > PATCH_LIMITS.maxFindLength || e.replace.length > PATCH_LIMITS.maxReplaceLength) { errors.push(`Cambio ${i + 1}: supera el tamaño permitido`); continue; }
-    if (e.find.includes('@funlabs:') || e.replace.includes('@funlabs:')) { errors.push(`Cambio ${i + 1}: no puede tocar los marcadores de región`); continue; }
+    if (typeof e?.find !== 'string' || typeof e?.replace !== 'string') { errors.push(`Change ${i + 1}: invalid format`); continue; }
+    if (!e.find.length) { errors.push(`Change ${i + 1}: the text to find is empty`); continue; }
+    if (e.find.length > PATCH_LIMITS.maxFindLength || e.replace.length > PATCH_LIMITS.maxReplaceLength) { errors.push(`Change ${i + 1}: exceeds the allowed size`); continue; }
+    if (e.find.includes('@funlabs:') || e.replace.includes('@funlabs:')) { errors.push(`Change ${i + 1}: cannot touch the region markers`); continue; }
     if (/<\/?script/i.test(e.replace)) { errors.push(`Cambio ${i + 1}: no puede agregar ni cerrar etiquetas <script>`); continue; }
 
     const hits = countOccurrences(current, e.find);
-    if (hits.length === 0) { errors.push(`Cambio ${i + 1}: no se encontró el texto a reemplazar`); continue; }
-    if (hits.length > 1) { errors.push(`Cambio ${i + 1}: el texto a reemplazar aparece ${hits.length} veces; debe ser único`); continue; }
+    if (hits.length === 0) { errors.push(`Change ${i + 1}: the text to replace was not found`); continue; }
+    if (hits.length > 1) { errors.push(`Change ${i + 1}: the text to replace appears ${hits.length} times; it must be unique`); continue; }
     const at = hits[0];
     const { regions } = parseRegions(current);
     const region = regions.find((r) => r.kind === 'editable' && at >= r.contentStart && at + e.find.length <= r.contentEnd);
-    if (!region) { errors.push(`Cambio ${i + 1}: queda fuera de una región editable`); continue; }
+    if (!region) { errors.push(`Change ${i + 1}: falls outside an editable region`); continue; }
 
     current = current.slice(0, at) + e.replace + current.slice(at + e.find.length);
     applied.push({ index: i, region: region.name, at, removed: e.find.length, added: e.replace.length, reason: e.reason });
   }
   if (errors.length) return { ok: false, errors };
-  if (Buffer.byteLength(current, 'utf8') > PATCH_LIMITS.maxResultBytes) return { ok: false, errors: ['El build resultante supera el tamaño permitido'] };
+  if (Buffer.byteLength(current, 'utf8') > PATCH_LIMITS.maxResultBytes) return { ok: false, errors: ['The resulting build exceeds the allowed size'] };
 
   const scope = compareScope(baseline, current);
   if (!scope.ok) return { ok: false, errors: scope.errors };
-  if (scope.changedEditable.length === 0) return { ok: false, errors: ['El resultado es idéntico a la versión base'] };
+  if (scope.changedEditable.length === 0) return { ok: false, errors: ['The result is identical to the baseline version'] };
   return { ok: true, source: current, applied, changedRegions: scope.changedEditable };
 }

@@ -58,7 +58,7 @@ export function ActionButton({
           });
         }}
       >
-        {pending ? pendingLabel ?? 'Un momento…' : processing ? 'Procesando…' : label}
+        {pending ? pendingLabel ?? 'One moment…' : processing ? 'Processing…' : label}
       </button>
       {result?.message && (
         <span className={result.ok ? 'small' : 'field-error'} role={result.ok ? 'status' : 'alert'}>

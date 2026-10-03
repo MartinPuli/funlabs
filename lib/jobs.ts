@@ -34,9 +34,9 @@ export async function enqueueJob(
     .select('*')
     .single();
   if (!ins.error) return ins.data as JobRow;
-  if (ins.error.code !== '23505') throw new Error(`Encolar trabajo: ${ins.error.message}`);
+  if (ins.error.code !== '23505') throw new Error(`Enqueue job: ${ins.error.message}`);
   const existing = await worker.from('jobs').select('*').eq('idempotency_key', job.key).single();
-  if (existing.error) throw new Error(`Leer trabajo existente: ${existing.error.message}`);
+  if (existing.error) throw new Error(`Read existing job: ${existing.error.message}`);
   return existing.data as JobRow;
 }
 
@@ -49,7 +49,7 @@ export async function retryJob(worker: SupabaseClient, jobId: string) {
     .in('status', ['failed', 'cancelled'])
     .select('*')
     .maybeSingle();
-  if (res.error) throw new Error(`Reintentar: ${res.error.message}`);
+  if (res.error) throw new Error(`Retry: ${res.error.message}`);
   return res.data as JobRow | null;
 }
 
@@ -83,7 +83,7 @@ export async function runJobs(worker: SupabaseClient, opts: { kinds?: JobKind[];
   while (processed.length < maxJobs) {
     if (Date.now() > deadline) return { processed, stoppedBecause: 'deadline' };
     const claim = await worker.rpc('claim_job', { p_kinds: kinds, p_worker: workerId, p_runner: env.runner });
-    if (claim.error) throw new Error(`Tomar trabajo: ${claim.error.message}`);
+    if (claim.error) throw new Error(`Claim job: ${claim.error.message}`);
     const job = (claim.data as JobRow[] | null)?.[0];
     if (!job) return { processed, stoppedBecause: 'empty' };
     const started = Date.now();

@@ -13,17 +13,17 @@ const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SU
 const BASE = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
 async function recordAndPlay(page: Page, label: string, savedCount: number) {
-  await page.getByRole('button', { name: 'Compartir pestaña y grabar' }).click();
-  await expect(page.getByText('Grabando la pestaña del juego.')).toBeVisible({ timeout: 15_000 });
-  const frame = page.frameLocator('iframe[title^="Juego"]').last();
+  await page.getByRole('button', { name: 'Share tab and record' }).click();
+  await expect(page.getByText('Recording the game tab.')).toBeVisible({ timeout: 15_000 });
+  const frame = page.frameLocator('iframe[title^="Game"]').last();
   await frame.locator('canvas').click();
   await page.keyboard.down('ArrowRight');
   await page.waitForTimeout(1500);
   await page.keyboard.up('ArrowRight');
   await page.keyboard.press('Space');
   await page.waitForTimeout(1200);
-  await page.getByRole('button', { name: 'Detener y guardar' }).click();
-  await expect(page.getByText('Grabación guardada.')).toHaveCount(savedCount, { timeout: 60_000 });
+  await page.getByRole('button', { name: 'Stop and save' }).click();
+  await expect(page.getByText('Recording saved.')).toHaveCount(savedCount, { timeout: 60_000 });
   void label;
 }
 
@@ -36,8 +36,8 @@ test('comparison loop: variant passes checks, blind A/B, results', async ({ brow
   const { runJobs } = await import('../../lib/jobs.ts');
 
   const worker = await workerClient();
-  const email = `comparacion-${Date.now()}@funlabs.test`;
-  const password = 'ensayo-tecnico-largo-123';
+  const email = `comparison-${Date.now()}@funlabs.test`;
+  const password = 'long-technical-rehearsal-123';
   const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   expect(created.error).toBeNull();
   const ownerId = created.data.user!.id;
@@ -48,7 +48,7 @@ test('comparison loop: variant passes checks, blind A/B, results', async ({ brow
   try {
     const { product, versionA } = await ensureGravityRoomProduct(userClient, worker, ownerId);
     productId = product.id;
-    const study = await createStudyDraft(userClient, worker, ownerId, { ...demoStudyInput(), title: 'Ensayo técnico del circuito A/B', participants_target: 1, budget_cap_cents: 3000 }, { isRehearsal: true });
+    const study = await createStudyDraft(userClient, worker, ownerId, { ...demoStudyInput(), title: 'Technical rehearsal of the A/B circuit', participants_target: 1, budget_cap_cents: 3000 }, { isRehearsal: true });
     studyId = study.id;
     await publishStudy(worker, studyId, { via: 'ui' });
     const [invite] = await createInvitations(userClient, ownerId, studyId, 1);
@@ -58,21 +58,21 @@ test('comparison loop: variant passes checks, blind A/B, results', async ({ brow
     const tctx = await browser.newContext({ permissions: ['microphone'] });
     const tp = await tctx.newPage();
     await tp.goto(link);
-    await tp.getByRole('checkbox', { name: /Participar y grabar/ }).check();
-    await tp.getByRole('button', { name: 'Aceptar y continuar' }).click();
-    await expect(tp.getByRole('heading', { name: 'Jugá y contanos' })).toBeVisible();
+    await tp.getByRole('checkbox', { name: /Take part and record/ }).check();
+    await tp.getByRole('button', { name: 'Accept and continue' }).click();
+    await expect(tp.getByRole('heading', { name: 'Play and tell us' })).toBeVisible();
     await recordAndPlay(tp, 'A', 1);
-    for (const q of ['¿Qué disfrutaste?', /¿Dónde no supiste cómo seguir/, '¿Qué cambiarías?']) await tp.getByLabel(q).fill('[prueba técnica] respuesta de ensayo');
-    await tp.getByRole('button', { name: 'Enviar entrega' }).click();
-    await expect(tp.getByRole('heading', { name: 'Gracias por participar' })).toBeVisible();
+    for (const q of ['What did you enjoy?', /Where did you not know how to continue/, 'What would you change?']) await tp.getByLabel(q).fill('[technical rehearsal] rehearsal answer');
+    await tp.getByRole('button', { name: 'Submit playtest' }).click();
+    await expect(tp.getByRole('heading', { name: 'Thanks for taking part' })).toBeVisible();
 
     // ---- the creator's agent changes only the presentation; fixed checks decide
     const res = await materializeIntervention(worker, {
       studyId,
       baseVersionId: versionA.id,
-      actor: 'Ensayo técnico',
+      actor: 'Technical rehearsal',
       objective: 'clarity',
-      proposal: { summary: 'El LED apagado se ve naranja.', rationale: 'Ensayo técnico del circuito.', evidence_ids: [], preserve: 'Niveles y física.', edits: [{ find: 'ctx.fillStyle = on ? palette.ledOn : palette.ledOff;', replace: "ctx.fillStyle = on ? palette.ledOn : '#ffb347';" }] },
+      proposal: { summary: 'The unlit LED looks orange.', rationale: 'Technical rehearsal of the circuit.', evidence_ids: [], preserve: 'Levels and physics.', edits: [{ find: 'ctx.fillStyle = on ? palette.ledOn : palette.ledOff;', replace: "ctx.fillStyle = on ? palette.ledOn : '#ffb347';" }] },
     });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
@@ -89,31 +89,31 @@ test('comparison loop: variant passes checks, blind A/B, results', async ({ brow
 
     // ---- blind comparison: neutral names, order set by the participant's seed
     await tp.reload();
-    await expect(tp.getByRole('heading', { name: 'Compará dos versiones' })).toBeVisible();
-    const first = tp.getByRole('heading', { level: 2 }).filter({ hasText: /Versión (Ámbar|Celeste)/ }).first();
+    await expect(tp.getByRole('heading', { name: 'Compare two versions' })).toBeVisible();
+    const first = tp.getByRole('heading', { level: 2 }).filter({ hasText: /(Amber|Sky) version/ }).first();
     await expect(first).toBeVisible();
-    expect(await tp.content()).not.toMatch(/versión [AB]\b|naranja|ffb347/i);
+    expect(await tp.content()).not.toMatch(/version [AB]\b|orange|ffb347/i);
     await recordAndPlay(tp, 'first', 1);
-    await expect(tp.getByRole('button', { name: 'Compartir pestaña y grabar' })).toBeVisible();
+    await expect(tp.getByRole('button', { name: 'Share tab and record' })).toBeVisible();
     await recordAndPlay(tp, 'second', 2);
-    await tp.getByRole('radio', { name: 'Sin preferencia' }).check();
-    await tp.getByLabel('¿Por qué?').fill('[prueba técnica] no noté diferencias');
-    await tp.getByRole('button', { name: 'Enviar comparación' }).click();
-    await expect(tp.getByRole('heading', { name: 'Gracias por participar' })).toBeVisible();
+    await tp.getByRole('radio', { name: 'No preference' }).check();
+    await tp.getByLabel('Why?').fill('[technical rehearsal] I noticed no differences');
+    await tp.getByRole('button', { name: 'Submit comparison' }).click();
+    await expect(tp.getByRole('heading', { name: 'Thanks for taking part' })).toBeVisible();
 
     // ---- the creator sees honest results after a reload
     const cctx = await browser.newContext();
     const cp = await cctx.newPage();
-    await cp.goto(`${BASE}/entrar`);
-    await cp.getByLabel('Correo').fill(email);
-    await cp.getByLabel('Contraseña', { exact: true }).fill(password);
-    await cp.getByRole('button', { name: 'Entrar' }).click();
+    await cp.goto(`${BASE}/sign-in`);
+    await cp.getByLabel('Email').fill(email);
+    await cp.getByLabel('Password', { exact: true }).fill(password);
+    await cp.getByRole('button', { name: 'Sign in' }).click();
     await expect(cp).toHaveURL(/\/lab$/);
-    await cp.goto(`${BASE}/lab/estudios/${studyId}/comparacion`);
-    await expect(cp.getByText(/Con una muestra de 1 persona/)).toBeVisible();
-    await expect(cp.getByText('Sin preferencia').first()).toBeVisible();
-    await expect(cp.getByText(/Muestra de 1 persona: describe lo que pasó en esta prueba/)).toBeVisible();
-    await expect(cp.getByText('[prueba técnica] no noté diferencias')).toBeVisible();
+    await cp.goto(`${BASE}/lab/studies/${studyId}/comparison`);
+    await expect(cp.getByText(/With a sample of 1 person/)).toBeVisible();
+    await expect(cp.getByText('No preference').first()).toBeVisible();
+    await expect(cp.getByText(/Sample of 1 person: it describes what happened in this test/)).toBeVisible();
+    await expect(cp.getByText('[technical rehearsal] I noticed no differences')).toBeVisible();
 
     const cmp = await worker.from('comparisons').select('choice, first_label, second_label, preferred_version_id, prior_exposure').eq('study_id', studyId);
     expect(cmp.data).toHaveLength(1);

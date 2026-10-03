@@ -12,11 +12,11 @@ import { runHeadlessSuite, suitePassed, type SuiteDefinition } from './suite.ts'
 export async function runChecksJob(worker: SupabaseClient, job: JobRow): Promise<Record<string, unknown>> {
   const input = job.input as { version_id: string; baseline_version_id: string | null; suite_id: string; intervention_id?: string };
   const suite = await worker.from('check_suites').select('id, definition, sha256').eq('id', input.suite_id).single();
-  if (suite.error) throw new Error(`Comprobaciones no encontradas: ${suite.error.message}`);
+  if (suite.error) throw new Error(`Checks not found: ${suite.error.message}`);
   const candidate = await versionHtml(worker, input.version_id);
-  if (!candidate) throw new Error('No se encontró el archivo de la versión');
+  if (!candidate) throw new Error('The version file was not found');
   const baseline = input.baseline_version_id ? await versionHtml(worker, input.baseline_version_id) : undefined;
-  if (input.baseline_version_id && !baseline) throw new Error('No se encontró la versión base');
+  if (input.baseline_version_id && !baseline) throw new Error('The baseline version was not found');
 
   const results = runHeadlessSuite(suite.data.definition as SuiteDefinition, candidate, baseline ?? undefined);
   const runner = `node-vm (${env.runner})`;
@@ -34,7 +34,7 @@ export async function runChecksJob(worker: SupabaseClient, job: JobRow): Promise
     duration_ms: r.durationMs,
   }));
   const ins = await worker.from('checks').insert(rows);
-  if (ins.error) throw new Error(`Guardar comprobaciones: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Save checks: ${ins.error.message}`);
 
   const passed = suitePassed(results);
   const version = await worker.from('versions').select('id, status').eq('id', input.version_id).single();

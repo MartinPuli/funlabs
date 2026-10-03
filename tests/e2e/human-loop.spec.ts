@@ -13,15 +13,15 @@ const env = loadEnvLocal();
 const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL!, env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false, autoRefreshToken: false } });
 
 async function signIn(page: Page, email: string, password: string) {
-  await page.goto('/entrar');
-  await page.getByLabel('Correo').fill(email);
-  await page.getByLabel('Contraseña', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Entrar' }).click();
+  await page.goto('/sign-in');
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password', { exact: true }).fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/lab$/);
 }
 
 async function playABit(page: Page) {
-  const frame = page.frameLocator('iframe[title^="Juego"]');
+  const frame = page.frameLocator('iframe[title^="Game"]');
   await frame.locator('canvas').click();
   await page.waitForTimeout(500);
   await page.keyboard.down('ArrowRight');
@@ -37,8 +37,8 @@ async function playABit(page: Page) {
 }
 
 test('human loop: publish, invite, record, deliver, review', async ({ browser }) => {
-  const email = `creador-${Date.now()}@funlabs.test`;
-  const password = 'ensayo-tecnico-largo-123';
+  const email = `creator-${Date.now()}@funlabs.test`;
+  const password = 'long-technical-rehearsal-123';
   const { data: user, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
   expect(error).toBeNull();
   let studyId = '';
@@ -47,22 +47,22 @@ test('human loop: publish, invite, record, deliver, review', async ({ browser })
     const page = await creator.newPage();
     await signIn(page, email, password);
 
-    await page.getByRole('button', { name: 'Estudio de ejemplo' }).click();
-    await expect(page).toHaveURL(/\/lab\/estudios\/[0-9a-f-]{36}$/);
+    await page.getByRole('button', { name: 'Example study' }).click();
+    await expect(page).toHaveURL(/\/lab\/studies\/[0-9a-f-]{36}$/);
     studyId = page.url().split('/').pop()!;
     const flag = await admin.from('studies').update({ is_rehearsal: true }).eq('id', studyId);
     expect(flag.error).toBeNull();
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Publicar el encargo' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Publish the request' })).toBeVisible();
 
     page.once('dialog', (d) => d.accept());
-    await page.getByRole('button', { name: 'Publicar estudio' }).click();
-    await expect(page.getByText('Estudio publicado. Las comprobaciones quedaron fijadas.')).toBeVisible();
+    await page.getByRole('button', { name: 'Publish study' }).click();
+    await expect(page.getByText('Study published. The checks are now fixed.')).toBeVisible();
     await page.reload();
-    await expect(page.getByText('Invitar personas')).toBeVisible();
+    await expect(page.getByText('Invite people')).toBeVisible();
 
-    await page.getByLabel('Cantidad').fill('2');
-    await page.getByRole('button', { name: 'Crear enlaces' }).click();
+    await page.getByLabel('Count').fill('2');
+    await page.getByRole('button', { name: 'Create links' }).click();
     const link = (await page.locator('code.token-reveal').first().textContent())!.trim();
     expect(link).toMatch(/\/t\/flt_/);
 
@@ -70,40 +70,40 @@ test('human loop: publish, invite, record, deliver, review', async ({ browser })
     const testerCtx = await browser.newContext({ permissions: ['microphone'] });
     const tp = await testerCtx.newPage();
     await tp.goto(link);
-    await expect(tp.getByText('Ensayo técnico: estos datos no cuentan como estudio real')).toBeVisible();
-    await tp.getByRole('checkbox', { name: /Participar y grabar/ }).check();
-    await tp.getByRole('checkbox', { name: /Aportar datos a investigación/ }).check();
-    await tp.getByRole('button', { name: 'Aceptar y continuar' }).click();
-    await expect(tp.getByRole('heading', { name: 'Jugá y contanos' })).toBeVisible();
+    await expect(tp.getByText('Technical rehearsal: this data does not count as a real study')).toBeVisible();
+    await tp.getByRole('checkbox', { name: /Take part and record/ }).check();
+    await tp.getByRole('checkbox', { name: /Contribute data to research/ }).check();
+    await tp.getByRole('button', { name: 'Accept and continue' }).click();
+    await expect(tp.getByRole('heading', { name: 'Play and tell us' })).toBeVisible();
 
-    await tp.getByRole('button', { name: 'Compartir pestaña y grabar' }).click();
-    const recording = await tp.getByText('Grabando la pestaña del juego.').waitFor({ timeout: 10_000 }).then(() => true).catch(() => false);
+    await tp.getByRole('button', { name: 'Share tab and record' }).click();
+    const recording = await tp.getByText('Recording the game tab.').waitFor({ timeout: 10_000 }).then(() => true).catch(() => false);
     if (recording) {
       await playABit(tp);
-      await tp.getByLabel('Anotar un momento').fill('[prueba técnica, no es una persona] no sé qué objeto puedo activar');
-      await tp.getByRole('button', { name: 'Anotar', exact: true }).click();
-      await expect(tp.getByText(/Comentario anotado en/)).toBeVisible();
+      await tp.getByLabel('Note a moment').fill('[technical rehearsal, not a person] I do not know which object I can activate');
+      await tp.getByRole('button', { name: 'Add note', exact: true }).click();
+      await expect(tp.getByText(/Comment noted at/)).toBeVisible();
       await playABit(tp);
-      await tp.getByRole('button', { name: 'Detener y guardar' }).click();
+      await tp.getByRole('button', { name: 'Stop and save' }).click();
     } else {
       // Capture refused in this environment: manual upload path with a recorded bot run.
       const dir = path.resolve('.scratch/botrec');
       const file = fs.existsSync(dir) ? fs.readdirSync(dir).find((f) => f.endsWith('.webm')) : undefined;
-      test.skip(!file, 'Sin captura de pestaña y sin video de respaldo');
+      test.skip(!file, 'No tab capture and no fallback video');
       await tp.locator('input[type=file]').setInputFiles(path.join(dir, file!));
     }
-    await expect(tp.getByText('Grabación guardada.')).toBeVisible({ timeout: 60_000 });
+    await expect(tp.getByText('Recording saved.')).toBeVisible({ timeout: 60_000 });
 
-    await tp.getByLabel('¿Qué disfrutaste?').fill('[prueba técnica] respuesta de ensayo');
-    await tp.getByLabel(/¿Dónde no supiste cómo seguir/).fill('[prueba técnica] respuesta de ensayo');
-    await tp.getByLabel('¿Qué cambiarías?').fill('[prueba técnica] respuesta de ensayo');
-    await tp.getByRole('button', { name: 'Enviar entrega' }).click();
-    await expect(tp.getByRole('heading', { name: 'Gracias por participar' })).toBeVisible();
+    await tp.getByLabel('What did you enjoy?').fill('[technical rehearsal] rehearsal answer');
+    await tp.getByLabel(/Where did you not know how to continue/).fill('[technical rehearsal] rehearsal answer');
+    await tp.getByLabel('What would you change?').fill('[technical rehearsal] rehearsal answer');
+    await tp.getByRole('button', { name: 'Submit playtest' }).click();
+    await expect(tp.getByRole('heading', { name: 'Thanks for taking part' })).toBeVisible();
 
     // --------------------------------------------------------------- creator
     await page.reload();
     await expect(page.getByRole('cell', { name: 'P-1' })).toBeVisible();
-    await expect(page.getByText(/Grabación \d\d:\d\d/)).toBeVisible();
+    await expect(page.getByText(/Recording \d\d:\d\d/)).toBeVisible();
 
     const rec = await admin.from('recordings').select('status, duration_ms, bytes, method').eq('study_id', studyId).single();
     expect(rec.data?.status).toBe('verified');
@@ -111,12 +111,12 @@ test('human loop: publish, invite, record, deliver, review', async ({ browser })
     expect(events.count ?? 0).toBeGreaterThan(3);
 
     // Valid delivery → test-mode payout recorded.
-    await page.getByRole('button', { name: 'Válida' }).click();
-    await expect(page.getByText(/Pago registrado en modo prueba/)).toBeVisible();
+    await page.getByRole('button', { name: 'Valid', exact: true }).click();
+    await expect(page.getByText(/Payout recorded in test mode/)).toBeVisible();
 
-    await page.goto(`/lab/estudios/${studyId}/evidencia`);
+    await page.goto(`/lab/studies/${studyId}/evidence`);
     await expect(page.locator('video')).toBeVisible();
-    await expect(page.getByText('Respuestas finales')).toBeVisible();
+    await expect(page.getByText('Final answers')).toBeVisible();
     console.log(JSON.stringify({ studyId, recording: rec.data, events: events.count, captured: recording }));
   } finally {
     if (process.env.E2E_KEEP !== '1') {

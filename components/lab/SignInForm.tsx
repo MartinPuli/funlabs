@@ -38,15 +38,15 @@ export function SignInForm({ next }: { next: string }) {
           router.refresh();
           return;
         }
-        setNotice('Te enviamos un correo para confirmar la cuenta. Abrí el enlace desde este navegador.');
+        setNotice('We sent you an email to confirm your account. Open the link in this browser.');
         return;
       }
       const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: redirect, shouldCreateUser: true } });
       if (error) throw error;
-      setNotice('Te enviamos un enlace para entrar. Revisá tu correo.');
+      setNotice('We sent you a sign-in link. Check your email.');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'No se pudo entrar';
-      setError(/invalid login/i.test(msg) ? 'Correo o contraseña incorrectos.' : /rate limit/i.test(msg) ? 'Se enviaron demasiados correos. Esperá unos minutos o entrá con contraseña.' : msg);
+      const msg = err instanceof Error ? err.message : 'Could not sign in';
+      setError(/invalid login/i.test(msg) ? 'Incorrect email or password.' : /rate limit/i.test(msg) ? 'Too many emails were sent. Wait a few minutes or sign in with a password.' : msg);
     } finally {
       setBusy(false);
     }
@@ -54,12 +54,12 @@ export function SignInForm({ next }: { next: string }) {
 
   return (
     <form className="panel stack" onSubmit={submit} noValidate>
-      <div className="tabs-list" role="tablist" aria-label="Forma de entrar">
+      <div className="tabs-list" role="tablist" aria-label="Sign-in method">
         {(
           [
-            ['password', 'Contraseña'],
-            ['signup', 'Crear cuenta'],
-            ['magic', 'Enlace por correo'],
+            ['password', 'Password'],
+            ['signup', 'Create account'],
+            ['magic', 'Email link'],
           ] as const
         ).map(([m, label]) => (
           <button key={m} type="button" role="tab" aria-selected={mode === m} data-state={mode === m ? 'active' : 'inactive'} onClick={() => setMode(m)}>
@@ -68,12 +68,12 @@ export function SignInForm({ next }: { next: string }) {
         ))}
       </div>
       <div className="field">
-        <label htmlFor="email">Correo</label>
+        <label htmlFor="email">Email</label>
         <input id="email" className="input" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
       </div>
       {mode !== 'magic' && (
         <div className="field">
-          <label htmlFor="password">Contraseña</label>
+          <label htmlFor="password">Password</label>
           <input
             id="password"
             className="input"
@@ -86,7 +86,7 @@ export function SignInForm({ next }: { next: string }) {
             aria-describedby="pw-help"
           />
           <span id="pw-help" className="field-help">
-            {mode === 'signup' ? 'Mínimo 8 caracteres.' : '¿Sin contraseña? Usá el enlace por correo.'}
+            {mode === 'signup' ? 'At least 8 characters.' : 'No password? Use the email link.'}
           </span>
         </div>
       )}
@@ -98,7 +98,7 @@ export function SignInForm({ next }: { next: string }) {
       {notice && <p className="callout callout-success" role="status">{notice}</p>}
       <div>
         <button className="btn btn-primary" type="submit" disabled={busy || !email || (mode !== 'magic' && password.length < 8)}>
-          {busy ? 'Un momento…' : mode === 'password' ? 'Entrar' : mode === 'signup' ? 'Crear cuenta' : 'Enviar enlace'}
+          {busy ? 'One moment…' : mode === 'password' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send link'}
         </button>
       </div>
     </form>

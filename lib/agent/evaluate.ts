@@ -33,7 +33,7 @@ export function evaluateAnalysis(
   const partial = findings.filter((f) => f.structural_status === 'partial').length;
   const unsupported = findings.filter((f) => f.structural_status === 'unsupported').length;
   const invented = findings.reduce((acc, f) => acc + f.inventedReferences, 0);
-  const intervalsOk = findings.filter((f) => !f.notes.some((x) => /intervalo|termina después|empieza después/i.test(x)) && f.structural_status !== 'unsupported').length;
+  const intervalsOk = findings.filter((f) => !f.notes.some((x) => /interval/i.test(x)) && f.structural_status !== 'unsupported').length;
   const cited = findings.reduce((acc, f) => acc + f.sources.filter((s) => s.kind !== 'recording').length, 0);
   const citedOk = findings.reduce((acc, f) => acc + f.sources.filter((s) => s.kind !== 'recording' && s.verified).length, 0);
   const covered = new Set(findings.map((f) => f.session_id)).size;
@@ -48,15 +48,15 @@ export function evaluateAnalysis(
     separation_ratio: ratio(separated, n),
   };
   const reasons: string[] = [];
-  if (n === 0) reasons.push('La entrega no incluye hallazgos.');
-  if (invented > 0) reasons.push(`${invented} referencia(s) a comentarios o eventos que no existen en esa sesión: no se paga por inventar evidencia.`);
-  if (n > 0 && unsupported / n > 0.34) reasons.push('Más de un tercio de los hallazgos no tiene intervalo o fuente verificable.');
+  if (n === 0) reasons.push('The submission includes no findings.');
+  if (invented > 0) reasons.push(`${invented} reference(s) to comments or events that do not exist in that session: invented evidence is not paid.`);
+  if (n > 0 && unsupported / n > 0.34) reasons.push('More than a third of the findings have no verifiable interval or source.');
   const valid = reasons.length === 0;
   return {
     criteria,
     counts: { findings: n, verified, partial, unsupported, invented_references: invented, sessions_available: sessionsAvailable, sessions_covered: covered },
     valid,
     reasons,
-    note: 'Evaluación estructural automática: comprueba que las fuentes existan y los intervalos sean correctos. No juzga si la interpretación es acertada; una revisión humana puede confirmar o rechazar cada hallazgo.',
+    note: 'Automatic structural evaluation: it checks that sources exist and intervals are correct. It does not judge whether the interpretation is right; a human review can confirm or reject each finding.',
   };
 }

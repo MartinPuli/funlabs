@@ -1,7 +1,7 @@
 -- Review time (an impact criterion), public demo products and instant job kick.
 
 -- ---------------------------------------------------------------------------
--- Products that anyone can play (version list at /jugar). Off by default.
+-- Products that anyone can play (version list at /play). Off by default.
 -- ---------------------------------------------------------------------------
 alter table public.products add column if not exists is_public_demo boolean not null default false;
 
@@ -35,7 +35,7 @@ declare
   v_add integer := least(greatest(coalesce(p_seconds, 0), 0), 120);
 begin
   if (select auth.uid()) is null or not private.can_work(p_study) then
-    raise exception 'Sin acceso al estudio' using errcode = '42501';
+    raise exception 'No access to the study' using errcode = '42501';
   end if;
   insert into public.review_time (study_id, user_id, seconds)
   values (p_study, (select auth.uid()), v_add)

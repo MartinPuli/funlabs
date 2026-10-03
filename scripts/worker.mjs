@@ -22,7 +22,7 @@ process.on('SIGINT', () => (stop = true));
 process.on('SIGTERM', () => (stop = true));
 do {
   const report = await runJobs(worker, { maxJobs: 10, deadlineMs: 240_000 });
-  for (const p of report.processed) console.log(`[worker] ${p.kind} ${p.ok ? 'ok' : 'FALLÓ: ' + p.error} (${p.ms} ms)`);
+  for (const p of report.processed) console.log(`[worker] ${p.kind} ${p.ok ? 'ok' : 'FAILED: ' + p.error} (${p.ms} ms)`);
   if (once && report.stoppedBecause === 'empty') break;
   if (report.stoppedBecause === 'empty') await new Promise((r) => setTimeout(r, 5000));
 } while (!stop);

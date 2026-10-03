@@ -34,17 +34,17 @@ export type AgentActor = { credential: AgentCredential };
  * Only its hash is stored. It is never an administrative key.
  */
 export async function authenticateAgent(worker: SupabaseClient, token: string | null): Promise<AgentActor> {
-  if (!token) throw new AgentError('missing_token', 'Falta la credencial de trabajo (Authorization: Bearer fla_...)', 401);
-  if (!looksLikeToken(token, 'fla')) throw new AgentError('invalid_token', 'La credencial no tiene el formato esperado', 401);
+  if (!token) throw new AgentError('missing_token', 'The work credential is missing (Authorization: Bearer fla_...)', 401);
+  if (!looksLikeToken(token, 'fla')) throw new AgentError('invalid_token', 'The credential does not have the expected format', 401);
   const { data, error } = await worker
     .from('agent_credentials')
     .select('id, product_id, study_id, bounty_id, kind, label, capabilities, created_by, expires_at, revoked_at, labels_seen_at')
     .eq('token_hash', hashToken(token))
     .maybeSingle();
-  if (error) throw new Error(`Credencial: ${error.message}`);
-  if (!data) throw new AgentError('invalid_token', 'Credencial desconocida', 401);
-  if (data.revoked_at) throw new AgentError('revoked', 'La credencial fue revocada por su titular', 401);
-  if (new Date(data.expires_at).getTime() < Date.now()) throw new AgentError('expired', 'La credencial venció', 401);
+  if (error) throw new Error(`Credential: ${error.message}`);
+  if (!data) throw new AgentError('invalid_token', 'Unknown credential', 401);
+  if (data.revoked_at) throw new AgentError('revoked', 'The credential was revoked by its owner', 401);
+  if (new Date(data.expires_at).getTime() < Date.now()) throw new AgentError('expired', 'The credential expired', 401);
   void worker.from('agent_credentials').update({ last_used_at: new Date().toISOString() }).eq('id', data.id).then(() => undefined);
   const { revoked_at: _revoked, ...credential } = data;
   void _revoked;
@@ -53,6 +53,6 @@ export async function authenticateAgent(worker: SupabaseClient, token: string | 
 
 export function requireCapability(actor: AgentActor, capability: Capability) {
   if (!actor.credential.capabilities.includes(capability)) {
-    throw new AgentError('forbidden', `Esta credencial no tiene la capacidad ${capability}`, 403, { required: capability, granted: actor.credential.capabilities });
+    throw new AgentError('forbidden', `This credential does not have the ${capability} capability`, 403, { required: capability, granted: actor.credential.capabilities });
   }
 }

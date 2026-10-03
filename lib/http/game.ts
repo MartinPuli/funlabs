@@ -30,6 +30,6 @@ export function gameResponse(html: string, opts: { immutable: boolean; sha256?: 
   });
 }
 
-export function notFound(message = 'No encontrado') {
+export function notFound(message = 'Not found') {
   return new Response(message, { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 }

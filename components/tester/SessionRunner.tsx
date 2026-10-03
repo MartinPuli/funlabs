@@ -31,7 +31,7 @@ const SURFACE_METHOD: Record<string, string> = { browser: 'tab_capture', window:
 export function SessionRunner({ token, session, maxMinutes, onFinished }: { token: string; session: Session; maxMinutes: number; onFinished: (r: SessionResult) => void }) {
   const [mode, setMode] = useState<Mode>('choose');
   const [mic, setMic] = useState(false);
-  const [status, setStatus] = useState('Listo para empezar.');
+  const [status, setStatus] = useState('Ready to start.');
   const [error, setError] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -88,7 +88,7 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
     const t = window.setInterval(() => {
       const v = now() ?? 0;
       setElapsed(v);
-      if (mode === 'recording' && v > maxMinutes * 60_000) void stopRecording('Se alcanzó el tiempo máximo de la sesión.');
+      if (mode === 'recording' && v > maxMinutes * 60_000) void stopRecording('The maximum session time was reached.');
     }, 500);
     return () => window.clearInterval(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -104,12 +104,12 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
   async function startRecording() {
     setError(null);
     if (!navigator.mediaDevices?.getDisplayMedia || typeof MediaRecorder === 'undefined') {
-      setError('Este navegador no permite grabar la pestaña. Podés subir una grabación propia o seguir con la alternativa escrita.');
+      setError('This browser cannot record the tab. You can upload your own recording or continue with the written alternative.');
       setMode('failed');
       return;
     }
     setMode('starting');
-    setStatus('Elegí "Esta pestaña" en el diálogo del navegador para compartir solo el juego.');
+    setStatus('Choose "This tab" in the browser dialog to share only the game.');
     try {
       const display = await navigator.mediaDevices.getDisplayMedia({
         video: { frameRate: { ideal: 30, max: 30 }, width: { ideal: 1280 }, height: { ideal: 720 } },
@@ -143,7 +143,7 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
           meta.current.hasAudio = true;
         } catch {
           meta.current.hasAudio = false;
-          setStatus('No se pudo usar el micrófono. Seguimos sin voz: podés escribir comentarios.');
+          setStatus('Could not use the microphone. We continue without voice: you can write comments.');
         }
       }
       const mime = pickMime();
@@ -153,18 +153,18 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
       rec.ondataavailable = (e) => {
         if (e.data && e.data.size) chunks.current.push(e.data);
       };
-      track.addEventListener('ended', () => void stopRecording('Dejaste de compartir la pestaña.'));
+      track.addEventListener('ended', () => void stopRecording('You stopped sharing the tab.'));
       recorder.current = rec;
       methodRef.current = SURFACE_METHOD[surface ?? ''] ?? 'tab_capture';
       rec.start(1000);
       clockStart.current = performance.now();
       clockKind.current = 'recording';
       setMode('recording');
-      setStatus(surface && surface !== 'browser' ? 'Grabando. Compartiste algo distinto de esta pestaña: se graba lo que elegiste.' : 'Grabando la pestaña del juego.');
+      setStatus(surface && surface !== 'browser' ? 'Recording. You shared something other than this tab: what you chose is being recorded.' : 'Recording the game tab.');
       window.setTimeout(focusGame, 50);
     } catch (err) {
       const denied = err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'AbortError');
-      setError(denied ? 'No se compartió la pestaña. Podés intentar de nuevo, subir una grabación propia o seguir con la alternativa escrita.' : `No se pudo iniciar la grabación: ${err instanceof Error ? err.message : String(err)}`);
+      setError(denied ? 'The tab was not shared. You can try again, upload your own recording or continue with the written alternative.' : `Could not start recording: ${err instanceof Error ? err.message : String(err)}`);
       setMode('failed');
     }
   }
@@ -196,7 +196,7 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
     setError(null);
     setProgress(0);
     try {
-      if (blob.size > 50 * 1024 * 1024) throw new Error('La grabación supera 50 MB. Probá una sesión más corta.');
+      if (blob.size > 50 * 1024 * 1024) throw new Error('The recording is over 50 MB. Try a shorter session.');
       const url = await testerCall<{ signedUrl: string }>(token, 'upload-url', { session_id: session.id, mime_type: blob.type || 'video/webm', method: methodRef.current });
       await uploadWithProgress(url.signedUrl, blob, setProgress);
       await testerCall(token, 'confirm-recording', {
@@ -208,10 +208,10 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
         cropped: meta.current.cropped,
       });
       setMode('done');
-      setStatus('Grabación guardada.');
+      setStatus('Recording saved.');
       onFinished({ recorded: true, method: methodRef.current, durationMs: durationRef.current });
     } catch (err) {
-      setError(err instanceof TesterApiError || err instanceof Error ? `El archivo no se pudo subir. ${err.message}` : 'El archivo no se pudo subir.');
+      setError(err instanceof TesterApiError || err instanceof Error ? `The file could not be uploaded. ${err.message}` : 'The file could not be uploaded.');
       setMode('failed');
     }
   }
@@ -220,7 +220,7 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
     clockStart.current = performance.now();
     clockKind.current = 'session';
     setMode('playing');
-    setStatus('Jugando sin grabación. Escribí lo que te pase con el botón "Anotar".');
+    setStatus('Playing without recording. Write down what happens with the "Add note" button.');
     window.setTimeout(focusGame, 50);
   }
 
@@ -255,10 +255,10 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
       const res = await testerCall<{ comment: Comment }>(token, 'moment', { session_id: session.id, t_ms: now(), body });
       setComments((c) => [...c, res.comment]);
       setDraft('');
-      setStatus(`Comentario anotado en ${mmss(res.comment.t_ms)}.`);
+      setStatus(`Comment noted at ${mmss(res.comment.t_ms)}.`);
       window.setTimeout(focusGame, 30);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'No se pudo guardar el comentario.');
+      setError(err instanceof Error ? err.message : 'Could not save the comment.');
     } finally {
       setSavingComment(false);
     }
@@ -271,63 +271,63 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
       <div className="split">
         <h2 id={`s-${session.id}`}>{session.neutral_label}</h2>
         <span className="mono" aria-live="off">
-          {mode === 'recording' ? `Grabando ${mmss(elapsed)}` : mode === 'playing' ? `Jugando ${mmss(elapsed)}` : ''}
+          {mode === 'recording' ? `Recording ${mmss(elapsed)}` : mode === 'playing' ? `Playing ${mmss(elapsed)}` : ''}
         </span>
       </div>
 
-      <div className="record-controls panel panel-tight" role="group" aria-label="Controles de grabación">
+      <div className="record-controls panel panel-tight" role="group" aria-label="Recording controls">
         {mode === 'choose' && (
           <div className="stack">
-            <p>Antes de jugar, elegí cómo registrar la partida. Solo se graba la pestaña del juego; no se usa cámara.</p>
+            <p>Before playing, choose how to record the session. Only the game tab is recorded; no camera is used.</p>
             <label className="choice">
               <input type="checkbox" checked={mic} onChange={(e) => setMic(e.target.checked)} />
               <span>
-                <strong>Grabar también mi voz</strong>
-                <span className="field-help" style={{ display: 'block' }}>Opcional. Sirve para pensar en voz alta mientras jugás.</span>
+                <strong>Also record my voice</strong>
+                <span className="field-help" style={{ display: 'block' }}>Optional. Useful for thinking aloud while you play.</span>
               </span>
             </label>
             <div className="cluster">
-              <button type="button" className="btn btn-primary" onClick={startRecording}>Compartir pestaña y grabar</button>
-              <button type="button" className="btn" onClick={playWithoutRecording}>Jugar sin grabar</button>
+              <button type="button" className="btn btn-primary" onClick={startRecording}>Share tab and record</button>
+              <button type="button" className="btn" onClick={playWithoutRecording}>Play without recording</button>
             </div>
           </div>
         )}
-        {mode === 'starting' && <p>Esperando permiso del navegador…</p>}
+        {mode === 'starting' && <p>Waiting for browser permission…</p>}
         {mode === 'recording' && (
           <div className="cluster">
-            <span className="tag tag-error">Grabando</span>
-            <button type="button" className="btn" onClick={() => void stopRecording()}>Detener y guardar</button>
+            <span className="tag tag-error">Recording</span>
+            <button type="button" className="btn" onClick={() => void stopRecording()}>Stop and save</button>
           </div>
         )}
         {mode === 'playing' && (
           <div className="cluster">
-            <span className="tag">Sin grabación</span>
-            <button type="button" className="btn" onClick={() => void finishWithoutRecording()}>Terminé de jugar</button>
+            <span className="tag">Not recording</span>
+            <button type="button" className="btn" onClick={() => void finishWithoutRecording()}>I finished playing</button>
           </div>
         )}
         {mode === 'uploading' && (
           <div className="stack">
-            <label htmlFor={`p-${session.id}`}>Subiendo la grabación</label>
+            <label htmlFor={`p-${session.id}`}>Uploading the recording</label>
             <progress id={`p-${session.id}`} max={1} value={progress} style={{ width: '100%', height: 12 }} />
           </div>
         )}
-        {mode === 'done' && <p className="tag tag-success">Sesión guardada</p>}
+        {mode === 'done' && <p className="tag tag-success">Session saved</p>}
         {mode === 'failed' && (
           <div className="stack">
             <p className="field-error" role="alert">{error}</p>
             <div className="cluster">
               {pendingBlob.current ? (
-                <button type="button" className="btn btn-primary" onClick={() => void upload()}>Reintentar subida</button>
+                <button type="button" className="btn btn-primary" onClick={() => void upload()}>Retry upload</button>
               ) : (
-                <button type="button" className="btn btn-primary" onClick={startRecording}>Intentar grabar de nuevo</button>
+                <button type="button" className="btn btn-primary" onClick={startRecording}>Try recording again</button>
               )}
               <label className="btn">
-                Subir una grabación propia
+                Upload your own recording
                 <input type="file" accept="video/webm,video/mp4,video/quicktime" className="visually-hidden" onChange={(e) => e.target.files?.[0] && void manualUpload(e.target.files[0])} />
               </label>
-              {!pendingBlob.current && <button type="button" className="btn" onClick={playWithoutRecording}>Jugar sin grabar</button>}
+              {!pendingBlob.current && <button type="button" className="btn" onClick={playWithoutRecording}>Play without recording</button>}
             </div>
-            <p className="field-help">Si subís una grabación propia, que sea de esta misma partida. Queda registrado que la subiste manualmente.</p>
+            <p className="field-help">If you upload your own recording, it should be of this same session. It is recorded that you uploaded it manually.</p>
           </div>
         )}
         <p className="field-help live-region" aria-live="polite">{status}</p>
@@ -337,14 +337,14 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
         <iframe
           ref={frameRef}
           src={session.play_url}
-          title={`Juego: ${session.neutral_label}`}
+          title={`Game: ${session.neutral_label}`}
           sandbox="allow-scripts"
           className="game-frame"
           tabIndex={active ? 0 : -1}
         />
         {!active && (
           <div className="game-frame-cover">
-            <p>{mode === 'done' ? 'Sesión terminada.' : 'El juego se habilita cuando elegís cómo registrar la partida.'}</p>
+            <p>{mode === 'done' ? 'Session finished.' : 'The game unlocks when you choose how to record the session.'}</p>
           </div>
         )}
       </div>
@@ -352,23 +352,23 @@ export function SessionRunner({ token, session, maxMinutes, onFinished }: { toke
       {active && (
         <div className="stack panel panel-tight">
           <div className="field">
-            <label htmlFor={`m-${session.id}`}>Anotar un momento</label>
+            <label htmlFor={`m-${session.id}`}>Note a moment</label>
             <textarea
               id={`m-${session.id}`}
               className="textarea"
               rows={2}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder="Por ejemplo: no sé qué puedo tocar"
+              placeholder="For example: I do not know what I can touch"
               aria-describedby={`mh-${session.id}`}
             />
-            <span id={`mh-${session.id}`} className="field-help">Se guarda con el tiempo de la partida. Después volvés al juego.</span>
+            <span id={`mh-${session.id}`} className="field-help">It is saved with the game time. Then you go back to the game.</span>
           </div>
           <div className="cluster">
             <button type="button" className="btn" onClick={() => void saveComment()} disabled={savingComment || !draft.trim()}>
-              {savingComment ? 'Guardando…' : 'Anotar'}
+              {savingComment ? 'Saving…' : 'Add note'}
             </button>
-            <button type="button" className="btn btn-ghost" onClick={focusGame}>Volver al juego</button>
+            <button type="button" className="btn btn-ghost" onClick={focusGame}>Back to the game</button>
           </div>
           {comments.length > 0 && (
             <ul className="stack" style={{ ['--gap' as string]: 'var(--s-2)', listStyle: 'none', margin: 0, padding: 0 }}>

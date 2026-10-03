@@ -34,17 +34,17 @@ export async function settleDelivery(worker: SupabaseClient, delivery: { id: str
   const amount = reservation?.amount_cents ?? 0;
   if (reservation) {
     await worker.from('budget_entries').upsert(
-      { study_id: delivery.study_id, kind: 'release', amount_cents: amount, assignment_id: delivery.assignment_id, delivery_id: delivery.id, idempotency_key: `release:${delivery.assignment_id}:${delivery.phase}`, note: valid ? 'Reserva aplicada al pago' : `Reserva liberada: ${note}` },
+      { study_id: delivery.study_id, kind: 'release', amount_cents: amount, assignment_id: delivery.assignment_id, delivery_id: delivery.id, idempotency_key: `release:${delivery.assignment_id}:${delivery.phase}`, note: valid ? 'Reservation applied to payout' : `Reservation released: ${note}` },
       { onConflict: 'idempotency_key', ignoreDuplicates: true },
     );
   }
   if (valid && amount > 0) {
     await worker.from('budget_entries').upsert(
-      { study_id: delivery.study_id, kind: 'payout', amount_cents: amount, assignment_id: delivery.assignment_id, delivery_id: delivery.id, idempotency_key: `payout:${delivery.id}`, note: 'Pago por entrega válida (modo prueba)' },
+      { study_id: delivery.study_id, kind: 'payout', amount_cents: amount, assignment_id: delivery.assignment_id, delivery_id: delivery.id, idempotency_key: `payout:${delivery.id}`, note: 'Payout for a valid submission (test mode)' },
       { onConflict: 'idempotency_key', ignoreDuplicates: true },
     );
     await worker.from('payment_events').upsert(
-      { study_id: delivery.study_id, provider: 'internal', event_type: 'test_payout_recorded', external_id: `payout:${delivery.id}`, signature_verified: true, payload: { delivery_id: delivery.id, amount_cents: amount, note: 'Registro interno en modo prueba. No es una transferencia.' } },
+      { study_id: delivery.study_id, provider: 'internal', event_type: 'test_payout_recorded', external_id: `payout:${delivery.id}`, signature_verified: true, payload: { delivery_id: delivery.id, amount_cents: amount, note: 'Internal test-mode record. Not a transfer.' } },
       { onConflict: 'external_id', ignoreDuplicates: true },
     );
   }
@@ -66,5 +66,5 @@ export async function releaseAssignment(worker: SupabaseClient, studyId: string,
 
 export function money(cents: number | null | undefined, currency = 'usd'): string {
   const v = (cents ?? 0) / 100;
-  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: currency.toUpperCase(), minimumFractionDigits: 2 }).format(v);
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency.toUpperCase(), minimumFractionDigits: 2 }).format(v);
 }

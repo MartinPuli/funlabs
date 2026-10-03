@@ -61,21 +61,21 @@ export function validateFinding(f: ProposedFinding, m: SessionMaterial): Validat
   let start = Math.round(Number(f.start_ms));
   let end = Math.round(Number(f.end_ms));
   let intervalOk = Number.isFinite(start) && Number.isFinite(end) && start >= 0 && end > start;
-  if (!intervalOk) notes.push('Intervalo inválido.');
+  if (!intervalOk) notes.push('Invalid interval.');
   if (intervalOk && end - start > MAX_INTERVAL_MS) {
-    notes.push('Intervalo demasiado largo para señalar un momento.');
+    notes.push('Interval too long to point at a moment.');
     intervalOk = false;
   }
   if (intervalOk && m.durationMs !== null) {
     if (start >= m.durationMs) {
-      notes.push('El intervalo empieza después del final de la grabación.');
+      notes.push('The interval starts after the end of the recording.');
       intervalOk = false;
     } else if (end > m.durationMs) {
       if (end - m.durationMs <= END_TOLERANCE_MS) {
-        notes.push('El final del intervalo se ajustó a la duración de la grabación.');
+        notes.push('The end of the interval was adjusted to the recording duration.');
         end = m.durationMs;
       } else {
-        notes.push('El intervalo termina después del final de la grabación.');
+        notes.push('The interval ends after the end of the recording.');
         intervalOk = false;
       }
     }
@@ -86,7 +86,7 @@ export function validateFinding(f: ProposedFinding, m: SessionMaterial): Validat
   }
 
   const sources: ValidatedSource[] = [];
-  if (m.recordingId) sources.push({ kind: 'recording', source_id: m.recordingId, t_ms: start, verified: intervalOk, note: intervalOk ? null : 'Intervalo fuera de la grabación' });
+  if (m.recordingId) sources.push({ kind: 'recording', source_id: m.recordingId, t_ms: start, verified: intervalOk, note: intervalOk ? null : 'Interval outside the recording' });
 
   let eventsVerified = 0;
   let refsFailed = 0;
@@ -97,15 +97,15 @@ export function validateFinding(f: ProposedFinding, m: SessionMaterial): Validat
     const ev = m.events.get(ref);
     if (!ev) {
       refsFailed++;
-      notes.push(`El evento ${ref} no existe en esta sesión.`);
+      notes.push(`Event ${ref} does not exist in this session.`);
       continue;
     }
     const inside = ev.t_ms >= start - EVENT_TOLERANCE_MS && ev.t_ms <= end + EVENT_TOLERANCE_MS;
     if (!inside) {
       refsFailed++;
-      notes.push(`El evento ${ref} (${ev.type}) ocurre fuera del intervalo.`);
+      notes.push(`Event ${ref} (${ev.type}) occurs outside the interval.`);
     } else eventsVerified++;
-    sources.push({ kind: 'game_event', source_id: String(ev.id), t_ms: ev.t_ms, verified: inside, note: inside ? null : 'Fuera del intervalo' });
+    sources.push({ kind: 'game_event', source_id: String(ev.id), t_ms: ev.t_ms, verified: inside, note: inside ? null : 'Outside the interval' });
   }
 
   let feedbackId: string | null = null;
@@ -113,20 +113,20 @@ export function validateFinding(f: ProposedFinding, m: SessionMaterial): Validat
     const fb = m.feedback.get(f.feedback_ref);
     if (!fb) {
       refsFailed++;
-      notes.push(`El comentario ${f.feedback_ref} no existe en esta sesión: no se muestra ninguna cita.`);
+      notes.push(`Comment ${f.feedback_ref} does not exist in this session: no quote is shown.`);
     } else {
       feedbackId = fb.id;
-      sources.push({ kind: 'feedback', source_id: fb.id, t_ms: fb.t_ms, verified: true, note: fb.t_ms === null ? 'Respuesta final (sin tiempo)' : null });
+      sources.push({ kind: 'feedback', source_id: fb.id, t_ms: fb.t_ms, verified: true, note: fb.t_ms === null ? 'Final answer (no timestamp)' : null });
     }
   }
 
-  const observation = clean(f.observation) ?? 'Observación vacía';
+  const observation = clean(f.observation) ?? 'Empty observation';
   let status: ValidatedFinding['structural_status'];
   if (!intervalOk) status = 'unsupported';
   else if (refsFailed === 0 && (eventsVerified > 0 || feedbackId)) status = 'verified';
   else if (eventsVerified > 0 || feedbackId || (m.recordingId && clean(f.visual_basis))) status = 'partial';
   else status = 'unsupported';
-  if (status === 'partial' && eventsVerified === 0 && !feedbackId) notes.push('Respaldado solo por lo que se ve en la grabación.');
+  if (status === 'partial' && eventsVerified === 0 && !feedbackId) notes.push('Supported only by what is visible in the recording.');
 
   return {
     interval_start_ms: start,

@@ -18,40 +18,40 @@ export function CredentialForm({ studyId, bounties }: { studyId: string; bountie
   return (
     <form action={action} className="panel stack" key={kind}>
       <input type="hidden" name="study_id" value={studyId} />
-      <h3>Nueva credencial de trabajo</h3>
+      <h3>New work credential</h3>
       <fieldset className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-        <legend>Quién la usa</legend>
+        <legend>Who uses it</legend>
         <label className="choice">
           <input type="radio" name="kind" value="creator_agent" checked={kind === 'creator_agent'} onChange={() => setKind('creator_agent')} />
-          <span><strong>Agente creador</strong><span className="field-help" style={{ display: 'block' }}>Consulta evidencia, prepara estudios, interviene y ve resultados.</span></span>
+          <span><strong>Creator agent</strong><span className="field-help" style={{ display: 'block' }}>Reads evidence, prepares studies, intervenes and sees results.</span></span>
         </label>
         <label className="choice">
           <input type="radio" name="kind" value="participant_agent" checked={kind === 'participant_agent'} onChange={() => setKind('participant_agent')} />
-          <span><strong>Agente participante</strong><span className="field-help" style={{ display: 'block' }}>Trabaja un bounty: predice una preferencia o analiza evidencia. No ve video ni resultados.</span></span>
+          <span><strong>Participating agent</strong><span className="field-help" style={{ display: 'block' }}>Works a bounty: predicts a preference or analyzes evidence. Does not see video or results.</span></span>
         </label>
       </fieldset>
       <div className="field">
-        <label htmlFor="cred-label">Nombre</label>
-        <input id="cred-label" name="label" className="input" required minLength={2} maxLength={80} placeholder={kind === 'creator_agent' ? 'Claude Code del equipo' : 'Agente analista de la empresa X'} />
+        <label htmlFor="cred-label">Name</label>
+        <input id="cred-label" name="label" className="input" required minLength={2} maxLength={80} placeholder={kind === 'creator_agent' ? 'The team\'s Claude Code' : 'Company X analyst agent'} />
       </div>
       {kind === 'participant_agent' && (
         <div className="field">
           <label htmlFor="cred-bounty">Bounty</label>
           <select id="cred-bounty" name="bounty_id" className="select" required defaultValue="">
-            <option value="" disabled>Elegí un bounty</option>
+            <option value="" disabled>Choose a bounty</option>
             {agentBounties.map((b) => <option key={b.id} value={b.id}>{b.title}</option>)}
           </select>
         </div>
       )}
       {kind === 'creator_agent' && (
         <fieldset className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-          <legend>Alcance</legend>
-          <label className="choice"><input type="radio" name="scope" value="study" defaultChecked /><span>Solo este estudio</span></label>
-          <label className="choice"><input type="radio" name="scope" value="product" /><span>Todo el producto (necesario para crear estudios nuevos)</span></label>
+          <legend>Scope</legend>
+          <label className="choice"><input type="radio" name="scope" value="study" defaultChecked /><span>This study only</span></label>
+          <label className="choice"><input type="radio" name="scope" value="product" /><span>The whole product (needed to create new studies)</span></label>
         </fieldset>
       )}
       <fieldset className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-        <legend>Capacidades</legend>
+        <legend>Capabilities</legend>
         {caps.map((c) => (
           <label key={c} className="choice">
             <input type="checkbox" name="capabilities" value={c} defaultChecked={c !== 'study:publish' && c !== 'export:request'} />
@@ -60,7 +60,7 @@ export function CredentialForm({ studyId, bounties }: { studyId: string; bountie
         ))}
       </fieldset>
       <div className="field" style={{ maxWidth: 220 }}>
-        <label htmlFor="cred-days">Vence en (días)</label>
+        <label htmlFor="cred-days">Expires in (days)</label>
         <input id="cred-days" name="days" type="number" min={1} max={30} defaultValue={7} className="input" />
       </div>
       {state.message && !state.ok && <p className="field-error" role="alert">{state.message}</p>}
@@ -69,12 +69,12 @@ export function CredentialForm({ studyId, bounties }: { studyId: string; bountie
           <strong>{state.message}</strong>
           <code className="token-reveal">{token}</code>
           <div className="cluster">
-            <button type="button" className="btn btn-sm" onClick={async () => { await navigator.clipboard.writeText(token); setCopied(true); }}>{copied ? 'Copiado' : 'Copiar token'}</button>
-            <span className="small">Usalo como <span className="mono">Authorization: Bearer …</span> en la API REST o en el servidor MCP.</span>
+            <button type="button" className="btn btn-sm" onClick={async () => { await navigator.clipboard.writeText(token); setCopied(true); }}>{copied ? 'Copied' : 'Copy token'}</button>
+            <span className="small">Use it as <span className="mono">Authorization: Bearer …</span> on the REST API or the MCP server.</span>
           </div>
         </div>
       )}
-      <div><button className="btn btn-primary" type="submit" disabled={pending}>{pending ? 'Creando…' : 'Crear credencial'}</button></div>
+      <div><button className="btn btn-primary" type="submit" disabled={pending}>{pending ? 'Creating…' : 'Create credential'}</button></div>
     </form>
   );
 }

@@ -5,15 +5,15 @@ import { exportDownloadUrl, requestExportAction, setCreatorConsent, type ActionS
 import { EXPORT_FIELDS } from '@/lib/export-fields';
 
 const FIELD_LABEL: Record<string, string> = {
-  protocol: 'Protocolo del estudio',
-  versions: 'Versiones y hashes',
-  predictions: 'Predicciones de agentes (fechadas)',
-  sessions: 'Sesiones y participantes',
-  events: 'Eventos de la partida',
-  comments: 'Comentarios y respuestas',
-  evidence: 'Hallazgos revisados con fuentes',
-  interventions: 'Intervenciones, diff y comprobaciones',
-  comparisons: 'Preferencias A/B con motivos',
+  protocol: 'Study protocol',
+  versions: 'Versions and hashes',
+  predictions: 'Agent predictions (timestamped)',
+  sessions: 'Sessions and participants',
+  events: 'Game events',
+  comments: 'Comments and answers',
+  evidence: 'Reviewed findings with sources',
+  interventions: 'Interventions, diff and checks',
+  comparisons: 'A/B preferences with reasons',
 };
 
 export function CreatorConsent({ studyId, granted, disabled }: { studyId: string; granted: boolean; disabled?: boolean }) {
@@ -34,14 +34,14 @@ export function CreatorConsent({ studyId, granted, disabled }: { studyId: string
               const res = await setCreatorConsent(studyId, next);
               if (!res.ok) {
                 setOn(!next);
-                setErr(res.message ?? 'No se pudo guardar');
+                setErr(res.message ?? 'Could not save');
               } else setErr(null);
             });
           }}
         />
         <span>
-          <strong>Autorizo como titular del producto el uso de ejemplos de este estudio en un export de investigación</strong>
-          <span className="field-help" style={{ display: 'block' }}>Solo entran ejemplos con permiso de cada participante y hallazgos revisados. El video no se incluye.</span>
+          <strong>As the product owner, I authorize the use of examples from this study in a research export</strong>
+          <span className="field-help" style={{ display: 'block' }}>Only examples with each participant's permission and reviewed findings are included. Video is not included.</span>
         </span>
       </label>
       {err && <p className="field-error" role="alert">{err}</p>}
@@ -54,26 +54,26 @@ export function ExportForm({ studyId }: { studyId: string }) {
   return (
     <form action={action} className="panel stack">
       <input type="hidden" name="study_id" value={studyId} />
-      <h3>Pedir un export privado</h3>
+      <h3>Request a private export</h3>
       <div className="field">
-        <label htmlFor="exp-purpose">Finalidad</label>
-        <input id="exp-purpose" name="purpose" className="input" required minLength={5} maxLength={500} placeholder="Evaluar si un agente anticipa la preferencia de un público" />
+        <label htmlFor="exp-purpose">Purpose</label>
+        <input id="exp-purpose" name="purpose" className="input" required minLength={5} maxLength={500} placeholder="Evaluate whether an agent anticipates an audience's preference" />
       </div>
       <fieldset className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-        <legend>Campos</legend>
+        <legend>Fields</legend>
         {EXPORT_FIELDS.map((f) => (
           <label key={f} className="choice"><input type="checkbox" name="fields" value={f} defaultChecked /><span>{FIELD_LABEL[f]}</span></label>
         ))}
       </fieldset>
       <fieldset>
-        <legend>Formato</legend>
+        <legend>Format</legend>
         <div className="cluster">
           <label className="choice"><input type="radio" name="format" value="json" defaultChecked /><span>JSON</span></label>
-          <label className="choice"><input type="radio" name="format" value="jsonl" /><span>JSON por líneas</span></label>
+          <label className="choice"><input type="radio" name="format" value="jsonl" /><span>JSON Lines</span></label>
         </div>
       </fieldset>
       {state.message && <p className={state.ok ? 'callout callout-success' : 'callout callout-warning'} role={state.ok ? 'status' : 'alert'}>{state.message}</p>}
-      <div><button className="btn btn-primary" type="submit" disabled={pending}>{pending ? 'Pidiendo…' : 'Pedir export'}</button></div>
+      <div><button className="btn btn-primary" type="submit" disabled={pending}>{pending ? 'Requesting…' : 'Request export'}</button></div>
     </form>
   );
 }
@@ -91,11 +91,11 @@ export function DownloadButton({ studyId, exportId }: { studyId: string; exportI
           start(async () => {
             const res = await exportDownloadUrl(studyId, exportId);
             if (res.ok && res.data?.url) window.location.href = res.data.url as string;
-            else setErr(res.message ?? 'No se pudo descargar');
+            else setErr(res.message ?? 'Could not download');
           })
         }
       >
-        {pending ? 'Firmando…' : 'Descargar (enlace temporal)'}
+        {pending ? 'Signing…' : 'Download (temporary link)'}
       </button>
       {err && <span className="field-error" role="alert">{err}</span>}
     </span>

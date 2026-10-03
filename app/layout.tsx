@@ -8,7 +8,7 @@ const plexMono = IBM_Plex_Mono({ subsets: ['latin'], variable: '--font-plex-mono
 
 export const metadata: Metadata = {
   title: { default: 'FUNLABS', template: '%s · FUNLABS' },
-  description: 'Encargá pruebas, revisá partidas y comprobá qué cambios prefieren las personas.',
+  description: 'Request playtests, review recorded sessions and check which changes people prefer.',
   applicationName: 'FUNLABS',
 };
 
@@ -24,12 +24,12 @@ const themeScript = `try{var t=localStorage.getItem('funlabs-theme');if(t==='lig
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${bricolage.variable} ${dmSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${bricolage.variable} ${dmSans.variable} ${plexMono.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        <a className="skip-link" href="#contenido">Saltar al contenido</a>
+        <a className="skip-link" href="#content">Skip to content</a>
         {children}
       </body>
     </html>

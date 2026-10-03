@@ -9,15 +9,15 @@ const material: SessionMaterial = {
     ['e11', { id: 111, t_ms: 23_000, type: 'interact' }],
     ['e40', { id: 140, t_ms: 55_000, type: 'death' }],
   ]),
-  feedback: new Map([['c1', { id: 'fb-uuid-1', t_ms: 24_000, body: 'No sé qué objeto puedo activar' }]]),
+  feedback: new Map([['c1', { id: 'fb-uuid-1', t_ms: 24_000, body: 'I do not know which object I can activate' }]]),
 };
 
 const base = {
-  observation: 'La persona intenta avanzar varias veces.',
-  visual_basis: 'Se ve al personaje junto a la pared.',
-  hypothesis: 'La señal de interacción podría ser poco visible.',
-  alternative: 'Puede que no haya comprendido la instrucción inicial.',
-  next_test: 'Cambiar la señal visual y mantener el puzzle.',
+  observation: 'The person tries to move forward several times.',
+  visual_basis: 'The character is seen next to the wall.',
+  hypothesis: 'The interaction cue may be hard to see.',
+  alternative: 'They may not have understood the initial instruction.',
+  next_test: 'Change the visual cue and keep the puzzle.',
   category: 'clarity',
   preserve: false,
 };
@@ -35,7 +35,7 @@ describe('validateFinding', () => {
     const v = validateFinding({ ...base, start_ms: 21_000, end_ms: 29_000, feedback_ref: 'c9', event_refs: ['e10'] }, material);
     expect(v.feedback_id).toBeNull();
     expect(v.structural_status).toBe('partial');
-    expect(v.notes.join(' ')).toMatch(/no existe/);
+    expect(v.notes.join(' ')).toMatch(/does not exist/);
   });
 
   it('flags events outside the interval and unknown events', () => {
@@ -60,7 +60,7 @@ describe('validateFinding', () => {
   it('accepts a video-only observation as partial evidence', () => {
     const v = validateFinding({ ...base, start_ms: 5_000, end_ms: 9_000, feedback_ref: null, event_refs: [] }, material);
     expect(v.structural_status).toBe('partial');
-    expect(v.notes.join(' ')).toMatch(/solo por lo que se ve/);
+    expect(v.notes.join(' ')).toMatch(/only by what is visible/);
   });
 
   it('rejects inverted or overly long intervals', () => {

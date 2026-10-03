@@ -11,7 +11,7 @@ export const maxDuration = 300;
 /** Called every minute by pg_cron + pg_net when jobs are waiting. */
 export async function POST(request: Request) {
   const secret = request.headers.get('x-funlabs-cron') ?? '';
-  if (!env.cronSecret || !safeEqual(secret, env.cronSecret)) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  if (!env.cronSecret || !safeEqual(secret, env.cronSecret)) return NextResponse.json({ error: 'Not authorized' }, { status: 401 });
   const worker = await workerClient();
   const report = await runJobs(worker, { maxJobs: 8, deadlineMs: 270_000 });
   const studies = new Set<string>();

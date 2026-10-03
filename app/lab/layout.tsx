@@ -6,23 +6,23 @@ export const dynamic = 'force-dynamic';
 
 export default async function LabLayout({ children }: { children: React.ReactNode }) {
   const { user } = await currentUser();
-  if (!user) redirect('/entrar');
+  if (!user) redirect('/sign-in');
   return (
     <>
       <SiteHeader
         items={[
-          { href: '/lab', label: 'Estudios' },
-          { href: '/agentes', label: 'Para agentes', optional: true },
+          { href: '/lab', label: 'Studies' },
+          { href: '/agents', label: 'For agents', optional: true },
         ]}
         right={
-          <form action="/auth/salir" method="post">
+          <form action="/auth/sign-out" method="post">
             <button type="submit" className="btn btn-ghost btn-sm" title={user.email ?? undefined}>
-              Salir
+              Sign out
             </button>
           </form>
         }
       />
-      <main id="contenido" className="page" style={{ paddingTop: 32, paddingBottom: 32 }}>
+      <main id="content" className="page" style={{ paddingTop: 32, paddingBottom: 32 }}>
         {children}
       </main>
       <SiteFooter />

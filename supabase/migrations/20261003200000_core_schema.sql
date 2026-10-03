@@ -30,7 +30,7 @@ language plpgsql
 set search_path = ''
 as $$
 begin
-  raise exception '% es de solo agregado: no se modifica ni se borra', tg_table_name using errcode = 'P0001';
+  raise exception '% is append-only: it cannot be modified or deleted', tg_table_name using errcode = 'P0001';
 end;
 $$;
 
@@ -133,10 +133,10 @@ begin
      or new.origin <> old.origin
      or new.bytes <> old.bytes
      or new.entry_path <> old.entry_path then
-    raise exception 'El contenido de una versión es inmutable' using errcode = 'P0001';
+    raise exception 'The content of a version is immutable' using errcode = 'P0001';
   end if;
   if old.status in ('ready', 'rejected') and new.status <> old.status then
-    raise exception 'Una versión % no cambia de estado', old.status using errcode = 'P0001';
+    raise exception 'A % version does not change status', old.status using errcode = 'P0001';
   end if;
   return new;
 end;
@@ -265,17 +265,17 @@ as $$
 begin
   if private.is_worker() then
     if old.check_suite_id is not null and new.check_suite_id is distinct from old.check_suite_id then
-      raise exception 'El conjunto de comprobaciones ya está fijado' using errcode = 'P0001';
+      raise exception 'The check suite is already fixed' using errcode = 'P0001';
     end if;
     return new;
   end if;
   if new.owner_id <> old.owner_id or new.product_id <> old.product_id then
-    raise exception 'No se puede cambiar el titular ni el producto' using errcode = 'P0001';
+    raise exception 'The owner and the product cannot be changed' using errcode = 'P0001';
   end if;
   if new.status <> old.status or new.check_suite_id is distinct from old.check_suite_id
      or new.published_at is distinct from old.published_at or new.is_rehearsal <> old.is_rehearsal
      or new.created_via <> old.created_via then
-    raise exception 'Estos campos los gestiona FUNLABS' using errcode = 'P0001';
+    raise exception 'These fields are managed by FUNLABS' using errcode = 'P0001';
   end if;
   if old.status <> 'draft' and (
        new.question <> old.question or new.objective <> old.objective or new.objective_detail <> old.objective_detail
@@ -283,7 +283,7 @@ begin
        or new.session_minutes <> old.session_minutes or new.budget_cap_cents <> old.budget_cap_cents
        or new.tester_payment_cents <> old.tester_payment_cents or new.agent_reward_cents <> old.agent_reward_cents
        or new.client_contribution_cents <> old.client_contribution_cents) then
-    raise exception 'La pregunta, el objetivo, el protocolo y el presupuesto se fijan al publicar' using errcode = 'P0001';
+    raise exception 'The question, objective, protocol and budget are fixed when published' using errcode = 'P0001';
   end if;
   return new;
 end;
@@ -532,7 +532,7 @@ begin
   if new.created_at <> old.created_at or new.payload <> old.payload or new.kind <> old.kind
      or new.is_retrospective <> old.is_retrospective or new.results_existed <> old.results_existed
      or new.study_id <> old.study_id or new.credential_id is distinct from old.credential_id then
-    raise exception 'Una entrega de agente queda fechada y no se reescribe' using errcode = 'P0001';
+    raise exception 'An agent submission is timestamped and is not rewritten' using errcode = 'P0001';
   end if;
   return new;
 end;
@@ -585,16 +585,16 @@ declare
 begin
   if new.human_statement_feedback_id is null then
     if new.human_statement is not null then
-      raise exception 'Una declaración humana necesita el comentario que la respalda' using errcode = 'P0001';
+      raise exception 'A human statement needs the comment that supports it' using errcode = 'P0001';
     end if;
     return new;
   end if;
   select body, session_id, assignment_id, study_id into fb from public.feedback where id = new.human_statement_feedback_id;
   if not found or fb.study_id <> new.study_id then
-    raise exception 'El comentario citado no pertenece a este estudio' using errcode = 'P0001';
+    raise exception 'The cited comment does not belong to this study' using errcode = 'P0001';
   end if;
   if fb.session_id is not null and fb.session_id <> new.session_id then
-    raise exception 'El comentario citado pertenece a otra sesión' using errcode = 'P0001';
+    raise exception 'The cited comment belongs to another session' using errcode = 'P0001';
   end if;
   new.human_statement := fb.body;
   return new;
@@ -669,7 +669,7 @@ begin
      or new.interval_end_ms <> old.interval_end_ms or new.human_statement is distinct from old.human_statement
      or new.hypothesis is distinct from old.hypothesis or new.origin <> old.origin
      or new.structural_status <> old.structural_status or new.session_id <> old.session_id then
-    raise exception 'Un hallazgo no se reescribe: registrá una revisión' using errcode = 'P0001';
+    raise exception 'A finding is not rewritten: record a review' using errcode = 'P0001';
   end if;
   return new;
 end;

@@ -17,7 +17,7 @@ export default defineConfig({
       args: [
         // Lets the tester page record its own tab without a manual picker.
         '--auto-accept-this-tab-capture',
-        '--auto-select-tab-capture-source-by-title=Invitación',
+        '--auto-select-tab-capture-source-by-title=Invitation',
         '--use-fake-ui-for-media-stream',
         '--use-fake-device-for-media-stream',
         '--enable-features=GetDisplayMediaSet',

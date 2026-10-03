@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     const res = await supabase.auth.exchangeCodeForSession(code);
     error = res.error?.message ?? null;
   } else {
-    error = 'Enlace incompleto';
+    error = 'Incomplete link';
   }
-  const dest = new URL(error ? `/entrar?error=${encodeURIComponent('El enlace venció o ya se usó. Pedí uno nuevo.')}` : next, url.origin);
+  const dest = new URL(error ? `/sign-in?error=${encodeURIComponent('The link expired or was already used. Request a new one.')}` : next, url.origin);
   return NextResponse.redirect(dest);
 }

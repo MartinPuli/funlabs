@@ -53,9 +53,9 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
     if (p.error) throw p.error;
     ids.product = p.data.id;
     const s = await a.from('studies').insert({
-      product_id: ids.product, owner_id: ids.user_a, title: 'Claridad sala 1',
-      question: '¿Las personas entienden qué pueden activar?', objective: 'clarity', audience: 'Personas que no jugaron antes',
-      protocol: { task: 'Jugá dos minutos' }, participants_target: 3, session_minutes: 3,
+      product_id: ids.product, owner_id: ids.user_a, title: 'Clarity room 1',
+      question: 'Do people understand what they can activate?', objective: 'clarity', audience: 'People who have not played before',
+      protocol: { task: 'Play for two minutes' }, participants_target: 3, session_minutes: 3,
       budget_cap_cents: 1000, tester_payment_cents: 300,
     }).select().single();
     if (s.error) throw s.error;
@@ -67,7 +67,7 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
     const v = await worker.from('versions').insert({ product_id: ids.product, label: 'A', origin: 'repository', content_sha256: 'a'.repeat(64), bytes: 10 }).select().single();
     if (v.error) throw v.error;
     ids.version = v.data.id;
-    const bo = await worker.from('bounties').insert({ study_id: ids.study, kind: 'human_playtest', title: 'Jugar y explicar', instructions: 'x', deliverable: 'y', criteria: [] }).select().single();
+    const bo = await worker.from('bounties').insert({ study_id: ids.study, kind: 'human_playtest', title: 'Play and explain', instructions: 'x', deliverable: 'y', criteria: [] }).select().single();
     if (bo.error) throw bo.error;
     ids.bounty = bo.data.id;
     const inv = await worker.from('invitations').insert({ study_id: ids.study, bounty_id: ids.bounty, token_hash: 'b'.repeat(64), token_hint: 'bbbb', expires_at: new Date(Date.now() + 86400000).toISOString() }).select().single();
@@ -75,10 +75,10 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
     const asg = await worker.from('assignments').insert({ study_id: ids.study, bounty_id: ids.bounty, invitation_id: inv.data.id, participant_code: 'P-1' }).select().single();
     if (asg.error) throw asg.error;
     ids.assignment = asg.data.id;
-    const ses = await worker.from('sessions').insert({ study_id: ids.study, assignment_id: ids.assignment, version_id: ids.version, phase: 'playtest', neutral_label: 'Versión 1' }).select().single();
+    const ses = await worker.from('sessions').insert({ study_id: ids.study, assignment_id: ids.assignment, version_id: ids.version, phase: 'playtest', neutral_label: 'Version 1' }).select().single();
     if (ses.error) throw ses.error;
     ids.session = ses.data.id;
-    const fb = await worker.from('feedback').insert({ study_id: ids.study, session_id: ids.session, assignment_id: ids.assignment, kind: 'moment', t_ms: 21000, body: 'No sé qué objeto puedo activar' }).select().single();
+    const fb = await worker.from('feedback').insert({ study_id: ids.study, session_id: ids.session, assignment_id: ids.assignment, kind: 'moment', t_ms: 21000, body: 'I do not know which object I can activate' }).select().single();
     if (fb.error) throw fb.error;
     ids.feedback = fb.data.id;
     const rec = await worker.from('recordings').insert({ study_id: ids.study, session_id: ids.session, storage_path: `${ids.study}/${ids.session}/rec.webm`, mime_type: 'video/webm', method: 'tab_capture', duration_ms: 60000 }).select().single();
@@ -104,7 +104,7 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
     expect(st).toEqual([]);
     const { data: fb } = await b.from('feedback').select('id').eq('study_id', ids.study);
     expect(fb).toEqual([]);
-    const upd = await b.from('studies').update({ title: 'secuestro' }).eq('id', ids.study).select();
+    const upd = await b.from('studies').update({ title: 'hijack' }).eq('id', ids.study).select();
     expect(upd.data ?? []).toEqual([]);
   });
 
@@ -120,30 +120,30 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
   it('copies the human statement verbatim from the cited comment', async () => {
     const ev = await worker.from('evidence').insert({
       study_id: ids.study, version_id: ids.version, session_id: ids.session, origin: 'model',
-      interval_start_ms: 21000, interval_end_ms: 29000, observation: 'Intenta avanzar varias veces.',
-      human_statement: 'Texto inventado por el modelo', human_statement_feedback_id: ids.feedback,
+      interval_start_ms: 21000, interval_end_ms: 29000, observation: 'Tries to move forward several times.',
+      human_statement: 'Text invented by the model', human_statement_feedback_id: ids.feedback,
       structural_status: 'verified',
     }).select().single();
     expect(ev.error).toBeNull();
-    expect(ev.data.human_statement).toBe('No sé qué objeto puedo activar');
+    expect(ev.data.human_statement).toBe('I do not know which object I can activate');
     ids.evidence = ev.data.id;
 
     const bad = await worker.from('evidence').insert({
       study_id: ids.study, version_id: ids.version, session_id: ids.session, origin: 'model',
-      interval_start_ms: 0, interval_end_ms: 1000, observation: 'Sin fuente', human_statement: 'cita sin comentario',
+      interval_start_ms: 0, interval_end_ms: 1000, observation: 'No source', human_statement: 'quote without comment',
       structural_status: 'unsupported',
     });
-    expect(bad.error?.message).toMatch(/necesita el comentario/);
+    expect(bad.error?.message).toMatch(/needs the comment/);
   });
 
   it('keeps review history and never rewrites the finding', async () => {
-    const r1 = await a.from('evidence_reviews').insert({ evidence_id: ids.evidence, study_id: ids.study, reviewer_id: ids.user_a, reviewer_kind: 'creator', action: 'correct', corrected: { hypothesis: 'La instrucción inicial dura poco' } });
+    const r1 = await a.from('evidence_reviews').insert({ evidence_id: ids.evidence, study_id: ids.study, reviewer_id: ids.user_a, reviewer_kind: 'creator', action: 'correct', corrected: { hypothesis: 'The initial instruction lasts a short time' } });
     expect(r1.error).toBeNull();
     const { data: ev } = await a.from('evidence').select('review_status, current, hypothesis').eq('id', ids.evidence).single();
     expect(ev?.review_status).toBe('corrected');
-    expect(ev?.current).toEqual({ hypothesis: 'La instrucción inicial dura poco' });
-    const rewrite = await worker.from('evidence').update({ observation: 'otra cosa' }).eq('id', ids.evidence);
-    expect(rewrite.error?.message).toMatch(/no se reescribe/);
+    expect(ev?.current).toEqual({ hypothesis: 'The initial instruction lasts a short time' });
+    const rewrite = await worker.from('evidence').update({ observation: 'something else' }).eq('id', ids.evidence);
+    expect(rewrite.error?.message).toMatch(/is not rewritten/);
     const forged = await a.from('evidence_reviews').insert({ evidence_id: ids.evidence, study_id: ids.study, reviewer_id: ids.user_b, reviewer_kind: 'creator', action: 'confirm' });
     expect(forged.error).not.toBeNull();
   });
@@ -152,11 +152,11 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
     const pub = await worker.from('studies').update({ status: 'published', published_at: new Date().toISOString() }).eq('id', ids.study);
     expect(pub.error).toBeNull();
     const change = await a.from('studies').update({ objective: 'fun' }).eq('id', ids.study);
-    expect(change.error?.message).toMatch(/se fijan al publicar/);
-    const rename = await a.from('studies').update({ title: 'Claridad de la sala 1' }).eq('id', ids.study);
+    expect(change.error?.message).toMatch(/are fixed when published/);
+    const rename = await a.from('studies').update({ title: 'Clarity of room 1' }).eq('id', ids.study);
     expect(rename.error).toBeNull();
     const status = await a.from('studies').update({ status: 'completed' }).eq('id', ids.study);
-    expect(status.error?.message).toMatch(/gestiona FUNLABS/);
+    expect(status.error?.message).toMatch(/managed by FUNLABS/);
   });
 
   it('reserves budget atomically under the cap and is idempotent', async () => {
@@ -184,7 +184,7 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
     ]);
     const claimed = [...(c1.data ?? []), ...(c2.data ?? [])].filter((j: { idempotency_key: string }) => j.idempotency_key === key);
     expect(claimed.length).toBe(1);
-    const fail = await worker.rpc('finish_job', { p_job: ins.data.id, p_ok: false, p_result: null, p_error: 'Gemini no respondió' });
+    const fail = await worker.rpc('finish_job', { p_job: ins.data.id, p_ok: false, p_result: null, p_error: 'Gemini did not respond' });
     expect(fail.data.status).toBe('queued');
     expect(new Date(fail.data.run_after).getTime()).toBeGreaterThan(Date.now());
     const asCreator = await a.rpc('claim_job', { p_kinds: ['analyze_session'], p_worker: 'x', p_runner: 'x' });
@@ -192,8 +192,8 @@ describe.skipIf(!reachable || !local || !SERVICE)('row level security and integr
   });
 
   it('keeps comments and comparisons append-only', async () => {
-    const upd = await worker.from('feedback').update({ body: 'editado' }).eq('id', ids.feedback);
-    expect(upd.error?.message).toMatch(/solo agregado/);
+    const upd = await worker.from('feedback').update({ body: 'edited' }).eq('id', ids.feedback);
+    expect(upd.error?.message).toMatch(/append-only/);
   });
 
   it('lets creators stream their recordings but not other studies', async () => {

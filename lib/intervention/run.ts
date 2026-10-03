@@ -41,10 +41,10 @@ export type MaterializeResult =
  */
 export async function materializeIntervention(worker: SupabaseClient, input: MaterializeInput): Promise<MaterializeResult> {
   const study = await worker.from('studies').select('id, product_id, check_suite_id').eq('id', input.studyId).single();
-  if (study.error) throw new Error(`Estudio: ${study.error.message}`);
-  if (!study.data.check_suite_id) throw new Error('El estudio no tiene comprobaciones fijadas: publicalo antes de intervenir.');
+  if (study.error) throw new Error(`Study: ${study.error.message}`);
+  if (!study.data.check_suite_id) throw new Error('The study has no fixed checks: publish it before intervening.');
   const base = await versionHtml(worker, input.baseVersionId);
-  if (!base) throw new Error('No se encontró la versión base');
+  if (!base) throw new Error('The baseline version was not found');
 
   const evidenceIds = input.proposal.evidence_ids.filter((id) => /^[0-9a-f-]{36}$/i.test(id));
   const record = {
@@ -54,7 +54,7 @@ export async function materializeIntervention(worker: SupabaseClient, input: Mat
     actor: input.actor,
     objective: input.objective,
     summary: input.proposal.summary.slice(0, 2000),
-    rationale: [input.proposal.rationale, input.proposal.expected_effect ? `Efecto esperado: ${input.proposal.expected_effect}` : '', input.proposal.risks ? `Riesgos: ${input.proposal.risks}` : '']
+    rationale: [input.proposal.rationale, input.proposal.expected_effect ? `Expected effect: ${input.proposal.expected_effect}` : '', input.proposal.risks ? `Risks: ${input.proposal.risks}` : '']
       .filter(Boolean)
       .join('\n\n')
       .slice(0, 6000),
@@ -67,7 +67,7 @@ export async function materializeIntervention(worker: SupabaseClient, input: Mat
   const patched = applyScopedEdits(base, input.proposal.edits as Edit[]);
   if (!patched.ok) {
     const ins = await worker.from('interventions').insert({ ...record, status: 'rejected', errors: patched.errors }).select('id').single();
-    if (ins.error) throw new Error(`Registrar intervención: ${ins.error.message}`);
+    if (ins.error) throw new Error(`Record intervention: ${ins.error.message}`);
     return { ok: false, interventionId: ins.data.id, errors: patched.errors };
   }
 
@@ -82,13 +82,13 @@ export async function materializeIntervention(worker: SupabaseClient, input: Mat
     notes: input.proposal.summary.slice(0, 500),
     createdBy: input.createdBy ?? null,
   });
-  const diff = unifiedDiff(base, patched.source, { fromLabel: 'versión base', toLabel: `versión ${version.label}` });
+  const diff = unifiedDiff(base, patched.source, { fromLabel: 'baseline version', toLabel: `version ${version.label}` });
   const ins = await worker
     .from('interventions')
     .insert({ ...record, result_version_id: version.id, diff, status: 'checking' })
     .select('id')
     .single();
-  if (ins.error) throw new Error(`Registrar intervención: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Record intervention: ${ins.error.message}`);
 
   const job = await enqueueJob(worker, {
     studyId: input.studyId,
@@ -106,11 +106,11 @@ export async function materializeIntervention(worker: SupabaseClient, input: Mat
  */
 export async function runInterventionJob(worker: SupabaseClient, job: JobRow): Promise<Record<string, unknown>> {
   const input = job.input as { base_version_id: string; evidence_ids: string[]; requested_by?: string | null };
-  if (!job.study_id) throw new Error('Falta el estudio');
+  if (!job.study_id) throw new Error('The study is missing');
   const study = await worker.from('studies').select('id, question, objective, objective_detail, check_suite_id, product_id').eq('id', job.study_id).single();
-  if (study.error) throw new Error(`Estudio: ${study.error.message}`);
+  if (study.error) throw new Error(`Study: ${study.error.message}`);
   const base = await versionHtml(worker, input.base_version_id);
-  if (!base) throw new Error('No se encontró la versión base');
+  if (!base) throw new Error('The baseline version was not found');
 
   const ev = await worker
     .from('evidence')
@@ -123,7 +123,7 @@ export async function runInterventionJob(worker: SupabaseClient, job: JobRow): P
     const cur = (e.current ?? {}) as Record<string, string>;
     return {
       id: e.id,
-      interval: `${mmss(e.interval_start_ms)} a ${mmss(e.interval_end_ms)}`,
+      interval: `${mmss(e.interval_start_ms)} to ${mmss(e.interval_end_ms)}`,
       category: e.category,
       observation: e.observation,
       human_statement: e.human_statement,
@@ -135,7 +135,7 @@ export async function runInterventionJob(worker: SupabaseClient, job: JobRow): P
       structural_status: e.structural_status,
     };
   });
-  if (!evidence.length) throw new Error('No hay hallazgos válidos seleccionados para intervenir.');
+  if (!evidence.length) throw new Error('No valid findings are selected for intervention.');
 
   const request = { question: study.data.question, objective: study.data.objective, objectiveDetail: study.data.objective_detail, baseHtml: base, evidence };
   const suite = study.data.check_suite_id ? await worker.from('check_suites').select('definition').eq('id', study.data.check_suite_id).single() : null;
@@ -163,7 +163,7 @@ export async function runInterventionJob(worker: SupabaseClient, job: JobRow): P
     .insert({
       study_id: job.study_id,
       bounty_id: bounty.data?.id ?? null,
-      actor: 'Claude, agente creador en FUNLABS',
+      actor: 'Claude, creator agent in FUNLABS',
       kind: 'intervention',
       input_version_ids: [input.base_version_id],
       payload: { ...run.proposal, model },
@@ -179,7 +179,7 @@ export async function runInterventionJob(worker: SupabaseClient, job: JobRow): P
         study_id: job.study_id,
         base_version_id: input.base_version_id,
         submission_id: submission.data?.id ?? null,
-        actor: 'Claude, agente creador en FUNLABS',
+        actor: 'Claude, creator agent in FUNLABS',
         objective: study.data.objective,
         summary: run.proposal.summary,
         rationale: run.proposal.rationale,
@@ -188,7 +188,7 @@ export async function runInterventionJob(worker: SupabaseClient, job: JobRow): P
         edits: [],
         model,
         status: 'rejected',
-        errors: ['Claude no recomendó cambios con esta evidencia.'],
+        errors: ['Claude did not recommend changes with this evidence.'],
       })
       .select('id')
       .single();
@@ -198,7 +198,7 @@ export async function runInterventionJob(worker: SupabaseClient, job: JobRow): P
   const result = await materializeIntervention(worker, {
     studyId: job.study_id,
     baseVersionId: input.base_version_id,
-    actor: 'Claude, agente creador en FUNLABS',
+    actor: 'Claude, creator agent in FUNLABS',
     objective: study.data.objective,
     proposal: run.proposal,
     model,

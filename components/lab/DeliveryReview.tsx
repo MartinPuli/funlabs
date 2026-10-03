@@ -14,26 +14,26 @@ export function DeliveryReview({ studyId, deliveryId }: { studyId: string; deliv
   const run = (valid: boolean) =>
     start(async () => {
       const res = await reviewDelivery(studyId, deliveryId, valid, note);
-      setMsg({ ok: res.ok, text: res.message ?? (res.ok ? 'Listo' : 'Error') });
+      setMsg({ ok: res.ok, text: res.message ?? (res.ok ? 'Done' : 'Error') });
       if (res.ok) router.refresh();
     });
   return (
     <div className="stack" style={{ ['--gap' as string]: '6px' }}>
       <div className="cluster" style={{ ['--gap' as string]: '6px' }}>
         <button type="button" className="btn btn-sm btn-primary" disabled={pending} onClick={() => run(true)}>
-          Válida
+          Valid
         </button>
         <button type="button" className="btn btn-sm" disabled={pending} onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-          No utilizable
+          Not usable
         </button>
       </div>
       {open && (
         <div className="stack" style={{ ['--gap' as string]: '6px' }}>
-          <label className="small" htmlFor={`dn-${deliveryId}`}>Motivo (la persona puede pedir revisión)</label>
+          <label className="small" htmlFor={`dn-${deliveryId}`}>Reason (the person can ask for a review)</label>
           <textarea id={`dn-${deliveryId}`} className="textarea" rows={2} value={note} onChange={(e) => setNote(e.target.value)} />
           <div>
             <button type="button" className="btn btn-sm btn-danger" disabled={pending || !note.trim()} onClick={() => run(false)}>
-              Confirmar
+              Confirm
             </button>
           </div>
         </div>

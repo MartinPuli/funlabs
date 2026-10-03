@@ -41,7 +41,7 @@ export async function requestExport(
     })
     .select('id, status, blocked_reason')
     .single();
-  if (ins.error) throw new Error(`Crear export: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Create export: ${ins.error.message}`);
   if (pre.ok) await enqueueJob(worker, { studyId: input.studyId, kind: 'export_dataset', key: `export:${ins.data.id}`, input: { export_id: ins.data.id }, createdBy: input.userId });
   return ins.data as { id: string; status: string; blocked_reason: string | null };
 }
@@ -50,12 +50,12 @@ export async function requestExport(
 export async function exportPreflight(worker: SupabaseClient, studyId: string, includeRawMedia: boolean) {
   const study = await worker.from('studies').select('creator_research_consent, is_rehearsal').eq('id', studyId).single();
   const reasons: string[] = [];
-  if (!study.data?.creator_research_consent) reasons.push('Falta la autorización del titular del producto para investigación.');
-  if (includeRawMedia) reasons.push('El MVP no exporta video ni audio crudos: hace falta una autorización aparte de cada participante.');
+  if (!study.data?.creator_research_consent) reasons.push('The product owner has not authorized research use.');
+  if (includeRawMedia) reasons.push('The MVP does not export raw video or audio: each participant would have to authorize it separately.');
   const consents = await participantConsents(worker, studyId);
   const assignments = await worker.from('assignments').select('id, status').eq('study_id', studyId);
   const eligible = (assignments.data ?? []).filter((a) => a.status !== 'withdrawn' && consents.get(a.id)?.research).length;
-  if (eligible === 0) reasons.push('Ninguna persona participante autorizó el uso para investigación.');
+  if (eligible === 0) reasons.push('No participant authorized research use.');
   return { ok: reasons.length === 0, reasons, eligible, total: (assignments.data ?? []).length, rehearsal: Boolean(study.data?.is_rehearsal) };
 }
 
@@ -111,7 +111,7 @@ export async function runExportJob(worker: SupabaseClient, job: JobRow): Promise
     generated_by: { runner: env.runner },
     purpose: exp.data.purpose,
     rehearsal: Boolean(study.data?.is_rehearsal),
-    unit: 'versión base -> predicción previa -> experiencia humana -> diagnóstico -> intervención -> variante -> preferencias y motivos',
+    unit: 'baseline version -> prior prediction -> human experience -> diagnosis -> intervention -> variant -> preferences and reasons',
     study: {
       id: study.data?.id,
       title: study.data?.title,
@@ -195,19 +195,19 @@ export async function runExportJob(worker: SupabaseClient, job: JobRow): Promise
     participants_withdrawn: (assignments.data ?? []).filter((a) => a.status === 'withdrawn').length,
     evidence_unreviewed: (evidence.data ?? []).filter((e) => allowedSessions.has(e.session_id) && e.review_status === 'unreviewed').length,
     evidence_rejected: (evidence.data ?? []).filter((e) => allowedSessions.has(e.session_id) && e.review_status === 'rejected').length,
-    raw_media: 'no incluido',
+    raw_media: 'not included',
   };
   doc.excluded = excluded;
   doc.limitations = [
-    'Export privado de ejemplos autorizados: no es un dataset representativo.',
-    'Los eventos están sincronizados con el reloj de la grabación del navegador de cada persona; no se afirma una sincronización exacta con cada cuadro del video.',
+    'Private export of authorized examples: not a representative dataset.',
+    'Events are synchronized to the browser recording clock of each person; frame-exact synchronization with the video is not claimed.',
     ...summary.limitations,
   ];
 
   const body = exp.data.format === 'jsonl' ? toJsonl(doc) : JSON.stringify(doc, null, 2);
   const path = `${studyId}/${exportId}.${exp.data.format === 'jsonl' ? 'jsonl' : 'json'}`;
   const up = await worker.storage.from('exports').upload(path, new Blob([body], { type: exp.data.format === 'jsonl' ? 'application/x-ndjson' : 'application/json' }), { upsert: true, contentType: exp.data.format === 'jsonl' ? 'application/x-ndjson' : 'application/json' });
-  if (up.error) throw new Error(`Guardar export: ${up.error.message}`);
+  if (up.error) throw new Error(`Save export: ${up.error.message}`);
   const items = (doc.participants as unknown[] | undefined)?.length ?? 0;
   await worker
     .from('dataset_exports')

@@ -22,12 +22,12 @@ export async function testerCall<T>(token: string, action: string, body: unknown
       body: JSON.stringify(body),
     });
   } catch {
-    throw new TesterApiError('network', 'Sin conexión con FUNLABS. Revisá tu red y reintentá.', 0);
+    throw new TesterApiError('network', 'No connection to FUNLABS. Check your network and try again.', 0);
   }
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     const err = (json as { error?: ApiError }).error;
-    throw new TesterApiError(err?.code ?? 'error', err?.message ?? 'Algo falló. Reintentar.', res.status);
+    throw new TesterApiError(err?.code ?? 'error', err?.message ?? 'Something went wrong. Try again.', res.status);
   }
   return json as T;
 }
@@ -42,8 +42,8 @@ export function uploadWithProgress(signedUrl: string, blob: Blob, onProgress: (f
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(e.loaded / e.total);
     };
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Subida rechazada (${xhr.status})`)));
-    xhr.onerror = () => reject(new Error('La conexión se cortó durante la subida'));
+    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error(`Upload rejected (${xhr.status})`)));
+    xhr.onerror = () => reject(new Error('The connection dropped during the upload'));
     xhr.send(blob);
   });
 }

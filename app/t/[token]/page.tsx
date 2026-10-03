@@ -5,7 +5,7 @@ import { Wordmark } from '@/components/SiteHeader';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { looksLikeToken } from '@/lib/tokens';
 
-export const metadata: Metadata = { title: 'Invitación', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'Invitation', robots: { index: false, follow: false } };
 
 export default async function TesterPage(props: { params: Promise<{ token: string }> }) {
   const { token } = await props.params;
@@ -20,7 +20,7 @@ export default async function TesterPage(props: { params: Promise<{ token: strin
           </div>
         </div>
       </header>
-      <main id="contenido" className="page">
+      <main id="content" className="page">
         <TesterApp token={token} />
       </main>
     </>

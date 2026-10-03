@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 type Pref = 'auto' | 'light' | 'dark';
-const LABELS: Record<Pref, string> = { auto: 'Tema automático', light: 'Tema claro', dark: 'Tema oscuro' };
+const LABELS: Record<Pref, string> = { auto: 'Automatic theme', light: 'Light theme', dark: 'Dark theme' };
 const NEXT: Record<Pref, Pref> = { auto: 'light', light: 'dark', dark: 'auto' };
 
 function apply(pref: Pref) {
@@ -34,10 +34,10 @@ export function ThemeToggle() {
         apply(next);
         setPref(next);
       }}
-      aria-label={`${LABELS[pref]}. Cambiar tema`}
-      title={`${LABELS[pref]}. Cambiar tema`}
+      aria-label={`${LABELS[pref]}. Change theme`}
+      title={`${LABELS[pref]}. Change theme`}
     >
-      {pref === 'auto' ? 'Auto' : pref === 'light' ? 'Claro' : 'Oscuro'}
+      {pref === 'auto' ? 'Auto' : pref === 'light' ? 'Light' : 'Dark'}
     </button>
   );
 }

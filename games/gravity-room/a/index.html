@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,18 +19,18 @@
 </style>
 </head>
 <body>
-<canvas id="screen" width="960" height="540" tabindex="0" aria-label="Gravity Room: juego. Flechas para moverse, Espacio invierte la gravedad, E para usar, R reinicia la sala."></canvas>
+<canvas id="screen" width="960" height="540" tabindex="0" aria-label="Gravity Room: game. Arrow keys to move, Space flips gravity, E to use, R restarts the room."></canvas>
 <script id="game">
 (function (root) {
   'use strict';
 
   /* @funlabs:locked:start levels */
-  // Mapas de 30 x 16 casillas. # muro, = plataforma, ^ pinchos en el piso,
-  // v pinchos en el techo, S interruptor, D puerta de salida, P inicio.
+  // Maps of 30 x 16 tiles. # wall, = platform, ^ floor spikes,
+  // v ceiling spikes, S switch, D exit door, P start.
   var LEVELS = [
     {
-      id: 'sala-1',
-      name: 'Sala 1',
+      id: 'room-1',
+      name: 'Room 1',
       map: [
         '##############################',
         '#.....S.............vvv......#',
@@ -51,8 +51,8 @@
       ]
     },
     {
-      id: 'sala-2',
-      name: 'Sala 2',
+      id: 'room-2',
+      name: 'Room 2',
       map: [
         '##############################',
         '#...................vvv....D.#',
@@ -73,8 +73,8 @@
       ]
     },
     {
-      id: 'sala-3',
-      name: 'Sala 3',
+      id: 'room-3',
+      name: 'Room 3',
       map: [
         '##############################',
         '#S...........vvvv............#',
@@ -159,7 +159,7 @@
       var evt = { type: type, frame: s.totalFrames, payload: payload || {} };
       s.stepEvents.push(evt);
       pending.push(evt);
-      try { emit(type, payload || {}); } catch (e) { /* el puente nunca rompe el juego */ }
+      try { emit(type, payload || {}); } catch (e) { /* the bridge never breaks the game */ }
     }
 
     function tileAt(col, row) {
@@ -237,14 +237,14 @@
 
     function stepPlaying() {
       var p = s.player;
-      // Dirección horizontal
+      // Horizontal direction
       var dir = (s.keys.right ? 1 : 0) - (s.keys.left ? 1 : 0);
       var dirName = dir > 0 ? 'right' : dir < 0 ? 'left' : 'stop';
       if (dirName !== s.lastDir) { s.lastDir = dirName; send('move', { dir: dirName }); }
       if (dir !== 0) { p.vx += dir * ACCEL; p.facing = dir; } else { p.vx *= FRICTION; if (Math.abs(p.vx) < 0.05) p.vx = 0; }
       if (p.vx > MAX_VX) p.vx = MAX_VX; if (p.vx < -MAX_VX) p.vx = -MAX_VX;
 
-      // Inversión de gravedad: solo apoyado
+      // Gravity flip: only when grounded
       if (s.queued.flip) {
         var cellF = playerCell();
         if (p.grounded) {
@@ -258,14 +258,14 @@
       p.vy += G * p.gdir;
       if (p.vy > MAX_VY) p.vy = MAX_VY; if (p.vy < -MAX_VY) p.vy = -MAX_VY;
 
-      // Movimiento X
+      // X movement
       p.x += p.vx;
       var hx = hitSolidBox(p.x, p.y, PW, PH);
       if (hx) {
         if (p.vx > 0) p.x = hx.col * TILE - PW; else if (p.vx < 0) p.x = (hx.col + 1) * TILE;
         p.vx = 0;
       }
-      // Movimiento Y
+      // Y movement
       p.y += p.vy;
       var hy = hitSolidBox(p.x, p.y, PW, PH);
       if (hy) {
@@ -280,7 +280,7 @@
         send('land', { surface: p.gdir > 0 ? 'floor' : 'ceiling', col: cl.col, row: cl.row });
       }
 
-      // Interacción
+      // Interaction
       if (s.queued.interact) {
         var sw = nearbySwitch(), ci = playerCell();
         if (!sw) {
@@ -297,7 +297,7 @@
         }
       }
 
-      // Peligros y salida
+      // Hazards and exit
       if (p.y < -TILE || p.y > ROWS * TILE + TILE || p.x < -TILE || p.x > COLS * TILE + TILE) { die('out_of_bounds'); return; }
       if (touchingSpikes()) { die('spikes'); return; }
       if (s.doorOpen) {
@@ -309,7 +309,7 @@
         }
       }
 
-      // Inactividad
+      // Inactivity
       if (!s.idleSent && s.totalFrames - s.lastInputFrame >= IDLE_FRAMES) {
         var cid = playerCell();
         s.idleSent = true;
@@ -498,7 +498,7 @@
       var secs = Math.floor(v.elapsedMs / 1000), mm = Math.floor(secs / 60), ss = secs % 60;
       ctx.fillText(v.level.name + ' / ' + v.levelCount, 12, v.HUD / 2);
       ctx.fillStyle = palette.hudDim;
-      ctx.fillText('Caídas ' + v.deaths, 120, v.HUD / 2);
+      ctx.fillText('Falls ' + v.deaths, 120, v.HUD / 2);
       ctx.textAlign = 'right';
       ctx.fillText(mm + ':' + (ss < 10 ? '0' : '') + ss, v.WIDTH - 12, v.HUD / 2);
     }
@@ -512,28 +512,28 @@
       if (v.status === 'title') {
         ctx.fillStyle = palette.overlay; ctx.fillRect(0, 0, v.WIDTH, v.HEIGHT);
         centerText(ctx, v, 'GRAVITY ROOM', v.HEIGHT / 2 - 40, 44, palette.title, 800);
-        centerText(ctx, v, 'Escapá de las salas invirtiendo la gravedad.', v.HEIGHT / 2 + 8, 18, palette.hudText, 500);
-        centerText(ctx, v, 'Presioná cualquier tecla para empezar', v.HEIGHT / 2 + 48, 15, palette.accent, 600);
+        centerText(ctx, v, 'Escape the rooms by flipping gravity.', v.HEIGHT / 2 + 8, 18, palette.hudText, 500);
+        centerText(ctx, v, 'Press any key to start', v.HEIGHT / 2 + 48, 15, palette.accent, 600);
         return;
       }
-      // Instrucciones breves al comenzar la primera sala.
+      // Short instructions when the first room begins.
       if (v.firstRun && v.levelFrame < 300) {
         ctx.globalAlpha = v.levelFrame < 240 ? 1 : Math.max(0, (300 - v.levelFrame) / 60);
-        centerText(ctx, v, '← → moverse   ·   Espacio invertir gravedad   ·   E usar   ·   R reiniciar', v.HEIGHT - 18, 13, palette.hudDim, 500);
+        centerText(ctx, v, '← → move   ·   Space flip gravity   ·   E use   ·   R restart', v.HEIGHT - 18, 13, palette.hudDim, 500);
         ctx.globalAlpha = 1;
       }
       if (deathFlash > 0) {
         ctx.globalAlpha = deathFlash / 20 * 0.35; ctx.fillStyle = palette.danger; ctx.fillRect(0, v.HUD, v.WIDTH, v.HEIGHT - v.HUD); ctx.globalAlpha = 1;
       }
       if (v.status === 'clear') {
-        centerText(ctx, v, 'Sala superada', v.HEIGHT / 2, 28, palette.accent, 800);
+        centerText(ctx, v, 'Room cleared', v.HEIGHT / 2, 28, palette.accent, 800);
       }
       if (v.status === 'complete') {
         ctx.fillStyle = palette.overlay; ctx.fillRect(0, 0, v.WIDTH, v.HEIGHT);
         var secs = Math.round(v.elapsedMs / 1000);
-        centerText(ctx, v, '¡Escapaste!', v.HEIGHT / 2 - 30, 40, palette.title, 800);
-        centerText(ctx, v, 'Tiempo ' + secs + ' s   ·   Caídas ' + v.deaths, v.HEIGHT / 2 + 16, 18, palette.hudText, 500);
-        centerText(ctx, v, 'Gracias por jugar', v.HEIGHT / 2 + 52, 15, palette.accent, 600);
+        centerText(ctx, v, 'You escaped!', v.HEIGHT / 2 - 30, 40, palette.title, 800);
+        centerText(ctx, v, 'Time ' + secs + ' s   ·   Falls ' + v.deaths, v.HEIGHT / 2 + 16, 18, palette.hudText, 500);
+        centerText(ctx, v, 'Thanks for playing', v.HEIGHT / 2 + 52, 15, palette.accent, 600);
       }
     }
 
@@ -579,7 +579,7 @@
     var evt = { source: 'funlabs-game', v: 1, type: type, t: Math.round(performance.now() - t0), payload: payload || {} };
     log.push(evt);
     if (log.length > 5000) log.shift();
-    if (embedded) { try { window.parent.postMessage(evt, '*'); } catch (e) { /* sin anfitrión */ } }
+    if (embedded) { try { window.parent.postMessage(evt, '*'); } catch (e) { /* no host */ } }
   }
 
   var game = window.GravityRoom.createGame({ ctx: ctx, emit: post });

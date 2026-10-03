@@ -15,7 +15,7 @@ const clientOptions = { auth: { persistSession: false, autoRefreshToken: false, 
 async function signIn(): Promise<{ client: SupabaseClient; expiresAt: number }> {
   const client = createClient(env.supabaseUrl, env.supabaseAnonKey, clientOptions);
   const { data, error } = await client.auth.signInWithPassword({ email: env.workerEmail!, password: env.workerPassword! });
-  if (error || !data.session) throw new Error(`No se pudo autenticar la identidad del backend: ${error?.message ?? 'sin sesión'}`);
+  if (error || !data.session) throw new Error(`Could not authenticate the backend identity: ${error?.message ?? 'no session'}`);
   return { client, expiresAt: (data.session.expires_at ?? 0) * 1000 };
 }
 
@@ -35,12 +35,12 @@ export async function workerClient(): Promise<SupabaseClient> {
     return (await pending).client;
   }
   if (env.serviceRoleKey) return createClient(env.supabaseUrl, env.serviceRoleKey, clientOptions);
-  throw new Error('Falta configurar la identidad del backend (FUNLABS_WORKER_EMAIL y FUNLABS_WORKER_PASSWORD).');
+  throw new Error('The backend identity is not configured (FUNLABS_WORKER_EMAIL and FUNLABS_WORKER_PASSWORD).');
 }
 
 /** Throws a readable error when a query failed. */
 export function must<T>(res: { data: T | null; error: { message: string } | null }, what: string): T {
   if (res.error) throw new Error(`${what}: ${res.error.message}`);
-  if (res.data === null) throw new Error(`${what}: sin resultado`);
+  if (res.data === null) throw new Error(`${what}: no result`);
   return res.data;
 }

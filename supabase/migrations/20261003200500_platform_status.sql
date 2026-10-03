@@ -12,7 +12,7 @@ declare
   v_cron_jobs jsonb := '[]'::jsonb;
 begin
   if not private.is_worker() then
-    raise exception 'Solo el backend consulta el estado de la plataforma' using errcode = '42501';
+    raise exception 'Only the backend reads the platform status' using errcode = '42501';
   end if;
   begin
     select coalesce(jsonb_agg(jsonb_build_object('name', jobname, 'schedule', schedule, 'active', active) order by jobname), '[]'::jsonb)

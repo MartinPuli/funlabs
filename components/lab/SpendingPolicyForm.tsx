@@ -16,22 +16,22 @@ export function SpendingPolicyForm({ studyId, enabled, maxUsd, disabled }: { stu
         e.preventDefault();
         start(async () => {
           const res = await setSpendingPolicy(studyId, on, Number(max) || 0);
-          setMsg({ ok: res.ok, text: res.message ?? (res.ok ? 'Guardado' : 'No se pudo guardar') });
+          setMsg({ ok: res.ok, text: res.message ?? (res.ok ? 'Saved' : 'Could not save') });
         });
       }}
     >
-      <h3>Política de gasto para agentes</h3>
-      <p className="small muted measure">Un agente puede preparar un encargo, pero publicar trabajo remunerado requiere esta política o tu aprobación puntual. Hoy todos los pagos son de modo prueba.</p>
+      <h3>Spending policy for agents</h3>
+      <p className="small muted measure">An agent can prepare a request, but publishing paid work requires this policy or your one-off approval. All payments are in test mode today.</p>
       <label className="choice">
         <input type="checkbox" checked={on} disabled={disabled} onChange={(e) => setOn(e.target.checked)} />
-        <span>Permitir que agentes con la capacidad <span className="mono">study:publish</span> publiquen estudios</span>
+        <span>Allow agents with the <span className="mono">study:publish</span> capability to publish studies</span>
       </label>
       <div className="field" style={{ maxWidth: 260 }}>
-        <label htmlFor="pol-max">Límite máximo por estudio (USD)</label>
+        <label htmlFor="pol-max">Maximum cap per study (USD)</label>
         <input id="pol-max" className="input" type="number" min={0} step="0.01" value={max} disabled={disabled || !on} onChange={(e) => setMax(e.target.value)} />
       </div>
       <div className="cluster">
-        <button className="btn" type="submit" disabled={pending || disabled}>{pending ? 'Guardando…' : 'Guardar política'}</button>
+        <button className="btn" type="submit" disabled={pending || disabled}>{pending ? 'Saving…' : 'Save policy'}</button>
         {msg && <span className={msg.ok ? 'small' : 'field-error'} role={msg.ok ? 'status' : 'alert'}>{msg.text}</span>}
       </div>
     </form>

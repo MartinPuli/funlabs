@@ -16,7 +16,7 @@ declare
   v_id uuid;
 begin
   if p_password is null or char_length(p_password) < 24 then
-    raise exception 'La contraseña de servicio debe tener al menos 24 caracteres' using errcode = '22023';
+    raise exception 'The service password must be at least 24 characters long' using errcode = '22023';
   end if;
   select id into v_id from auth.users where email = lower(p_email);
   if v_id is null then

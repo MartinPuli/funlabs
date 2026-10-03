@@ -44,7 +44,7 @@ describe('scoped edits', () => {
   const highlight = {
     find: "ctx.fillStyle = on ? palette.ledOn : palette.ledOff;",
     replace: "ctx.fillStyle = on ? palette.ledOn : '#ffb347';",
-    reason: 'LED visible cuando está apagado',
+    reason: 'LED visible when it is off',
   };
 
   it('accepts a change inside the presentation region and keeps the suite green', () => {
@@ -63,7 +63,7 @@ describe('scoped edits', () => {
     const res = applyScopedEdits(baseline, [{ find: "'#P.........^^^^^^^^........D.#',", replace: "'#P..........................D#'," }]);
     expect(res.ok).toBe(false);
     if (res.ok) return;
-    expect(res.errors.join(' ')).toMatch(/fuera de una región editable/);
+    expect(res.errors.join(' ')).toMatch(/falls outside an editable region/);
   });
 
   it('rejects a change to the physics', () => {
@@ -79,12 +79,12 @@ describe('scoped edits', () => {
   it('rejects ambiguous and missing anchors', () => {
     const ambiguous = applyScopedEdits(baseline, [{ find: 'ctx.fillStyle', replace: 'ctx.fillStyle' }]);
     expect(ambiguous.ok).toBe(false);
-    const missing = applyScopedEdits(baseline, [{ find: 'esto no existe', replace: 'x' }]);
+    const missing = applyScopedEdits(baseline, [{ find: 'this does not exist', replace: 'x' }]);
     expect(missing.ok).toBe(false);
   });
 
   it('flags a presentation change that breaks rendering', () => {
-    const res = applyScopedEdits(baseline, [{ find: 'function drawHud(ctx, v) {', replace: 'function drawHud(ctx, v) { if (v.status === "playing") { throw new Error("hud roto"); }' }]);
+    const res = applyScopedEdits(baseline, [{ find: 'function drawHud(ctx, v) {', replace: 'function drawHud(ctx, v) { if (v.status === "playing") { throw new Error("broken hud"); }' }]);
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     const results = runHeadlessSuite(suite, res.source, baseline);

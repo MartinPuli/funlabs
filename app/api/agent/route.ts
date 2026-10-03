@@ -11,7 +11,7 @@ export function GET() {
     name: 'FUNLABS agent API',
     rest: `${env.siteUrl}/api/agent/{tool}`,
     mcp: `${env.siteUrl}/api/mcp`,
-    auth: 'Authorization: Bearer fla_... (credencial de trabajo limitada por actor, estudio, capacidades y caducidad)',
+    auth: 'Authorization: Bearer fla_... (work credential limited by actor, study, capabilities and expiry)',
     payments_mode: 'test',
     capabilities: CAPABILITIES,
     tools: toolCatalog(),

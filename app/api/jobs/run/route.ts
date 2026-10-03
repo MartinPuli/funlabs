@@ -11,11 +11,11 @@ export const maxDuration = 300;
 export async function POST(request: Request) {
   const supabase = await createUserClient();
   const { data } = await supabase.auth.getUser();
-  if (!data.user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+  if (!data.user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   const body = (await request.json().catch(() => ({}))) as { study_id?: string };
   if (body.study_id) {
     const visible = await supabase.from('studies').select('id').eq('id', body.study_id).maybeSingle();
-    if (!visible.data) return NextResponse.json({ error: 'Sin acceso al estudio' }, { status: 403 });
+    if (!visible.data) return NextResponse.json({ error: 'No access to the study' }, { status: 403 });
   }
   const worker = await workerClient();
   const report = await runJobs(worker, { maxJobs: 6, deadlineMs: 270_000 });

@@ -4,19 +4,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const TABS = [
-  { href: '', label: 'Resumen' },
-  { href: '/evidencia', label: 'Evidencia' },
-  { href: '/versiones', label: 'Versiones' },
-  { href: '/comparacion', label: 'Comparación' },
-  { href: '/agentes', label: 'Agentes' },
-  { href: '/datos', label: 'Datos' },
+  { href: '', label: 'Overview' },
+  { href: '/evidence', label: 'Evidence' },
+  { href: '/versions', label: 'Versions' },
+  { href: '/comparison', label: 'Comparison' },
+  { href: '/agents', label: 'Agents' },
+  { href: '/data', label: 'Data' },
 ];
 
 export function StudyTabs({ studyId }: { studyId: string }) {
   const path = usePathname();
-  const base = `/lab/estudios/${studyId}`;
+  const base = `/lab/studies/${studyId}`;
   return (
-    <nav className="tabs-list" aria-label="Secciones del estudio">
+    <nav className="tabs-list" aria-label="Study sections">
       {TABS.map((t) => {
         const href = base + t.href;
         const active = t.href === '' ? path === base : path.startsWith(href);

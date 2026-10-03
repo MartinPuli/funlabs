@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # FUNLABS notes for coding agents
 
-- Product spec (Spanish): `FUNLABS.md`. Architecture and runbook: `docs/ARCHITECTURE.md`.
+- Product spec: `FUNLABS.md`. Architecture and runbook: `docs/ARCHITECTURE.md`.
 - Shared server code lives in `lib/` and uses explicit `.ts` import extensions so Node scripts can import it directly.
 - Never put service keys or provider keys in the repo. Local secrets go in `.env.local` (gitignored).
 - Testers and agents never get a database identity: they use scoped tokens against `/api/*`, and the backend acts as the worker identity.

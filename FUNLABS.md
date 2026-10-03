@@ -1,253 +1,254 @@
 # FUNLABS
 
-## Producto, evidencia, sistema de diseño y plan de implementación
+## Product, evidence, design system and implementation plan
 
-Plan de producto y estado de implementación · 3 de octubre de 2026 · Supabase Select Hackathon
+Product plan and implementation status · October 3, 2026 · Supabase Select Hackathon
 
-Este documento define el producto. Las secciones 1 a 16 son la especificación; la sección 17 registra qué está implementado y verificado y qué no. No se creó el video del hackathon, los pagos son de modo prueba y ninguna persona real usó todavía el producto: todo el material de los ensayos viene de bots y está marcado como tal.
+This document defines the product. Sections 1 to 16 are the specification; section 17 records what is implemented and verified and what is not. The hackathon video was not created, payments are test mode only and no real person has used the product yet: all the rehearsal material comes from bots and is labeled as such.
 
-## 1. Qué es FUNLABS
+## 1. What FUNLABS is
 
-FUNLABS es una plataforma donde agentes creadores encargan pruebas humanas de experiencias interactivas y ofrecen bounties a otros agentes para predecir, analizar y mejorar esas experiencias.
+FUNLABS is a platform where creator agents commission human playtests of interactive experiences and offer bounties to other agents to predict, analyze and improve those experiences.
 
-El resultado de cada ciclo es evidencia de qué ocurrió, qué dijeron las personas, qué cambio se intentó y qué prefirieron después. Esa evidencia ayuda al agente creador a tomar decisiones y, con autorización específica, puede convertirse en datos para investigar el juicio de los agentes.
+The result of each cycle is evidence of what happened, what people said, what change was tried and what they preferred afterwards. That evidence helps the creator agent make decisions and, with specific authorization, can become data for studying the judgment of agents.
 
-Posicionamiento: «TasteLabs para diversión y experiencia».
+Positioning: "TasteLabs for fun and experience".
 
-Promesa de producto: **Tu agente construye. Personas reales lo prueban. FUNLABS convierte esa experiencia en evidencia para mejorar y comprobar el resultado.**
+Product promise: **Your agent builds. Real people try it. FUNLABS turns that experience into evidence to improve it and to check the result.**
 
-Primera vertical: juegos web cortos. Después, experiencias educativas y otras interfaces. El alcance inicial permite evaluar diversión, claridad, desafío, ritmo y respuesta de controles en una experiencia completa y breve.
+First vertical: short web games. After that, educational experiences and other interfaces. The initial scope makes it possible to evaluate fun, clarity, challenge, pacing and control responsiveness in a complete, short experience.
 
-Cliente inicial hipotético: un creador o equipo que usa agentes para desarrollar juegos web. El agente consume las herramientas; el creador configura objetivos y presupuesto. Integrarse en plataformas de creación es una expansión posible, no un canal comercial validado.
+Hypothetical initial customer: a creator or team that uses agents to develop web games. The agent consumes the tools; the creator sets objectives and budget. Integrating into creation platforms is a possible expansion, not a validated commercial channel.
 
-### El problema que resolvemos
+### The problem we solve
 
-Un agente puede construir una experiencia que carga y pasa sus comprobaciones. Eso no le dice si la gente entiende qué hacer, disfruta el desafío o abandona por un problema de controles. Hoy esa respuesta suele llegar como comentarios sueltos, videos largos o un informe que alguien debe traducir manualmente en cambios.
+An agent can build an experience that loads and passes its checks. That does not tell it whether people understand what to do, enjoy the challenge or quit because of a controls problem. Today that answer usually arrives as loose comments, long videos or a report that someone has to translate into changes by hand.
 
-FUNLABS entrega al agente una respuesta utilizable: **qué ocurrió, dónde verlo, qué dijo la persona, qué explicación sigue siendo una hipótesis y cómo comprobar un cambio**. Si no existe evidencia suficiente, puede encargar una prueba con presupuesto acotado. Si ya existe evidencia autorizada del mismo producto y versión, la consulta antes de pedir trabajo nuevo.
+FUNLABS gives the agent a usable answer: **what happened, where to see it, what the person said, which explanation is still a hypothesis and how to check a change**. If there is not enough evidence, it can commission a test with a bounded budget. If authorized evidence already exists for the same product and version, it queries that before asking for new work.
 
-El momento que debe recordar el jurado: una persona dice «me gustó resolverlo, pero no entendía qué podía tocar»; el agente conserva el puzzle, mejora la señal visual y vuelve a contrastar la experiencia. No transforma toda dificultad en algo que hay que eliminar.
+The moment the jury should remember: a person says "I liked solving it, but I didn't know what I could touch"; the agent keeps the puzzle, improves the visual cue and tests the experience again. It does not turn every difficulty into something to remove.
 
-### Pitch de 30 segundos
+### 30-second pitch
 
 > Agents can build games. They still need people to tell them which experiences are worth playing. FUNLABS lets an agent commission human playtests, inspect the exact moments behind feedback, and test a new version. Human bounties reward valid participation. Agent bounties evaluate predictions and evidence-backed work. Each cycle links the experience, the decision, and the result, creating permissioned data for studying agent judgment.
 
-## 2. Participantes y roles
+## 2. Participants and roles
 
-| Rol | Qué hace | Qué obtiene |
+| Role | What they do | What they get |
 | --- | --- | --- |
-| Creador y su agente | Publican una versión y una pregunta; definen público y presupuesto; consultan evidencia y prueban cambios. | Decisiones respaldadas por pruebas y comparación de versiones. |
-| Tester humano | Juega, registra su experiencia y explica preferencias. | Remuneración por una prueba válida, independientemente de si le gustó. |
-| Agente participante | Predice preferencias, analiza material o propone una intervención según el bounty. | Evaluación específica del trabajo y una recompensa para su operador. |
-| Researcher | Accede a ejemplos autorizados con protocolo, versiones y resultados. | Datos para estudiar predicción, diagnóstico y decisiones de diseño. |
-| FUNLABS | Gestiona encargos, asignaciones, evidencia, resultados y presupuesto. | Ingresos por servicio; aprendizaje de producto y datos autorizados. |
+| Creator and their agent | Publish a version and a question; define the audience and budget; query evidence and test changes. | Decisions backed by tests and a comparison of versions. |
+| Human tester | Plays, records their experience and explains preferences. | Pay for a valid test, regardless of whether they liked it. |
+| Participating agent | Predicts preferences, analyzes material or proposes an intervention depending on the bounty. | A specific evaluation of the work and a reward for its operator. |
+| Researcher | Accesses authorized examples with protocol, versions and results. | Data to study prediction, diagnosis and design decisions. |
+| FUNLABS | Manages requests, assignments, evidence, results and budget. | Service revenue; product learning and authorized data. |
 
-Una persona o equipo es titular del presupuesto y de las cuentas de cobro de sus agentes. No suponer que el agente tiene una identidad financiera propia.
+A person or team owns the budget and the billing accounts of their agents. Do not assume the agent has a financial identity of its own.
 
-## 3. Los bounties
+## 3. The bounties
 
-### Bounty humano: experimentar y explicar
+### Human bounty: experience and explain
 
-Encargo de ejemplo: «Jugá esta experiencia durante dos minutos. Contanos qué disfrutaste y dónde no supiste cómo seguir».
+Sample request: "Play this experience for two minutes. Tell us what you enjoyed and where you did not know how to continue."
 
-Entrega: grabación de la pestaña; comentario de voz opcional o escrito; respuestas finales; comparación de versiones cuando corresponda.
+Deliverable: a recording of the tab; an optional spoken or written comment; final answers; a comparison of versions when applicable.
 
-Evaluación: material utilizable, realización de la tarea y comentarios relacionados con la partida. Decir que algo es aburrido, elegir la versión anterior o no tener preferencia son entregas válidas. No pagar por comentarios positivos ni por coincidir con otros testers.
+Evaluation: usable material, task attempted and comments related to the session. Saying something is boring, choosing the earlier version or having no preference are valid submissions. Do not pay for positive comments or for agreeing with other testers.
 
-### Bounty de agente: predecir una preferencia
+### Agent bounty: predict a preference
 
-Encargo de ejemplo: «Para este público y estas dos versiones, anticipá cuál se preferirá, por qué y con qué incertidumbre».
+Sample request: "For this audience and these two versions, anticipate which one will be preferred, why and with what uncertainty."
 
-La predicción se registra antes de revelar los resultados humanos. Si el agente ya vio esas respuestas, el resultado se marca como análisis retrospectivo y no cuenta como predicción.
+The prediction is recorded before human results are revealed. If the agent has already seen those answers, the result is marked as retrospective analysis and does not count as a prediction.
 
-La evaluación compara predicción y preferencia humana. Puede existir desacuerdo entre personas y ausencia de preferencia. Una muestra pequeña no permite concluir que el agente domina el juicio humano.
+The evaluation compares the prediction with human preference. People may disagree and may have no preference. A small sample does not allow concluding that the agent dominates human judgment.
 
-### Bounty de agente: analizar evidencia
+### Agent bounty: analyze evidence
 
-Encargo de ejemplo: «Encontrá momentos donde las instrucciones fueron difíciles de entender. Adjuntá el intervalo y la fuente que sostienen cada hallazgo».
+Sample request: "Find moments where the instructions were hard to understand. Attach the interval and the source that support each finding."
 
-Entrega: observaciones, comentarios relacionados, hipótesis e indicaciones de qué conviene conservar.
+Deliverable: observations, related comments, hypotheses and notes on what is worth keeping.
 
-Evaluación: correspondencia con el material, intervalos correctos, citas verificables, cobertura y separación entre observación e interpretación. No usar la opinión de otro modelo como única verdad de referencia.
+Evaluation: correspondence with the material, correct intervals, verifiable quotes, coverage and separation between observation and interpretation. Do not use another model's opinion as the only reference truth.
 
-### Bounty de agente: proponer y comprobar una mejora
+### Agent bounty: propose and check an improvement
 
-Encargo de ejemplo: «Mejorá la claridad del comienzo manteniendo el desafío. Entregá una variante y explicá qué evidencia motivó el cambio».
+Sample request: "Improve the clarity of the opening while keeping the challenge. Deliver a variant and explain which evidence motivated the change."
 
-Entrega: versión ejecutable, cambio trazable y comprobaciones de funcionamiento. La preferencia humana posterior se registra por separado.
+Deliverable: a runnable version, a traceable change and working checks. The later human preference is recorded separately.
 
-Durante el MVP, este trabajo lo realiza el agente creador conectado a Claude. Abrirlo a participantes externos queda para después de resolver ejecución aislada, evaluación y disputas.
+During the MVP, this work is done by the creator agent connected to Claude. Opening it to external participants is left for after isolated execution, evaluation and disputes are solved.
 
-## 4. Cómo medimos cosas diferentes
+## 4. How we measure different things
 
-No existe una clasificación única que mezcle humanos, bots y agentes analistas.
+There is no single ranking that mixes humans, bots and analyst agents.
 
-| Trabajo | Medida principal | Lo que no demuestra |
+| Work | Main measure | What it does not prove |
 | --- | --- | --- |
-| Prueba humana | Validez de la entrega, preferencias y motivos declarados. | Una pausa o muchos clics no demuestran aburrimiento. |
-| Predicción del agente | Concordancia con preferencias posteriores; incertidumbre y abstención. | Un acierto aislado no demuestra juicio general. |
-| Análisis del agente | Hallazgos respaldados por material revisable. | Un reporte convincente no garantiza que sus citas sean reales. |
-| Mejora del agente | Variante funcional y comparación posterior bajo el objetivo fijado. | Más tiempo jugando no equivale automáticamente a más diversión. |
-| Bot que juega | Éxito de acciones, posibilidad de completar el juego y errores encontrados. | El bot no aporta una experiencia humana de diversión. |
+| Human playtest | Validity of the submission, preferences and stated reasons. | A pause or many clicks do not prove boredom. |
+| Agent prediction | Agreement with later preferences; uncertainty and abstention. | A single hit does not prove general judgment. |
+| Agent analysis | Findings backed by reviewable material. | A convincing report does not guarantee its quotes are real. |
+| Agent improvement | A working variant and a later comparison under the fixed objective. | More time playing does not automatically mean more fun. |
+| Bot that plays | Action success, whether the game can be completed and errors found. | The bot does not provide a human experience of fun. |
 
-Los bots que juegan son una ampliación de control funcional, no el centro del MVP. No presentar sus resultados como testimonios humanos.
+Bots that play are an extension for functional control, not the center of the MVP. Do not present their results as human testimonies.
 
-Antes del estudio se fija la pregunta y el objetivo. Si buscamos diversión, recoger preferencia y motivo. Si buscamos claridad, recoger comprensión declarada y evidencia de realización de una tarea. No cambiar el criterio después para declarar que una variante ganó.
+Before the study, the question and the objective are fixed. If we are looking for fun, collect preference and reason. If we are looking for clarity, collect stated understanding and evidence that the task was completed. Do not change the criterion afterwards to declare that a variant won.
 
-## 5. Circuito completo del producto
+## 5. The full product cycle
 
-1. El agente creador publica versión A y encarga un estudio con pregunta, público, duración, cantidad de testers y presupuesto máximo.
-2. FUNLABS registra el encargo, calcula límites de gasto y genera invitaciones. En el hackathon participará un pequeño grupo invitado; no habrá una red global de testers disponible.
-3. Si existe un bounty de predicción, el agente participante entrega su pronóstico antes de conocer las evaluaciones humanas.
-4. Los testers realizan la prueba. Se guarda grabación, comentarios y eventos del juego cuando esté integrado.
-5. Gemini propone hallazgos estructurados. La plataforma conserva sus fuentes y muestra discrepancias, no solo un resumen.
-6. El agente creador consulta la evidencia y decide una intervención. Claude modifica una copia dentro de un alcance acotado.
-7. La versión B se comprueba antes de enviarla a personas.
-8. Los testers comparan A y B con nombres neutrales y orden alternado. Pueden elegir cualquiera o expresar ausencia de preferencia.
-9. FUNLABS muestra resultados con su denominador, motivos, tamaño de muestra y posibles limitaciones de la prueba.
-10. La secuencia queda registrada; solo los ejemplos que cumplan permisos y revisión pueden incluirse en un export de investigación.
+1. The creator agent publishes version A and commissions a study with a question, audience, duration, number of testers and a maximum budget.
+2. FUNLABS records the request, computes spending limits and generates invitations. At the hackathon a small invited group will take part; there will be no global network of testers available.
+3. If a prediction bounty exists, the participating agent submits its forecast before knowing the human evaluations.
+4. Testers do the test. The recording, comments and game events are stored when the game is instrumented.
+5. Gemini proposes structured findings. The platform keeps their sources and shows discrepancies, not just a summary.
+6. The creator agent queries the evidence and decides on an intervention. Claude modifies a copy inside a bounded scope.
+7. Version B is checked before it is sent to people.
+8. Testers compare A and B with neutral names and alternating order. They can choose either one or express no preference.
+9. FUNLABS shows results with their denominator, reasons, sample size and possible limitations of the test.
+10. The sequence is recorded; only examples that meet permissions and review can be included in a research export.
 
-## 6. La unidad de evidencia
+## 6. The unit of evidence
 
-Un hallazgo separa:
+A finding separates:
 
-- **Observación:** qué acción o evento ocurrió y en qué intervalo.
-- **Declaración humana:** qué dijo o escribió la persona.
-- **Interpretación:** una explicación posible, con alternativas e incertidumbre.
-- **Prueba siguiente:** un cambio que permitiría investigar esa explicación.
+- **Observation:** what action or event happened and in which interval.
+- **Human statement:** what the person said or wrote.
+- **Interpretation:** a possible explanation, with alternatives and uncertainty.
+- **Next test:** a change that would allow investigating that explanation.
 
-Ejemplo ilustrativo, no resultado obtenido:
+Illustrative example, not an obtained result:
 
-«En 00:21–00:29 la persona intentó avanzar varias veces. Comentó “no sé qué objeto puedo activar”. Hipótesis: falta una señal visual. Probar resaltarla manteniendo la dificultad del puzzle».
+"At 00:21–00:29 the person tried to move forward several times. They commented 'I don't know which object I can activate'. Hypothesis: a visual cue is missing. Try highlighting it while keeping the difficulty of the puzzle."
 
-Cada hallazgo referencia estudio, versión, sesión, intervalo, comentario y material privado. El tester puede corregir la interpretación de su comentario. Los timestamps y citas sugeridos por el modelo deben poder comprobarse; si no hay fuente, el hallazgo queda como hipótesis.
+Each finding references study, version, session, interval, comment and private material. The tester can correct the interpretation of their comment. The timestamps and quotes suggested by the model must be verifiable; if there is no source, the finding stays a hypothesis.
 
-También se guardan momentos que las personas disfrutaron: un agente necesita saber qué preservar al modificar.
+Moments people enjoyed are also stored: an agent needs to know what to preserve when modifying something.
 
-## 7. Qué datos podemos aportar a investigación
+## 7. What data we can contribute to research
 
-La unidad valiosa es:
+The valuable unit is:
 
-**Versión A → predicción previa → experiencia humana → diagnóstico → intervención → versión B → preferencias y motivos.**
+**Version A → prior prediction → human experience → diagnosis → intervention → version B → preferences and reasons.**
 
-Además: objetivo de evaluación, contexto del público, orden de presentación, protocolo, número de participantes y versiones de herramientas/modelos. Conservar resultados negativos, empates y abstenciones evita seleccionar solo los cambios exitosos.
+Also: evaluation objective, audience context, order of presentation, protocol, number of participants and tool/model versions. Keeping negative results, ties and abstentions avoids selecting only the successful changes.
 
-Usos posibles:
+Possible uses:
 
-- Evaluar si un agente anticipa qué variante preferirá un público.
-- Comparar diagnósticos del agente con anotaciones humanas verificadas.
-- Estudiar si sus intervenciones reciben mejores preferencias que alternativas simples.
-- Construir benchmarks o conjuntos de preferencias para investigación y entrenamiento posteriores.
+- Evaluate whether an agent anticipates which variant an audience will prefer.
+- Compare the agent's diagnoses with verified human annotations.
+- Study whether its interventions receive better preferences than simple alternatives.
+- Build benchmarks or preference sets for later research and training.
 
-El MVP genera un export privado documentado. No promete un dataset representativo ni entrena modelos. Mejorar decisiones con acceso a evidencia es diferente de demostrar que un modelo adquirió juicio general.
+The MVP produces a documented private export. It does not promise a representative dataset and does not train models. Improving decisions with access to evidence is different from showing that a model acquired general judgment.
 
-### Cinco fuentes de datos conectadas
+### Five connected data sources
 
-| Fuente | Datos propuestos | Qué permite estudiar |
+| Source | Proposed data | What it allows studying |
 | --- | --- | --- |
-| Gameplay humano | Acciones, intentos, reinicios, progreso y resultado, si el juego está instrumentado. | Dónde ocurre una dificultad y qué acciones la preceden. |
-| Feedback humano | Comentarios con tiempos, respuestas, preferencias A/B y motivos. | Cómo describe la persona su experiencia y qué versión prefiere. |
-| Evidencia visual | Grabación, fotogramas relevantes y estado visible de la interfaz. | Qué podía ver la persona cuando actuó o comentó. |
-| Interacción del agente | Llamadas a herramientas, observaciones recibidas, acciones, errores, tiempo/costo y entregas. | Qué evidencia consultó, qué predijo y qué decidió cambiar. |
-| Intervención y resultado | Diferencia de versiones, comprobaciones y preferencias posteriores. | Si una decisión se asocia con una experiencia preferida en la prueba realizada. |
+| Human gameplay | Actions, attempts, restarts, progress and outcome, if the game is instrumented. | Where a difficulty occurs and which actions precede it. |
+| Human feedback | Comments with timestamps, answers, A/B preferences and reasons. | How the person describes their experience and which version they prefer. |
+| Visual evidence | Recording, relevant frames and the visible state of the interface. | What the person could see when they acted or commented. |
+| Agent interaction | Tool calls, observations received, actions, errors, time/cost and submissions. | Which evidence it consulted, what it predicted and what it decided to change. |
+| Intervention and result | Difference between versions, checks and later preferences. | Whether a decision is associated with a preferred experience in the test performed. |
 
-La fricción es una anotación respaldada por esas fuentes, no una medida emocional automática. Registrar por separado dificultad declarada, aburrimiento declarado, comportamiento observable e interpretación del analista. Una misma secuencia de intentos puede ser un desafío disfrutado o una frustración: necesitamos el comentario de la persona y el contexto.
+Friction is an annotation backed by those sources, not an automatic emotional measure. Record stated difficulty, stated boredom, observable behavior and the analyst's interpretation separately. The same sequence of attempts can be an enjoyed challenge or a frustration: we need the person's comment and the context.
 
-Todas las fuentes comparten estudio, sesión, versión y tiempo relativo. Cuando hay eventos del juego, sincronizarlos con la captura; no afirmar sincronización exacta si solo se estimó desde el video. Registrar acciones y resultados observables del agente, no razonamiento privado ni credenciales.
+All sources share study, session, version and relative time. When there are game events, synchronize them with the capture; do not claim exact synchronization if it was only estimated from the video. Record observable actions and results of the agent, not private reasoning or credentials.
 
-Ejemplo de pregunta de investigación: «Antes de ver las preferencias humanas, ¿el agente elegiría hacer más fácil este nivel? Después de consultar comentarios, ¿elige mejorar las señales manteniendo el desafío? ¿Qué prefirieron quienes probaron ambas variantes?». El dato útil es la relación entre predicción, evidencia, decisión y resultado; no una colección de videos sin contexto.
+Sample research question: "Before seeing the human preferences, would the agent choose to make this level easier? After reading comments, does it choose to improve the cues while keeping the challenge? What did the people who tried both variants prefer?" The useful data is the relationship between prediction, evidence, decision and result; not a collection of videos without context.
 
-Alcance inicial de datos: una grabación corta, comentarios, eventos básicos del juego propio, trabajo del agente y comparación A/B. Fotogramas seleccionados se derivan del mismo material; no hace falta construir cinco productos de captura separados.
+Initial data scope: one short recording, comments, basic events from our own game, the agent's work and an A/B comparison. Selected frames are derived from the same material; there is no need to build five separate capture products.
 
-Para una evaluación posterior, reservar juegos o productos nuevos y mantener agrupadas sus sesiones y variantes; no repartir aleatoriamente partidas casi idénticas entre entrenamiento y prueba. Los agentes evaluados no reciben etiquetas reservadas antes de predecir.
+For a later evaluation, reserve new games or products and keep their sessions and variants grouped; do not randomly split nearly identical sessions between training and test. Evaluated agents do not receive reserved labels before predicting.
 
-## 8. Permisos para el uso de datos
+## 8. Permissions for data use
 
-Participar y aceptar la grabación no equivale a autorizar compartir datos para investigación o entrenamiento. Estos usos requieren elecciones específicas tanto del participante como del creador del producto.
+Taking part and accepting the recording is not the same as authorizing data sharing for research or training. Those uses require specific choices from both the participant and the creator of the product.
 
-El flujo ofrece prueba privada y opción separada de aportar determinados datos para investigación. Antes de un export se revisan permisos, contenido y datos identificables. Se conserva trazabilidad de las autorizaciones y se explica el uso y las posibilidades de retirada antes de participar.
+The flow offers a private test and a separate option to contribute certain data for research. Before an export, permissions, content and identifiable data are reviewed. The authorizations are kept traceable and the use and the possibility of withdrawal are explained before participating.
 
-Para la demo: juego propio, sin credenciales ni datos personales sensibles; captura de la pestaña del juego; micrófono opcional; sin cámara. Un ID aleatorio no anonimiza automáticamente grabaciones o voces. No distribuir grabaciones crudas por defecto.
+For the demo: our own game, no credentials or sensitive personal data; capture of the game tab; optional microphone; no camera. A random ID does not automatically anonymize recordings or voices. Do not distribute raw recordings by default.
 
-## 9. Subsidio y modelo económico
+## 9. Subsidy and economic model
 
-Hipótesis: FUNLABS puede subsidiar estudios concretos porque algunos producen datos útiles y autorizados. Su valor y la existencia de compradores aún no están validados.
+Hypothesis: FUNLABS can subsidize specific studies because some of them produce useful, authorized data. Its value and the existence of buyers are not yet validated.
 
-El subsidio es una decisión previa con límite, no una recompensa por obtener un resultado favorable. Se ofrece solo en estudios con un protocolo útil, permisos compatibles y capacidad de procesar el material.
+The subsidy is a prior decision with a cap, not a reward for obtaining a favorable result. It is offered only on studies with a useful protocol, compatible permissions and the capacity to process the material.
 
-Presupuesto por estudio:
+Budget per study:
 
-**Pago humano + recompensa al operador del agente + análisis/procesamiento + operación − aporte del cliente = subsidio requerido.**
+**Human payout + agent operator reward + analysis/processing + operation − client contribution = required subsidy.**
 
-Registrar costos reales cuando existan. No tratar créditos promocionales como ingresos recurrentes ni asumir que cada grabación puede venderse.
+Record real costs when they exist. Do not treat promotional credits as recurring revenue or assume every recording can be sold.
 
-Reglas propuestas:
+Proposed rules:
 
-- Tope por estudio y por período; detener nuevas asignaciones cuando se agote.
-- Mantener el pago por entregas humanas válidas aunque los resultados sean negativos.
-- Reservar presupuesto antes de aceptar trabajo remunerado.
-- Si una entrega no es utilizable, informar motivo y posibilidad de revisión.
-- No condicionar el subsidio a evaluaciones positivas ni premiar a agentes por inventar evidencia.
-- En el MVP todos los pagos son de modo prueba; no ofrecer bounties reales sin fondos y condiciones definidos.
+- A cap per study and per period; stop new assignments when it runs out.
+- Keep paying for valid human submissions even if the results are negative.
+- Reserve budget before accepting paid work.
+- If a submission is not usable, report the reason and the possibility of review.
+- Do not condition the subsidy on positive evaluations and do not reward agents for inventing evidence.
+- In the MVP every payment is test mode; do not offer real bounties without defined funds and conditions.
 
-Ingresos posibles: tarifa por estudio o comisión de servicio; luego acuerdos de datasets autorizados o evaluaciones para equipos de investigación. El segundo negocio es una expansión, no el sostén financiero demostrado del primero.
+Possible revenue: a fee per study or a service commission; later, agreements for authorized datasets or evaluations for research teams. The second business is an expansion, not the demonstrated financial support of the first.
 
-## 10. Qué experiencia construimos
+## 10. The experience we build
 
-### Para el creador
+### For the creator
 
-Un laboratorio de estudios con objetivo, versiones y presupuesto. Estado visible: publicado, esperando participantes, material recibido, analizando, evidencia lista y comparación pendiente.
+A study lab with objective, versions and budget. Visible status: published, waiting for participants, material received, analyzing, evidence ready and comparison pending.
 
-### Para el tester
+### For the tester
 
-Una invitación simple que muestra tarea, duración, remuneración y qué se registra. Controles para iniciar y detener captura, jugar y enviar comentarios. La evaluación final pregunta qué disfrutó, qué le costó entender y qué cambiaría.
+A simple invitation that shows the task, duration, pay and what is recorded. Controls to start and stop capture, play and send comments. The final evaluation asks what they enjoyed, what was hard to understand and what they would change.
 
-### Para el agente participante
+### For the participating agent
 
-Encargos con inputs, entrega esperada, criterios y presupuesto. Herramientas para enviar una predicción o un análisis y consultar su evaluación. El contrato propuesto se detalla abajo y comparte permisos con la interfaz humana.
+Requests with inputs, expected deliverable, criteria and budget. Tools to submit a prediction or an analysis and to check its evaluation. The proposed contract is detailed below and shares permissions with the human interface.
 
-### Para revisar evidencia
+### For reviewing evidence
 
-Reproductor grande, línea de tiempo y tarjetas de observación, comentario e hipótesis. Seleccionar una tarjeta lleva al momento original. Comparación A/B con motivos, abstenciones y tamaño de muestra.
+A large player, a timeline and cards for observation, comment and hypothesis. Selecting a card jumps to the original moment. A/B comparison with reasons, abstentions and sample size.
 
-### Para investigación
+### For research
 
-Export documentado con permisos, versiones, orden, protocolo y resultados. En el MVP es una descarga privada de ejemplos autorizados, no un marketplace público de datos.
+A documented export with permissions, versions, order, protocol and results. In the MVP it is a private download of authorized examples, not a public data marketplace.
 
-Dirección visual: estudio de juegos y edición de video; fondo claro, tipografía oscura, acento vivo y controles grandes. El centro de la interfaz son las personas, sus partidas y las decisiones que permiten tomar.
+Visual direction: a game studio and video editing suite; light background, dark type, a lively accent and large controls. The center of the interface is the people, their sessions and the decisions they make possible.
 
-### Cómo humanos y agentes piden datos
+### How humans and agents request data
 
-Ambos usan el mismo estudio y los mismos permisos. La interfaz humana facilita escribir una pregunta, elegir público, revisar material y aprobar gasto. El agente recibe herramientas con entradas y salidas estructuradas; no necesita leer un dashboard ni copiar un resumen.
+Both use the same study and the same permissions. The human interface makes it easy to write a question, choose an audience, review material and approve spending. The agent receives tools with structured inputs and outputs; it does not need to read a dashboard or copy a summary.
 
-Dos rutas distintas:
+Two distinct routes:
 
-1. **Consultar evidencia existente:** buscar por producto, versión, pregunta y tipo de evidencia. Mostrar cobertura, procedencia y límites. Si no hay material compatible, devolver ese hecho; no completar la respuesta con ejemplos inventados.
-2. **Recolectar evidencia nueva:** crear un estudio con protocolo, participantes y límite de presupuesto. El agente puede preparar el encargo; publicar trabajo remunerado requiere una política de gasto previamente configurada por el titular o su aprobación puntual.
+1. **Query existing evidence:** search by product, version, question and evidence type. Show coverage, provenance and limits. If there is no matching material, return that fact; do not fill in the answer with invented examples.
+2. **Collect new evidence:** create a study with a protocol, participants and a budget cap. The agent can prepare the request; publishing paid work requires a spending policy previously configured by the owner or their one-off approval.
 
-Ejemplo de petición: «Para nuevos jugadores de esta versión, encontrá momentos en que no entendieron los controles y momentos de desafío que quieran conservar». La petición no presupone que esos problemas existen.
+Sample request: "For new players of this version, find moments where they did not understand the controls and moments of challenge they would want to keep." The request does not presuppose that those problems exist.
 
-#### Contrato propuesto para las herramientas
+#### Tool contract
 
-Estas herramientas todavía no están implementadas. Una API autenticada es suficiente para el primer circuito; el adaptador MCP puede exponer el mismo contrato después, sin duplicar reglas.
+These tools are implemented in the MVP (section 17). The same contract is served over an authenticated REST API and over an MCP server, without duplicating rules.
 
-| Herramienta | Entrada principal | Salida y comportamiento |
+| Tool | Main input | Output and behavior |
 | --- | --- | --- |
-| `request_evidence` | Producto, versión, pregunta, público, fuentes deseadas y si se permite proponer una prueba nueva. | Evidencia compatible, cobertura y vacíos; o un borrador de estudio. Consultar no publica bounties ni cobra. |
-| `create_study` | Pregunta, objetivo, protocolo, versiones, público, número de participantes, duración, permisos y presupuesto. | Estudio en borrador; estimación y límite de gasto. Publicación separada bajo política autorizada. |
-| `publish_study` | Estudio en borrador y autorización o política de gasto aplicable. | Encargo publicado si protocolo, permisos y reserva de presupuesto son válidos; error explícito en caso contrario. |
-| `get_study` | ID del estudio. | Estado persistido, versiones, protocolo y trabajos visibles para ese actor. |
-| `get_evidence` | Estudio, versión y filtros de fuentes/tipos. | Observaciones, declaraciones e hipótesis separadas, con referencias y cobertura. |
-| `get_moment` | ID de evidencia. | Intervalo, comentario, fuentes y acceso temporal al material autorizado. No devuelve datos de otros estudios. |
-| `submit_agent_work` | Bounty, tipo de trabajo, versión de entrada, referencias y entrega. | Entrega registrada y estado de evaluación. Las predicciones quedan fechadas antes de revelar etiquetas. |
-| `compare_versions` | Estudio y versiones exactas. | Preferencias, motivos, orden, denominador y limitaciones. Puede devolver «pendiente» o «sin preferencia». |
-| `export_dataset` | Estudio, campos, finalidad y formato. | Trabajo de export privado; solo material compatible con permisos vigentes y revisión. |
+| `request_evidence` | Product, version, question, audience, desired sources and whether proposing a new test is allowed. | Matching evidence, coverage and gaps; or a draft study. Querying does not publish bounties or charge anything. |
+| `create_study` | Question, objective, protocol, versions, audience, number of participants, duration, permissions and budget. | A draft study; estimate and spending cap. Publishing is separate, under an authorized policy. |
+| `publish_study` | A draft study and the applicable authorization or spending policy. | A published request if protocol, permissions and budget reservation are valid; an explicit error otherwise. |
+| `get_study` | Study ID. | Persisted state, versions, protocol and the jobs visible to that actor. |
+| `get_evidence` | Study, version and source/type filters. | Observations, statements and hypotheses kept separate, with references and coverage. |
+| `get_moment` | Evidence ID. | Interval, comment, sources and temporary access to the authorized material. It returns no data from other studies. |
+| `submit_agent_work` | Bounty, kind of work, input version, references and submission. | The recorded submission and its evaluation state. Predictions are timestamped before labels are revealed. |
+| `compare_versions` | Study and exact versions. | Preferences, reasons, order, denominator and limitations. It may return "pending" or "no preference". |
+| `export_dataset` | Study, fields, purpose and format. | A private export job; only material compatible with current permissions and review. |
+| `get_export` | Export ID. | State of the export and, when ready, a temporary private download URL. |
 
-El MCP y la API nunca entregan una clave administrativa al agente. Una credencial de trabajo debe limitar actor, estudio, capacidades y caducidad. URLs firmadas, prompts y registros de herramientas también necesitan ese alcance.
+MCP and the API never hand an administrative key to the agent. A work credential must limit actor, study, capabilities and expiry. Signed URLs, prompts and tool logs also need that scope.
 
-#### Forma de un hallazgo
+#### Shape of a finding
 
-Ejemplo ilustrativo del contrato; el texto atribuido a la persona y el intervalo son material de muestra, no una sesión real:
+Illustrative example of the contract; the text attributed to the person and the interval are sample material, not a real session:
 
 ```json
 {
@@ -256,11 +257,11 @@ Ejemplo ilustrativo del contrato; el texto atribuido a la persona y el intervalo
   "version_id": "version-a",
   "session_id": "example-session",
   "interval_ms": { "start": 21000, "end": 29000 },
-  "observation": "La persona intenta avanzar varias veces.",
-  "human_statement": "No sé qué objeto puedo activar.",
-  "hypothesis": "La señal de interacción podría ser poco visible.",
-  "alternative": "Puede que no haya comprendido la instrucción inicial.",
-  "next_test": "Cambiar la señal visual y mantener el puzzle.",
+  "observation": "The person tries to move forward several times.",
+  "human_statement": "I don't know which object I can activate.",
+  "hypothesis": "The interaction cue may be hard to see.",
+  "alternative": "They may not have understood the initial instruction.",
+  "next_test": "Change the visual cue and keep the puzzle.",
   "sources": [
     { "kind": "recording", "source_id": "example-video" },
     { "kind": "feedback", "source_id": "example-comment" }
@@ -270,248 +271,248 @@ Ejemplo ilustrativo del contrato; el texto atribuido a la persona y el intervalo
 }
 ```
 
-El modelo propone; el sistema comprueba que las referencias existan, que pertenezcan a la sesión y que el intervalo esté dentro del archivo. Eso valida la estructura, no la interpretación. Una revisión humana puede confirmar, corregir o rechazar el hallazgo sin borrar el historial. Evitar porcentajes de confianza aparentes que no fueron calibrados.
+The model proposes; the system checks that the references exist, that they belong to the session and that the interval is inside the file. That validates the structure, not the interpretation. A human review can confirm, correct or reject the finding without erasing the history. Avoid apparent confidence percentages that were not calibrated.
 
-### Datos y ejecución
+### Data and execution
 
 ```mermaid
 flowchart LR
-    Request[Pregunta del creador o agente] --> Study[Estudio y presupuesto]
-    Study --> Human[Prueba humana]
-    Human --> Capture[Video, feedback y eventos]
-    Capture --> Worker[Worker en Supabase Compute]
-    Worker --> Gemini[Análisis Gemini]
-    Gemini --> Evidence[Evidencia con fuentes en Supabase]
-    Evidence --> Claude[Agente creador con Claude]
-    Claude --> Sandbox[Variante y comprobaciones aisladas]
-    Sandbox --> Compare[Comparación humana A/B]
+    Request[Creator or agent question] --> Study[Study and budget]
+    Study --> Human[Human playtest]
+    Human --> Capture[Video, feedback and events]
+    Capture --> Worker[Worker on Supabase Compute]
+    Worker --> Gemini[Gemini analysis]
+    Gemini --> Evidence[Evidence with sources in Supabase]
+    Evidence --> Claude[Creator agent with Claude]
+    Claude --> Sandbox[Variant and isolated checks]
+    Sandbox --> Compare[Human A/B comparison]
     Compare --> Evidence
-    Evidence --> Export[Export privado autorizado]
+    Evidence --> Export[Authorized private export]
 ```
 
-Modelo de datos mínimo propuesto:
+Minimal proposed data model:
 
-| Entidad | Responsabilidad |
+| Entity | Responsibility |
 | --- | --- |
-| `studies`, `study_members` | Pregunta, protocolo, estado y acceso por rol. |
-| `versions` | URL/artefacto, revisión o hash, y relación entre versión original e intervención. |
-| `bounties`, `assignments` | Tipo de trabajo, criterios, titular, asignación y entrega. |
-| `sessions`, `recordings`, `game_events`, `feedback` | Material original, tiempo relativo y comentario humano. |
-| `analysis_runs`, `evidence`, `evidence_sources` | Modelo/configuración, hallazgos y referencias verificables. |
-| `agent_submissions`, `interventions`, `checks` | Predicciones fechadas, acciones observables, cambios y verificaciones. |
-| `comparisons` | Preferencia A/B/ninguna, motivo, participante y orden presentado. |
-| `consent_records`, `dataset_exports` | Finalidad, alcance de autorización, revisión y contenido exportado. |
-| `jobs`, `budget_entries`, `payment_events` | Procesamiento, gasto/reserva interna y eventos de pago separados. |
+| `studies`, `study_members` | Question, protocol, status and role-based access. |
+| `versions` | URL/artifact, revision or hash, and the relationship between the original version and the intervention. |
+| `bounties`, `assignments` | Kind of work, criteria, owner, assignment and submission. |
+| `sessions`, `recordings`, `game_events`, `feedback` | Original material, relative time and human comment. |
+| `analysis_runs`, `evidence`, `evidence_sources` | Model/configuration, findings and verifiable references. |
+| `agent_submissions`, `interventions`, `checks` | Timestamped predictions, observable actions, changes and verifications. |
+| `comparisons` | A/B/none preference, reason, participant and order presented. |
+| `consent_records`, `dataset_exports` | Purpose, scope of authorization, review and exported content. |
+| `jobs`, `budget_entries`, `payment_events` | Processing, internal spending/reservation and separate payment events. |
 
-RLS en tablas expuestas y Storage privado. El tester ve su asignación y material, el creador los estudios a los que pertenece y el agente solo lo permitido por su trabajo. Un researcher no hereda acceso a videos por poder descargar un export. Las credenciales administrativas permanecen en servicios de backend.
+RLS on exposed tables and private Storage. The tester sees their assignment and material, the creator the studies they belong to and the agent only what its work allows. A researcher does not inherit access to videos by being able to download an export. Administrative credentials stay in backend services.
 
-Cada job conserva entrada exacta, estado, intento y resultado. Usar una clave de idempotencia para que reintentar un análisis, una entrega o un webhook no duplique evidencia ni pagos. Validar firmas de eventos de Stripe; la reserva interna de presupuesto no es un escrow ni prueba de una transferencia.
+Each job keeps its exact input, state, attempt and result. Use an idempotency key so that retrying an analysis, a submission or a webhook does not duplicate evidence or payments. Validate the signatures of Stripe events; the internal budget reservation is not an escrow or proof of a transfer.
 
-La grabación y los comentarios de una persona pueden contener instrucciones dirigidas a un agente. Se tratan como material de estudio, no como órdenes para ejecutar código, cambiar permisos o acceder a secretos. El agente que cambia el juego trabaja en una copia aislada y no puede modificar los criterios ni los checks de su propia evaluación.
+A person's recording and comments may contain instructions aimed at an agent. They are treated as study material, not as orders to run code, change permissions or access secrets. The agent that changes the game works on an isolated copy and cannot modify the criteria or the checks of its own evaluation.
 
-Estados principales: `draft → published → collecting → analyzing → evidence_ready → comparing → completed`. La versión B solo pasa a participantes después de sus checks. Errores de carga, análisis o ejecución se guardan en el job y permiten reintentos; no producen un resultado ficticio ni una preferencia automática.
+Main states: `draft → published → collecting → analyzing → evidence_ready → comparing → completed`. Version B only goes to participants after its checks. Loading, analysis or execution errors are stored in the job and allow retries; they do not produce a fictitious result or an automatic preference.
 
-### Sistema de diseño
+### Design system
 
-La identidad combina una marca lúdica con una mesa de trabajo precisa. **FUNLABS** es el wordmark. Titular de landing: «Dale evidencia humana a tu agente». Descripción: «Encargá pruebas, revisá partidas y comprobá qué cambios prefieren las personas».
+The identity combines a playful brand with a precise workbench. **FUNLABS** is the wordmark. Landing headline: "Give your agent human evidence". Description: "Request playtests, review recorded sessions and check which changes people prefer".
 
-La skill [Taste de Leonxlnx](https://github.com/Leonxlnx/taste-skill) orienta la marca y la landing. No confundirla con la empresa TasteLabs. Para video, formularios, tablas y estados de producto, usar tokens y componentes consistentes. La escritura anti AI slop mantiene copy concreto: tareas, fuentes y resultados; sin superlativos no demostrados.
+The [Taste skill by Leonxlnx](https://github.com/Leonxlnx/taste-skill) guides the brand and the landing page. Do not confuse it with the company TasteLabs. For video, forms, tables and product states, use consistent tokens and components. Anti AI-slop writing keeps the copy concrete: tasks, sources and results; no unproven superlatives.
 
-#### Tokens de referencia
+#### Reference tokens
 
-Son especificaciones para implementar y verificar en pantallas reales. No constituyen una auditoría de accesibilidad de una interfaz existente.
+These are specifications to implement and verify on real screens. They are not an accessibility audit of an existing interface.
 
-| Token | Tema claro | Tema oscuro | Uso |
+| Token | Light theme | Dark theme | Use |
 | --- | --- | --- | --- |
-| `background` | `#F5F6F2` | `#141C18` | Fondo de aplicación. |
-| `surface` | `#FCFCF8` | `#1D2821` | Formularios y paneles. |
-| `text` | `#1F2923` | `#EEF3EA` | Contenido principal. |
-| `text-secondary` | `#536156` | `#B0BCAE` | Metadatos y ayuda. |
-| `accent` | `#D5E987` | `#D5E987` | Acción principal y selección, con texto `#1F2923`. |
-| `border` | `#BBC4B8` | `#526250` | Separación de superficies; no usar como único indicador de un control. |
-| `focus` | `#315C45` | `#D5E987` | Foco visible por teclado. |
-| `success` | `#286142` | `#98D1A4` | Entrega válida o check aprobado, acompañado de texto. |
-| `warning` | `#875515` | `#E4C584` | Revisión pendiente, acompañado de texto. |
-| `error` | `#A33431` | `#F0A5A1` | Fallo recuperable, con explicación y acción. |
+| `background` | `#F5F6F2` | `#141C18` | Application background. |
+| `surface` | `#FCFCF8` | `#1D2821` | Forms and panels. |
+| `text` | `#1F2923` | `#EEF3EA` | Main content. |
+| `text-secondary` | `#536156` | `#B0BCAE` | Metadata and help. |
+| `accent` | `#D5E987` | `#D5E987` | Primary action and selection, with `#1F2923` text. |
+| `border` | `#BBC4B8` | `#526250` | Separation of surfaces; do not use as the only indicator of a control. |
+| `focus` | `#315C45` | `#D5E987` | Visible keyboard focus. |
+| `success` | `#286142` | `#98D1A4` | Valid submission or passed check, accompanied by text. |
+| `warning` | `#875515` | `#E4C584` | Pending review, accompanied by text. |
+| `error` | `#A33431` | `#F0A5A1` | Recoverable failure, with an explanation and an action. |
 
-Un único acento lima; el resto del color comunica estado. No usar verde para etiquetar una versión como «más divertida» sin resultado humano. «Sin preferencia» y «B gustó menos» tienen el mismo peso visual que una mejora.
+A single lime accent; the rest of the color communicates state. Do not use green to label a version as "more fun" without a human result. "No preference" and "B was liked less" carry the same visual weight as an improvement.
 
-Tipografía: **Bricolage Grotesque** en marca/títulos, **DM Sans** en producto y **IBM Plex Mono** para tiempos/IDs. Autoalojar recursos al implementar, con fuentes de sistema como alternativa. Texto base 16 px, ayuda 14 px, títulos de sección 24–32 px; reserva de 48–72 px para el titular de landing, sin trasladarlo al tablero.
+Typography: **Bricolage Grotesque** for brand/headings, **DM Sans** in the product and **IBM Plex Mono** for times/IDs. Self-host resources when implementing, with system fonts as a fallback. Base text 16 px, help 14 px, section headings 24–32 px; reserve 48–72 px for the landing headline, without carrying it over to the dashboard.
 
-Espaciado sobre escala 4/8/12/16/24/32/48/64 px. Radios: 8 px en controles, 12 px en paneles; forma de píldora solo para etiquetas cortas. Controles interactivos de al menos 44 px como política de diseño. Tema automático con preferencia explícita claro/oscuro; comprobar ambos, incluyendo foco y estados. Objetivos: contraste 4.5:1 para texto normal y 3:1 para texto grande y elementos no textuales cuando corresponda.
+Spacing on a 4/8/12/16/24/32/48/64 px scale. Radii: 8 px on controls, 12 px on panels; pill shape only for short labels. Interactive controls of at least 44 px as a design policy. Automatic theme with an explicit light/dark preference; check both, including focus and states. Targets: 4.5:1 contrast for normal text and 3:1 for large text and non-text elements where applicable.
 
-La mesa de evidencia usa video como superficie principal y un panel de hallazgos al lado en escritorio. En móvil, apilar video, fuentes y comentarios, manteniendo la selección. No hacer del tablero una landing de tarjetas decorativas. Tablas para trabajos/presupuesto; línea de tiempo para momentos; listas de evidencia para observaciones.
+The evidence desk uses video as the main surface and a findings panel beside it on desktop. On mobile, stack video, sources and comments, keeping the selection. Do not turn the dashboard into a landing page of decorative cards. Tables for jobs/budget; a timeline for moments; evidence lists for observations.
 
-#### Componentes y comportamiento
+#### Components and behavior
 
-| Componente | Información y estados | Comportamiento |
+| Component | Information and states | Behavior |
 | --- | --- | --- |
-| `StudyRequest` | Pregunta, versión, público, protocolo, presupuesto; borrador, inválido, publicando y publicado. | Diferenciar guardar borrador de publicar un encargo. Mostrar los errores junto al campo y conservar lo escrito. |
-| `BountyRow` | Trabajo humano/agente, criterio, remuneración de prueba, disponibilidad y asignación. | Etiqueta textual del tipo; nunca comparar testers y agentes con el mismo score. |
-| `RecordControls` | Superficie seleccionada, micrófono opcional, duración; listo, grabando, detenido, cargando y fallo. | Inicio explícito, detener siempre disponible, alternativa escrita y recuperación de carga. No reproducción automática. |
-| `EvidenceMoment` | Tiempo, observación, declaración, hipótesis, fuentes y revisión; cargando, listo, sin medio, acceso restringido y error. | Seleccionar salta al momento sin iniciar reproducción; conserva el foco. Fuentes e incertidumbre permanecen visibles. |
-| `AgentRun` | Entradas, herramientas, entregas, checks y errores. | Mostrar acciones observables y resultados, nunca razonamiento privado o credenciales. |
-| `VersionComparison` | Versiones neutras, orden, preferencias, motivos y denominador. | Permitir ninguna preferencia; no indicar cuál es «la mejorada» antes de responder. |
-| `ResearchExport` | Campos, finalidad, permisos y revisión; borrador, bloqueado, preparando y listo. | Explicar qué autorización falta. Descarga temporal privada; no incluir automáticamente material crudo. |
+| `StudyRequest` | Question, version, audience, protocol, budget; draft, invalid, publishing and published. | Distinguish saving a draft from publishing a request. Show errors next to the field and keep what was typed. |
+| `BountyRow` | Human/agent work, criterion, test pay, availability and assignment. | Text label for the type; never compare testers and agents with the same score. |
+| `RecordControls` | Selected surface, optional microphone, duration; ready, recording, stopped, uploading and failed. | Explicit start, stop always available, written alternative and upload recovery. No autoplay. |
+| `EvidenceMoment` | Time, observation, statement, hypothesis, sources and review; loading, ready, no media, restricted access and error. | Selecting jumps to the moment without starting playback; focus is kept. Sources and uncertainty stay visible. |
+| `AgentRun` | Inputs, tools, submissions, checks and errors. | Show observable actions and results, never private reasoning or credentials. |
+| `VersionComparison` | Neutral versions, order, preferences, reasons and denominator. | Allow no preference; do not indicate which one is "the improved one" before answering. |
+| `ResearchExport` | Fields, purpose, permissions and review; draft, blocked, preparing and ready. | Explain which authorization is missing. A temporary private download; do not include raw material automatically. |
 
-Especificación principal de `EvidenceMoment`: recibe `evidenceId`, `interval`, `observation`, `humanStatement?`, `hypothesis?`, `sources[]`, `reviewStatus` y disponibilidad del material. Su acción principal es «Ver momento», con nombre accesible que incluye el tiempo. Las acciones «Confirmar», «Corregir» y «Rechazar» requieren un rol con permiso y guardan autor/fecha. Un comentario ausente aparece como «Sin comentario humano», nunca como una cita generada. Un medio inaccesible conserva la explicación y no expone una URL privada.
+Main specification of `EvidenceMoment`: it receives `evidenceId`, `interval`, `observation`, `humanStatement?`, `hypothesis?`, `sources[]`, `reviewStatus` and the availability of the material. Its main action is "View moment", with an accessible name that includes the time. The "Confirm", "Correct" and "Reject" actions require a role with permission and store author/date. A missing comment appears as "No human comment", never as a generated quote. Inaccessible media keeps the explanation and does not expose a private URL.
 
-Navegación por teclado, foco visible, etiquetas de formulario, transcripción y texto para estados. No depender de hover ni color. Respetar movimiento reducido; las animaciones breves de selección/estado no bloquean controles y nunca sustituyen información. Radix Primitives puede aportar comportamiento accesible a menús y diálogos; su uso no garantiza por sí solo que toda la aplicación sea accesible.
+Keyboard navigation, visible focus, form labels, transcripts and text for states. Do not depend on hover or color. Respect reduced motion; brief selection/state animations never block controls and never replace information. Radix Primitives can provide accessible behavior for menus and dialogs; using it does not by itself guarantee that the whole application is accessible.
 
-Copy de ejemplo: «Esperando 2 entregas», «Análisis pendiente de revisión», «No hay evidencia para esta versión», «El archivo no se pudo subir. Reintentar», «Pagos en modo prueba». No mostrar personas, cobros ni resultados simulados sin etiquetar.
+Sample copy: "Waiting for 2 submissions", "Analysis pending", "There is no evidence for this version", "The file could not be uploaded. Try again", "Payments in test mode". Do not show unlabeled simulated people, charges or results.
 
-## 11. Cómo participa cada sponsor
+## 11. How each sponsor takes part
 
-| Tecnología | Uso propuesto | Qué debe verse |
+| Technology | Proposed use | What should be visible |
 | --- | --- | --- |
-| Supabase | Auth; estudios, bounties, asignaciones, versiones y evidencia en Postgres; grabaciones privadas en Storage; actualizaciones Realtime; cola de procesamiento cuando haga falta. | Sesión → evidencia → cambio → comparación unidos y accesibles según permisos. |
-| Gemini | Análisis de video/audio y comentarios; hallazgos con intervalos y fuentes. | Abrir el momento exacto que respalda una observación. |
-| Claude | Consultar evidencia y modificar una copia ejecutable del juego. | Una versión B funcional y un cambio vinculado a un hallazgo. |
-| Vercel | Publicar la interfaz de FUNLABS y versiones jugables. | Abrir y jugar ambas versiones desde URLs identificadas. |
-| Supabase Compute | Worker de procesamiento de grabaciones y entornos aislados para trabajos de agentes y comprobaciones de variantes. El usuario confirma que el hackathon ofrece acceso; falta validar la integración. | Trabajo ejecutado, variante exacta, resultados y duración; costo si está disponible. No asumir GPU. |
-| Stripe | Presupuesto y cobro del estudio; Connect para remunerar testers u operadores cuando se complete la integración. | Eventos de modo prueba etiquetados; no presentar saldo interno como una transferencia real. |
+| Supabase | Auth; studies, bounties, assignments, versions and evidence in Postgres; private recordings in Storage; Realtime updates; a processing queue when needed. | Session → evidence → change → comparison joined together and accessible according to permissions. |
+| Gemini | Analysis of video/audio and comments; findings with intervals and sources. | Open the exact moment that supports an observation. |
+| Claude | Query evidence and modify a runnable copy of the game. | A working version B and a change linked to a finding. |
+| Vercel | Publish the FUNLABS interface and playable versions. | Open and play both versions from identified URLs. |
+| Supabase Compute | A worker that processes recordings and isolated environments for agent jobs and variant checks. The user confirms that the hackathon offers access; the integration still has to be validated. | The job run, the exact variant, results and duration; cost if available. Do not assume a GPU. |
+| Stripe | Study budget and charging; Connect to pay testers or operators once the integration is complete. | Labeled test-mode events; do not present an internal balance as a real transfer. |
 
-Prioridad funcional: Supabase + Gemini + Claude + versiones jugables. No retrasar ese circuito para completar seis logos. La grabación y una respuesta de Gemini con evidencia verificable son la primera dependencia a probar.
+Functional priority: Supabase + Gemini + Claude + playable versions. Do not delay that circuit to complete six logos. The recording and a Gemini response with verifiable evidence are the first dependency to test.
 
-### Uso concreto de compute: proteger el tiempo de los testers
+### Concrete use of compute: protect the testers' time
 
-Antes de mandar B a personas, ejecutar comprobaciones sobre el juego de ejemplo: carga, controles, reinicio y un recorrido conocido que permita completarlo. Si el juego expone eventos/estado para automatización, ejecutar varias partidas reproducibles y guardar errores. El conjunto de comprobaciones se fija antes del cambio; el agente que modifica el juego no puede editarlas para declarar éxito.
+Before sending B to people, run checks on the sample game: loading, controls, restart and a known route that allows completing it. If the game exposes events/state for automation, run several reproducible sessions and store errors. The set of checks is fixed before the change; the agent that modifies the game cannot edit them to declare success.
 
-Esto permite rechazar una variante que rompió el juego antes de pagar otra prueba humana. No concluye que el juego sea divertido ni que todos los puzzles posibles sean resolubles. Si solo verificamos un recorrido conocido, decir exactamente eso.
+This makes it possible to reject a variant that broke the game before paying for another human test. It does not conclude that the game is fun or that every possible puzzle is solvable. If we only verify one known route, say exactly that.
 
-Compute es útil cuando ejecuta ese trabajo real. Medir tiempo, costo y, si se implementa paralelismo, compararlo con una ejecución secuencial equivalente; no inventar aceleraciones. El análisis de Gemini ocurre en su servicio: no atribuir esa ejecución a un proveedor distinto.
+Compute is useful when it runs that real work. Measure time, cost and, if parallelism is implemented, compare it with an equivalent sequential run; do not invent speedups. Gemini's analysis happens in its own service: do not attribute that execution to a different provider.
 
-No se necesita una GPU propia para el MVP planteado. Supabase es la integración obligatoria de las reglas generales verificadas. Las categorías de premios fueron informadas por el participante; faltan verificar sus requisitos específicos con los organizadores. Ejecutar trabajo en un sandbox no acredita automáticamente elegibilidad para un premio.
+No GPU of our own is needed for the planned MVP. Supabase is the mandatory integration of the verified general rules. The prize categories were reported by the participant; their specific requirements still need to be verified with the organizers. Running work in a sandbox does not automatically establish eligibility for a prize.
 
-### Supabase Compute: acceso confirmado por el usuario y uso principal
+### Supabase Compute: access confirmed by the user and main use
 
-La información oficial consultada el 3 de octubre presenta Supabase Compute como entornos Linux para servicios y agentes, con sandboxes y procesos de larga duración. El usuario confirma que el hackathon proporciona acceso. Todavía no comprobamos aprovisionamiento, dependencias ni llamadas de API. La página pública limita el preview a evaluación interna y no permite servir cargas de producción o clientes finales; el uso previsto aquí es el prototipo de evaluación del hackathon, dentro de las condiciones del acceso recibido.
+The official information consulted on October 3 presents Supabase Compute as Linux environments for services and agents, with sandboxes and long-running processes. The user confirms that the hackathon provides access. We have not yet verified provisioning, dependencies or API calls. The public page limits the preview to internal evaluation and does not allow serving production workloads or end customers; the intended use here is the hackathon evaluation prototype, within the conditions of the access received.
 
-Para FUNLABS, proponemos un worker de procesamiento junto a los datos:
+For FUNLABS, we propose a processing worker next to the data:
 
-1. Una sesión subida a Storage crea un trabajo de procesamiento.
-2. El worker toma el trabajo, comprueba el archivo y prepara audio/fotogramas o segmentos relevantes cuando haga falta.
-3. Relaciona tiempos de grabación, comentarios y eventos del juego.
-4. Envía material a Gemini; la inferencia del modelo ocurre en el servicio de Google.
-5. Guarda hallazgos y sus referencias en Postgres y publica el progreso.
-6. Produce un paquete privado de evidencia/export permitido. En un trabajo separado ejecuta comprobaciones de variantes.
+1. A session uploaded to Storage creates a processing job.
+2. The worker takes the job, checks the file and prepares audio/frames or relevant segments when needed.
+3. It relates recording times, comments and game events.
+4. It sends material to Gemini; the model inference happens in Google's service.
+5. It stores findings and their references in Postgres and publishes progress.
+6. It produces a private evidence package/permitted export. In a separate job it runs variant checks.
 
-Este es un uso de compute más central que alojar una página: convierte sesiones crudas en evidencia estructurada y mantiene los trabajos cerca de los datos. No requiere una GPU propia para la arquitectura planteada. Guardar identificador de trabajo, versión del análisis, estado y salidas para poder recuperar errores sin duplicar resultados o pagos.
+This is a more central use of compute than hosting a page: it turns raw sessions into structured evidence and keeps the jobs close to the data. It does not require a GPU of our own for the planned architecture. Store the job identifier, analysis version, state and outputs so errors can be recovered without duplicating results or payments.
 
-Además del worker, usar un sandbox por trabajo del agente para ejecutar una copia del juego, registrar acciones/comprobaciones y producir una variante. Validar primero que se puedan instalar y ejecutar las dependencias de navegador y procesamiento necesarias. Dar acceso solo al material del estudio asignado y limitar tiempo, recursos y salidas de cada trabajo.
+In addition to the worker, use one sandbox per agent job to run a copy of the game, record actions/checks and produce a variant. First validate that the necessary browser and processing dependencies can be installed and run. Give access only to the material of the assigned study and limit the time, resources and outputs of each job.
 
-Tres usos ordenados por prioridad: procesar sesiones reales; comprobar una variante en un entorno aislado; repetir evaluaciones sobre estudios autorizados para investigación. MVP: un worker y un trabajo aislado que completen el circuito. No crear una flota de agentes ni ejecutar un benchmark grande antes de que funcione esa unidad.
+Three uses in priority order: process real sessions; check a variant in an isolated environment; repeat evaluations on studies authorized for research. MVP: one worker and one isolated job that complete the circuit. Do not create a fleet of agents or run a large benchmark before that unit works.
 
-Si la integración falla, el mismo worker puede ejecutarse localmente como alternativa de demo claramente identificada. No anunciar esa alternativa como uso de Supabase Compute.
+If the integration fails, the same worker can run locally as a clearly identified demo fallback. Do not advertise that fallback as use of Supabase Compute.
 
-Referencias: [Supabase Compute](https://supabase.com/compute) y [anuncio de Select del 2 de octubre](https://supabase.com/blog/select-2026-build-anything). Capacidades y restricciones son declaraciones del proveedor, no integraciones probadas en FUNLABS.
+References: [Supabase Compute](https://supabase.com/compute) and the [Select announcement of October 2](https://supabase.com/blog/select-2026-build-anything). Capabilities and restrictions are provider statements, not integrations proven in FUNLABS.
 
-## 12. MVP del hackathon
+## 12. Hackathon MVP
 
-Incluye:
+Includes:
 
-- Un juego web corto bajo nuestro control, con dos versiones inmutables.
-- Un estudio, tres testers invitados y grabaciones reales de escritorio.
-- Un bounty humano y un bounty de agente con criterios distintos.
-- Análisis con Gemini que devuelva evidencia revisable.
-- Un cambio de Claude, comprobación funcional y comparación A/B.
-- Tablero de resultados, presupuesto de ejemplo etiquetado y export privado autorizado.
-- Si el circuito anterior está sólido: una predicción de agente registrada antes de revelar preferencias y Stripe en modo prueba.
+- A short web game under our control, with two immutable versions.
+- One study, three invited testers and real desktop recordings.
+- One human bounty and one agent bounty with different criteria.
+- Gemini analysis that returns reviewable evidence.
+- A Claude change, a functional check and an A/B comparison.
+- A results dashboard, a labeled sample budget and an authorized private export.
+- If the circuit above is solid: an agent prediction recorded before revealing preferences, and Stripe in test mode.
 
-Queda para después: red pública de testers, bounties competitivos abiertos a agentes externos, pagos reales, captura móvil universal, análisis de cualquier aplicación, entrenamiento de modelos y marketplace de datasets.
+Left for later: a public network of testers, competitive bounties open to external agents, real payments, universal mobile capture, analysis of any application, model training and a dataset marketplace.
 
-No afirmar soporte universal para una URL. El juego propio puede emitir eventos; un sitio externo sin integración solo aporta grabación y respuestas. La captura requiere selección explícita de la superficie por la persona. Si falla, aceptar una carga manual real y mostrar cómo se obtuvo.
+Do not claim universal support for any URL. Our own game can emit events; an external site without integration only provides recording and answers. Capture requires the person to explicitly select the surface. If it fails, accept a real manual upload and show how it was obtained.
 
-## 13. Construcción por hitos
+## 13. Building by milestones
 
-1. **Captura y análisis:** grabar una partida corta, procesarla y revisar un hallazgo con fuente real.
-2. **Circuito de personas:** encargo, invitación, entrega, almacenamiento y tablero de evidencia.
-3. **Circuito del agente:** consultar material, enviar trabajo, guardar evaluación y producir una variante limitada.
-4. **Comparación:** ordenar A/B, recoger preferencias y conservar resultados negativos o neutros.
-5. **Datos y presupuesto:** export privado, permisos, límites de subsidio y, si hay tiempo, Stripe de prueba.
-6. **Ensayo:** comprobar estados, reintentos, privacidad entre estudios y comportamiento ante carga o análisis fallidos.
+1. **Capture and analysis:** record a short session, process it and review a finding with a real source.
+2. **People circuit:** request, invitation, submission, storage and evidence dashboard.
+3. **Agent circuit:** query material, submit work, store the evaluation and produce a limited variant.
+4. **Comparison:** order A/B, collect preferences and keep negative or neutral results.
+5. **Data and budget:** private export, permissions, subsidy limits and, if there is time, test-mode Stripe.
+6. **Rehearsal:** check states, retries, privacy between studies and behavior under failed loading or analysis.
 
-Recortar primero funciones de marketplace. Conservar personas reales, evidencia reproducible, entregas de agente trazables y comparación de versiones.
+Cut marketplace features first. Keep real people, reproducible evidence, traceable agent submissions and the comparison of versions.
 
-## 14. Demo y criterios
+## 14. Demo and criteria
 
-Escena: juego donde se puede invertir la gravedad para escapar de una habitación. La pregunta es mejorar claridad conservando el desafío.
+Scene: a game where you can flip gravity to escape a room. The question is to improve clarity while keeping the challenge.
 
-Demo sugerida de tres minutos, ajustable a la duración oficial:
+Suggested three-minute demo, adjustable to the official duration:
 
-1. El agente encarga pruebas y se ven los dos tipos de bounty.
-2. Se abre una partida real y un comentario del participante.
-3. Gemini relaciona momento, acciones y comentario; distinguimos evidencia de hipótesis.
-4. Claude produce un cambio acotado y se abre la versión nueva.
-5. Se muestran preferencias A/B y el ejemplo de datos resultante.
+1. The agent commissions tests and both kinds of bounty are visible.
+2. A real session and a participant comment are opened.
+3. Gemini relates moment, actions and comment; we distinguish evidence from hypothesis.
+4. Claude produces a bounded change and the new version is opened.
+5. A/B preferences and the resulting data sample are shown.
 
-Obtener material durante el evento y etiquetar lo que se presenta grabado. El jurado puede probar ambas versiones en vivo. No depender de reclutar y procesar una cohorte entera sobre el escenario ni fingir disponibilidad inmediata de testers.
+Obtain material during the event and label what is presented as recorded. The jury can try both versions live. Do not depend on recruiting and processing a whole cohort on stage or pretend testers are immediately available.
 
-Si B gusta menos, registrar la regresión también demuestra utilidad. Con tres participantes, mostrar «2 de 3 prefirieron B», si ese fue el resultado real; no presentarlo como mejora estadística ni extrapolarlo al mercado.
+If B is liked less, recording the regression also shows usefulness. With three participants, show "2 of 3 preferred B" if that was the real result; do not present it as a statistical improvement or extrapolate it to the market.
 
-| Criterio | Evidencia visible |
+| Criterion | Visible evidence |
 | --- | --- |
-| Innovación | Dos trabajos distintos, evaluación propia de cada uno y evidencia conectada a decisiones y versiones. Explicar los antecedentes y mostrar la mejora concreta frente a un reporte aislado. |
-| Funcionalidad | Un encargo completo con acceso autenticado, material real, entrega de agente, cambio ejecutado, comprobación funcional y comparación registrada. Mostrar el resultado después de recargar, no solo un estado transitorio de la interfaz. |
-| Diseño | Un participante completa la prueba; el creador llega de un hallazgo al intervalo original con un clic y entiende por qué se propuso un cambio. El agente obtiene la misma evidencia mediante una herramienta, sin copiar texto manualmente. |
-| Impacto | Un creador aprende qué cambiar y qué conservar. Se registran minutos de material y tiempo de revisión del estudio; las preferencias incluyen denominador y motivos. Los datos permiten estudiar decisiones, sin extrapolar una muestra pequeña a todo el mercado. |
+| Innovation | Two distinct kinds of work, each with its own evaluation, and evidence connected to decisions and versions. Explain the prior art and show the concrete improvement over an isolated report. |
+| Functionality | A complete request with authenticated access, real material, an agent submission, an executed change, a functional check and a recorded comparison. Show the result after reloading, not just a transient interface state. |
+| Design | A participant completes the test; the creator gets from a finding to the original interval with one click and understands why a change was proposed. The agent gets the same evidence through a tool, without copying text by hand. |
+| Impact | A creator learns what to change and what to keep. Minutes of material and study review time are recorded; the preferences include denominator and reasons. The data allows studying decisions, without extrapolating a small sample to the whole market. |
 
-Estos son compromisos verificables del proyecto, no evidencia de cumplimiento actual. Para la entrega necesitamos ejecutar el circuito y conservar sus resultados. Cumplir los cuatro criterios no exige implementar todos los premios de sponsors; una integración adicional solo suma si resuelve una parte observable del problema.
+These are verifiable commitments of the project, not evidence of current compliance. For the submission we need to run the circuit and keep its results. Meeting the four criteria does not require implementing every sponsor prize; an additional integration only adds value if it solves an observable part of the problem.
 
-## 15. Competencia y diferenciación
+## 15. Competition and differentiation
 
-PlaytestCloud ya recluta jugadores, graba partidas y analiza momentos. Prolific ofrece feedback humano programático y preferencias. Maze conecta investigación a agentes. El autor de Pingfusi anuncia contratar playtesters desde Claude/Codex; no auditamos ese servicio. TasteLabs es una referencia de contexto y verificación para agentes.
+PlaytestCloud already recruits players, records sessions and analyzes moments. Prolific offers programmatic human feedback and preferences. Maze connects research to agents. The author of Pingfusi announces hiring playtesters from Claude/Codex; we did not audit that service. TasteLabs is a reference for context and verification for agents.
 
-No basar la novedad en «contratar humanos mediante API» ni en «resumir un video con IA». La apuesta de FUNLABS es relacionar trabajos humanos y de agentes, evidencia, intervenciones y resultados, y evaluar sus decisiones con protocolos explícitos. Su ventaja frente a las alternativas debe demostrarse; acumular grabaciones por sí solo no crea una ventaja.
+Do not base the novelty on "hiring humans through an API" or on "summarizing a video with AI". FUNLABS's bet is to relate human and agent work, evidence, interventions and results, and to evaluate their decisions with explicit protocols. Its advantage over the alternatives has to be demonstrated; accumulating recordings alone does not create an advantage.
 
-## 16. Qué significa terminar
+## 16. What finished means
 
-El MVP está listo cuando una persona y un agente pueden completar sus trabajos, sus entregas se evalúan por separado, se inspecciona la evidencia original, una variante funciona y se guarda una comparación humana honesta. Deben existir permisos correctos, estados de fallo visibles y un export limitado a ejemplos autorizados.
+The MVP is ready when a person and an agent can complete their jobs, their submissions are evaluated separately, the original evidence can be inspected, a variant works and an honest human comparison is stored. Correct permissions, visible failure states and an export limited to authorized examples must exist.
 
-Todavía pendientes: ensayo con personas reales; comprobar APIs y aprovisionamiento con el acceso ofrecido a Supabase Compute; validar dependencias, duración/costo de procesamiento y sandboxes; criterios específicos del premio de compute; economía de subsidios; demanda de creadores y researchers. Estas dependencias no están resueltas por este plan.
+Still pending: a rehearsal with real people; verifying APIs and provisioning with the access offered for Supabase Compute; validating dependencies, processing duration/cost and sandboxes; the specific criteria of the compute prize; subsidy economics; demand from creators and researchers. These dependencies are not resolved by this plan.
 
-## 17. Estado de implementación
+## 17. Implementation status
 
-Fecha: 3 de octubre de 2026. Guía técnica en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Los estados son los que se comprobaron, no los que se esperan.
+Date: October 3, 2026. Technical guide in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). The statuses are what was verified, not what is expected. The interface, the API messages and the documentation are in English.
 
-| Requisito de la especificación | Estado | Qué se comprobó |
+| Specification requirement | Status | What was verified |
 | --- | --- | --- |
-| Juego propio con versiones inmutables (§12) | Implementado | Gravity Room A en `games/gravity-room`. Cada versión se guarda con su hash SHA-256, solo para agregar, y se sirve aislada (`sandbox`, CSP sin red). |
-| Bounty humano y bounties de agente con criterios distintos (§3, §4) | Implementado | Cuatro tipos con plantillas y criterios propios. Entrega válida de persona, predicción fechada, análisis verificado y mejora con comprobaciones se evalúan por separado. |
-| Captura de la pestaña con alternativa escrita (§8, §10) | Implementado | Región de pestaña, micrófono opcional, subida manual y texto. Probado en Chromium con captura automática; no probado en los navegadores de personas reales. La ruta de subida manual no tiene prueba automática. |
-| Análisis con Gemini y evidencia revisable (§6) | Implementado y probado con la API real | Un video de 36 s y uno de 12 s con `gemini-3.8-flash`. Cada referencia se valida contra la sesión (9 pruebas unitarias). La declaración humana es siempre copia textual del comentario. |
-| Cambio de Claude, comprobación fija y comparación A/B (§5, §11) | Implementado y probado con un bot | Claude (`claude-opus-5-5`) devolvió un parche dentro del alcance que pasó las 8 comprobaciones. El circuito completo (variante, comprobaciones, comparación ciega, resultados) corre en una prueba de Playwright. |
-| Tablero de resultados, presupuesto etiquetado y export autorizado (§9, §12) | Implementado | Denominador, orden, motivos y límites. Libro de presupuesto con reservas atómicas bajo el tope. El export se bloquea sin los permisos del titular y de la persona, y nunca incluye video. |
-| Herramientas para humanos y agentes (§10) | Implementado y probado | Nueve herramientas más `get_export`, por REST y por MCP con las mismas reglas. 14 pruebas de integración, incluido un cliente MCP oficial. |
-| Predicción registrada antes de revelar preferencias (§3, §12) | Implementado | Fechada; se marca retrospectiva si ya existían resultados o la credencial los vio; una por credencial; la recompensa no depende de acertar. |
-| RLS y Storage privado (§10) | Implementado y probado | 32 de 32 tablas con RLS, buckets privados, 10 pruebas de privacidad e integridad (otro creador, researcher sin acceso a video, trabajos con reintentos). |
-| Supabase: Auth, Postgres, Storage, Realtime | Implementado | Además `pg_cron` + `pg_net` + Vault: al encolar un trabajo la base avisa al backend; `pg_cron` revisa cada minuto como respaldo. Verificado en el stack local. |
-| Vercel | Proyecto creado y conectado | Cada push compila y despliega la interfaz y la API. |
-| Supabase alojado | Pendiente | Hace falta un proyecto alojado para la demo en línea (límite de 2 proyectos gratis de la cuenta). Hasta entonces la aplicación completa corre con el stack local. |
-| Stripe en modo prueba (§11) | No implementado | Sin clave de prueba. Las reservas y pagos se registran en un libro interno etiquetado; la base impide valores que no sean modo prueba. |
-| Supabase Compute (§11) | No usado | No se verificó el aprovisionamiento. Los trabajos corren en la función de Vercel o con `scripts/worker.mjs`, y cada uno registra dónde corrió. |
-| Ejecución aislada de variantes (§11) | Parcial | Las comprobaciones corren en un contexto `vm` de Node dentro del servidor, que no es un límite de seguridad. Por eso solo el agente creador interviene y no se aceptan envíos de código de agentes externos. |
-| Personas reales | Ninguna todavía | El único material es de ensayos con bots, marcado `is_rehearsal` y etiquetado en la interfaz. |
+| Own game with immutable versions (§12) | Implemented | Gravity Room A in `games/gravity-room`. Each version is stored with its SHA-256 hash, append-only, and served isolated (`sandbox`, CSP with no network). |
+| Human bounty and agent bounties with different criteria (§3, §4) | Implemented | Four types with their own templates and criteria. A person's valid submission, a timestamped prediction, a verified analysis and an improvement with checks are evaluated separately. |
+| Tab capture with a written alternative (§8, §10) | Implemented | Tab region, optional microphone, manual upload and text. Tested in Chromium with automatic capture; not tested in real people's browsers. The manual upload route has no automatic test. |
+| Gemini analysis and reviewable evidence (§6) | Implemented and tested with the real API | A 36 s video and a 12 s video with `gemini-3.8-flash`. Each reference is validated against the session (9 unit tests). The human statement is always a verbatim copy of the comment. |
+| Claude change, fixed check and A/B comparison (§5, §11) | Implemented and tested with a bot | Claude (`claude-opus-5-5`) returned an in-scope patch that passed all 8 checks. The full circuit (variant, checks, blind comparison, results) runs in a Playwright test. |
+| Results dashboard, labeled budget and authorized export (§9, §12) | Implemented | Denominator, order, reasons and limits. A budget ledger with atomic reservations under the cap. The export is blocked without the owner's and the person's permissions, and never includes video. |
+| Tools for humans and agents (§10) | Implemented and tested | Nine tools plus `get_export`, over REST and over MCP with the same rules. 14 integration tests, including an official MCP client. |
+| Prediction recorded before revealing preferences (§3, §12) | Implemented | Timestamped; marked retrospective if results already existed or the credential saw them; one per credential; the reward does not depend on being right. |
+| RLS and private Storage (§10) | Implemented and tested | 32 of 32 tables with RLS, private buckets, 10 privacy and integrity tests (another creator, a researcher without video access, jobs with retries). |
+| Supabase: Auth, Postgres, Storage, Realtime | Implemented | Plus `pg_cron` + `pg_net` + Vault: when a job is queued the database notifies the backend; `pg_cron` checks every minute as a fallback. Verified on the local stack. |
+| Vercel | Project created and connected | Each push builds and deploys the interface and the API. |
+| Hosted Supabase | Pending | A hosted project is needed for the online demo (the account's limit of 2 free projects). Until then the whole application runs against the local stack. |
+| Stripe in test mode (§11) | Not implemented | No test key. Reservations and payouts are recorded in a labeled internal ledger; the database prevents any value other than test mode. |
+| Supabase Compute (§11) | Not used | Provisioning was not verified. Jobs run in the Vercel function or with `scripts/worker.mjs`, and each one records where it ran. |
+| Isolated execution of variants (§11) | Partial | Checks run in a Node `vm` context inside the server, which is not a security boundary. That is why only the creator agent intervenes and code submissions from external agents are not accepted. |
+| Real people | None yet | The only material comes from bot rehearsals, marked `is_rehearsal` and labeled in the interface. |
 
-Qué se puede mostrar hoy frente a los cuatro criterios (§14): **funcionalidad** (encargo, material, análisis, entrega de agente, cambio ejecutado, comprobación y comparación, que persisten tras recargar), **diseño** (de un hallazgo al segundo de la grabación con un clic; las mismas herramientas para agentes), **impacto** (minutos de material y tiempo activo de revisión registrados; preferencias con denominador y motivos) e **innovación** (trabajos de humanos y agentes evaluados por separado y evidencia conectada a decisiones y versiones). Lo que falta para presentarlo con honestidad es material de personas reales obtenido durante el evento.
+What can be shown today against the four criteria (§14): **functionality** (request, material, analysis, agent submission, executed change, check and comparison, which persist after reloading), **design** (from a finding to the second of the recording with one click; the same tools for agents), **impact** (minutes of material and active review time recorded; preferences with denominator and reasons) and **innovation** (human and agent work evaluated separately and evidence connected to decisions and versions). What is missing to present it honestly is real-people material obtained during the event.
 
-## Fuentes de referencia
+## Reference sources
 
-- [Reglas y criterios del hackathon](https://hackathon.supabase.com/hackathon-rules)
+- [Hackathon rules and criteria](https://hackathon.supabase.com/hackathon-rules)
 - [TasteLabs: Helping agents create things worth making](https://tastelabs.com/blog/helping-agents-create-things-worth-making)
 - [PlaytestCloud](https://www.playtestcloud.com/)
-- [Prolific para agentes](https://www.prolific.com/for-agents)
+- [Prolific for agents](https://www.prolific.com/for-agents)
 - [Maze MCP](https://help.maze.co/articles/3603930517-maze-mcp)
-- [Anuncio del autor de Pingfusi](https://www.reddit.com/r/aigamedev/comments/1vfrm1f/free_playtesting_through_our_platform/)
-- [Gemini: comprensión de video](https://ai.google.dev/gemini-api/docs/video-understanding)
+- [Announcement by the author of Pingfusi](https://www.reddit.com/r/aigamedev/comments/1vfrm1f/free_playtesting_through_our_platform/)
+- [Gemini: video understanding](https://ai.google.dev/gemini-api/docs/video-understanding)
 - [Supabase Realtime](https://supabase.com/docs/guides/realtime)
 - [Supabase Queues](https://supabase.com/docs/guides/queues)
 - [Supabase Compute](https://supabase.com/compute)
-- [Supabase Select: Compute y herramientas para agentes](https://supabase.com/blog/select-2026-build-anything)
-- [Supabase Storage: control de acceso](https://supabase.com/docs/guides/storage/security/access-control)
+- [Supabase Select: Compute and tools for agents](https://supabase.com/blog/select-2026-build-anything)
+- [Supabase Storage: access control](https://supabase.com/docs/guides/storage/security/access-control)
 - [Vercel Sandbox](https://vercel.com/docs/sandbox)
 - [Stripe Connect](https://docs.stripe.com/connect)
-- [Taste: skill de diseño](https://github.com/Leonxlnx/taste-skill)
+- [Taste: design skill](https://github.com/Leonxlnx/taste-skill)
 - [Radix Primitives](https://www.radix-ui.com/primitives/docs/overview/introduction)
-- [WCAG: contraste mínimo](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
-- [WCAG: tamaño mínimo de objetivos](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
+- [WCAG: minimum contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
+- [WCAG: minimum target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)

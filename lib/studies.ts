@@ -47,7 +47,7 @@ export function defaultProtocol(task?: string): Protocol {
     final_questions: FINAL_QUESTIONS.map((q) => ({ ...q })),
     comparison: { enabled: true, neutral_labels: [...NEUTRAL_LABELS], order: 'alternate' },
     recording: { surface: 'tab', microphone: 'optional', camera: false },
-    payment_rule: 'Se paga cada entrega válida (material utilizable, tarea realizada, comentarios relacionados), sin importar si a la persona le gustó.',
+    payment_rule: 'Each valid submission (usable material, task attempted, related comments) is paid, whether or not the person liked the game.',
   };
 }
 
@@ -71,15 +71,15 @@ export type StudyDraftInput = {
 /** Ensures the creator owns the Gravity Room product with version A registered. */
 export async function ensureGravityRoomProduct(user: SupabaseClient, worker: SupabaseClient, userId: string) {
   const found = await user.from('products').select('*').eq('owner_id', userId).eq('slug', 'gravity-room').maybeSingle();
-  if (found.error) throw new Error(`Buscar producto: ${found.error.message}`);
+  if (found.error) throw new Error(`Find product: ${found.error.message}`);
   let product = found.data;
   if (!product) {
     const ins = await user
       .from('products')
-      .insert({ owner_id: userId, slug: 'gravity-room', name: 'Gravity Room', description: 'Juego web corto: invertí la gravedad para escapar de tres salas.', kind: 'web_game' })
+      .insert({ owner_id: userId, slug: 'gravity-room', name: 'Gravity Room', description: 'Short web game: flip gravity to escape three rooms.', kind: 'web_game' })
       .select('*')
       .single();
-    if (ins.error) throw new Error(`Crear producto: ${ins.error.message}`);
+    if (ins.error) throw new Error(`Create product: ${ins.error.message}`);
     product = ins.data;
   }
   const versionA = await registerVersion(worker, {
@@ -88,7 +88,7 @@ export async function ensureGravityRoomProduct(user: SupabaseClient, worker: Sup
     html: GRAVITY_ROOM_A_HTML,
     origin: 'repository',
     status: 'ready',
-    notes: 'Versión original del repositorio (games/gravity-room/a).',
+    notes: 'Original repository version (games/gravity-room/a).',
     createdBy: userId,
   });
   return { product, versionA };
@@ -134,11 +134,11 @@ export async function createStudyDraft(
     })
     .select('*')
     .single();
-  if (ins.error) throw new Error(`Crear estudio: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Create study: ${ins.error.message}`);
   const study = ins.data as StudyRow;
 
   const sv = await client.from('study_versions').insert({ study_id: study.id, version_id: baselineId, role: 'baseline' });
-  if (sv.error) throw new Error(`Asociar versión base: ${sv.error.message}`);
+  if (sv.error) throw new Error(`Attach baseline version: ${sv.error.message}`);
 
   const reward = input.agent_reward_cents ?? 0;
   const bounties = [
@@ -162,17 +162,17 @@ export async function createStudyDraft(
     };
   });
   const bi = await client.from('bounties').insert(rows);
-  if (bi.error) throw new Error(`Crear bounties: ${bi.error.message}`);
+  if (bi.error) throw new Error(`Create bounties: ${bi.error.message}`);
   return study;
 }
 
 export function demoStudyInput(): StudyDraftInput {
   return {
-    title: 'Gravity Room: claridad del comienzo',
-    question: '¿Las personas que juegan por primera vez entienden qué pueden activar y cómo avanzar, sin que el puzzle pierda desafío?',
+    title: 'Gravity Room: clarity of the opening',
+    question: 'Do people playing for the first time understand what they can activate and how to move forward, without the puzzle losing its challenge?',
     objective: 'clarity',
-    objective_detail: 'Mejorar la claridad conservando el desafío. No eliminar dificultades que las personas disfrutan.',
-    audience: 'Personas que no jugaron antes a Gravity Room, en computadora con teclado.',
+    objective_detail: 'Improve clarity while keeping the challenge. Do not remove difficulties that people enjoy.',
+    audience: 'People who have not played Gravity Room before, on a computer with a keyboard.',
     participants_target: 3,
     session_minutes: 3,
     budget_cap_cents: 3000,
@@ -195,17 +195,17 @@ export class PublishError extends Error {
 /** Validates, freezes the check suite, opens bounties and publishes. */
 export async function publishStudy(worker: SupabaseClient, studyId: string, actor: { userId?: string; via: 'ui' | 'agent_api' }) {
   const { data: study, error } = await worker.from('studies').select('*').eq('id', studyId).single();
-  if (error || !study) throw new Error('Estudio inexistente');
-  if (study.status !== 'draft') throw new PublishError([`El estudio ya está ${study.status}.`]);
+  if (error || !study) throw new Error('Study does not exist');
+  if (study.status !== 'draft') throw new PublishError([`The study is already ${study.status}.`]);
   const problems: string[] = [];
   const sv = await worker.from('study_versions').select('version_id, role, versions(status)').eq('study_id', studyId);
   const baseline = (sv.data ?? []).find((r) => r.role === 'baseline');
-  if (!baseline) problems.push('Falta la versión base.');
+  if (!baseline) problems.push('The baseline version is missing.');
   const bounties = await worker.from('bounties').select('id, kind').eq('study_id', studyId);
-  if (!(bounties.data ?? []).some((b) => b.kind === 'human_playtest')) problems.push('Falta el bounty humano.');
+  if (!(bounties.data ?? []).some((b) => b.kind === 'human_playtest')) problems.push('The human bounty is missing.');
   const planned = study.tester_payment_cents * study.participants_target;
   if (planned > study.budget_cap_cents) {
-    problems.push(`El límite de gasto (${study.budget_cap_cents / 100}) no cubre el pago a ${study.participants_target} personas (${planned / 100}).`);
+    problems.push(`The spending cap (${study.budget_cap_cents / 100}) does not cover payment for ${study.participants_target} people (${planned / 100}).`);
   }
   if (problems.length) throw new PublishError(problems);
 
@@ -215,7 +215,7 @@ export async function publishStudy(worker: SupabaseClient, studyId: string, acto
     .update({ status: 'published', published_at: new Date().toISOString(), check_suite_id: suite.id })
     .eq('id', studyId)
     .eq('status', 'draft');
-  if (upd.error) throw new Error(`Publicar: ${upd.error.message}`);
+  if (upd.error) throw new Error(`Publish: ${upd.error.message}`);
   await worker.from('bounties').update({ status: 'open' }).eq('study_id', studyId);
   // Reference run of the fixed checks on the baseline.
   if (baseline) {
@@ -231,7 +231,7 @@ export async function publishStudy(worker: SupabaseClient, studyId: string, acto
 
 export async function createInvitations(user: SupabaseClient, userId: string, studyId: string, count: number, labelPrefix = 'Tester') {
   const bounty = await user.from('bounties').select('id').eq('study_id', studyId).eq('kind', 'human_playtest').single();
-  if (bounty.error) throw new Error(`Bounty humano: ${bounty.error.message}`);
+  if (bounty.error) throw new Error(`Human bounty: ${bounty.error.message}`);
   const existing = await user.from('invitations').select('id', { count: 'exact', head: true }).eq('study_id', studyId);
   const start = (existing.count ?? 0) + 1;
   const out: Array<{ label: string; token: string; hint: string }> = [];
@@ -243,7 +243,7 @@ export async function createInvitations(user: SupabaseClient, userId: string, st
     rows.push({ study_id: studyId, bounty_id: bounty.data.id, token_hash: t.hash, token_hint: t.hint, label, created_by: userId, expires_at: new Date(Date.now() + 14 * 86400_000).toISOString() });
   }
   const ins = await user.from('invitations').insert(rows);
-  if (ins.error) throw new Error(`Crear invitaciones: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Create invites: ${ins.error.message}`);
   return out;
 }
 

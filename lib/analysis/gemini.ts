@@ -23,7 +23,7 @@ async function gfetch(url: string, init: RequestInit & { timeoutMs?: number } = 
   try {
     return await fetch(url, { ...init, signal: ctrl.signal });
   } catch (err) {
-    throw new GeminiError(`No se pudo contactar a Gemini: ${err instanceof Error ? err.message : String(err)}`, undefined, true);
+    throw new GeminiError(`Could not reach Gemini: ${err instanceof Error ? err.message : String(err)}`, undefined, true);
   } finally {
     clearTimeout(t);
   }
@@ -53,16 +53,16 @@ export async function uploadFile(apiKey: string, data: Uint8Array, mimeType: str
     },
     body: JSON.stringify({ file: { display_name: displayName.slice(0, 120) } }),
   });
-  if (!start.ok) throw await failure(start, 'Gemini rechazó la subida');
+  if (!start.ok) throw await failure(start, 'Gemini rejected the upload');
   const uploadUrl = start.headers.get('x-goog-upload-url');
-  if (!uploadUrl) throw new GeminiError('Gemini no devolvió la URL de subida');
+  if (!uploadUrl) throw new GeminiError('Gemini did not return the upload URL');
   const put = await gfetch(uploadUrl, {
     method: 'POST',
     headers: { 'Content-Length': String(data.byteLength), 'X-Goog-Upload-Offset': '0', 'X-Goog-Upload-Command': 'upload, finalize' },
     body: data as unknown as BodyInit,
     timeoutMs: 300_000,
   });
-  if (!put.ok) throw await failure(put, 'Gemini no recibió el archivo');
+  if (!put.ok) throw await failure(put, 'Gemini did not receive the file');
   const json = await put.json();
   return json.file as GeminiFile;
 }
@@ -71,11 +71,11 @@ export async function waitUntilActive(apiKey: string, file: GeminiFile, timeoutM
   const until = Date.now() + timeoutMs;
   let current = file;
   while (current.state !== 'ACTIVE') {
-    if (current.state === 'FAILED') throw new GeminiError('Gemini no pudo procesar el video');
-    if (Date.now() > until) throw new GeminiError('Gemini tardó demasiado en procesar el video', undefined, true);
+    if (current.state === 'FAILED') throw new GeminiError('Gemini could not process the video');
+    if (Date.now() > until) throw new GeminiError('Gemini took too long to process the video', undefined, true);
     await new Promise((r) => setTimeout(r, 2500));
     const res = await gfetch(`${BASE}/v1beta/${current.name}`, { headers: { 'x-goog-api-key': apiKey } });
-    if (!res.ok) throw await failure(res, 'No se pudo consultar el estado del video');
+    if (!res.ok) throw await failure(res, 'Could not check the video status');
     current = (await res.json()) as GeminiFile;
   }
   return current;
@@ -106,19 +106,19 @@ export async function generateJson(
     }),
     timeoutMs: 240_000,
   });
-  if (!res.ok) throw await failure(res, 'Gemini no generó el análisis');
+  if (!res.ok) throw await failure(res, 'Gemini did not generate the analysis');
   const body = await res.json();
   const candidate = body?.candidates?.[0];
   const text: string = (candidate?.content?.parts ?? []).map((p: { text?: string }) => p.text ?? '').join('');
   if (!text) {
-    const reason = candidate?.finishReason ?? body?.promptFeedback?.blockReason ?? 'sin texto';
-    throw new GeminiError(`Gemini no devolvió contenido (${reason})`, undefined, reason === 'MAX_TOKENS');
+    const reason = candidate?.finishReason ?? body?.promptFeedback?.blockReason ?? 'no text';
+    throw new GeminiError(`Gemini returned no content (${reason})`, undefined, reason === 'MAX_TOKENS');
   }
   let json: unknown;
   try {
     json = JSON.parse(text);
   } catch {
-    throw new GeminiError('La respuesta de Gemini no es JSON válido', undefined, true);
+    throw new GeminiError('The Gemini response is not valid JSON', undefined, true);
   }
   return { json, text, usage: body?.usageMetadata ?? null, modelVersion: body?.modelVersion ?? null };
 }

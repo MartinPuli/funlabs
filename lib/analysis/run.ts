@@ -18,14 +18,14 @@ type Loaded = {
 
 async function load(worker: SupabaseClient, sessionId: string): Promise<Loaded> {
   const session = await worker.from('sessions').select('id, study_id, assignment_id, version_id, phase, neutral_label').eq('id', sessionId).single();
-  if (session.error) throw new Error(`Sesión no encontrada: ${session.error.message}`);
+  if (session.error) throw new Error(`Session not found: ${session.error.message}`);
   const [study, recording, events, feedback] = await Promise.all([
     worker.from('studies').select('id, question, objective, objective_detail, audience').eq('id', session.data.study_id).single(),
     worker.from('recordings').select('id, storage_path, mime_type, duration_ms, has_audio, method, status').eq('session_id', sessionId).maybeSingle(),
     worker.from('game_events').select('id, seq, t_ms, type, payload').eq('session_id', sessionId).order('seq').limit(5000),
     worker.from('feedback').select('id, kind, t_ms, question_key, body, session_id').eq('assignment_id', session.data.assignment_id).order('created_at'),
   ]);
-  if (study.error) throw new Error(`Estudio: ${study.error.message}`);
+  if (study.error) throw new Error(`Study: ${study.error.message}`);
   return {
     session: session.data,
     study: study.data,
@@ -84,7 +84,7 @@ async function analyzeWithGeminiApi(worker: SupabaseClient, l: Loaded, prompt: P
   try {
     if (l.recording) {
       const dl = await worker.storage.from('recordings').download(l.recording.storage_path);
-      if (dl.error || !dl.data) throw new Error(`No se pudo leer la grabación: ${dl.error?.message ?? 'vacía'}`);
+      if (dl.error || !dl.data) throw new Error(`Could not read the recording: ${dl.error?.message ?? 'empty'}`);
       const bytes = new Uint8Array(await dl.data.arrayBuffer());
       const mime = l.recording.mime_type.split(';')[0];
       const file = await uploadFile(key, bytes, mime, `funlabs-${l.session.id}`);
@@ -106,7 +106,7 @@ async function analyzeWithGateway(worker: SupabaseClient, l: Loaded, prompt: Pro
   const content: Array<{ type: 'text'; text: string } | { type: 'file'; data: Uint8Array; mediaType: string }> = [];
   if (l.recording) {
     const dl = await worker.storage.from('recordings').download(l.recording.storage_path);
-    if (dl.error || !dl.data) throw new Error(`No se pudo leer la grabación: ${dl.error?.message ?? 'vacía'}`);
+    if (dl.error || !dl.data) throw new Error(`Could not read the recording: ${dl.error?.message ?? 'empty'}`);
     content.push({ type: 'file', data: new Uint8Array(await dl.data.arrayBuffer()), mediaType: l.recording.mime_type.split(';')[0] });
   }
   content.push({ type: 'text', text: buildUserPrompt(prompt) });
@@ -127,9 +127,9 @@ async function analyzeWithGateway(worker: SupabaseClient, l: Loaded, prompt: Pro
  */
 export async function runAnalysisJob(worker: SupabaseClient, job: JobRow): Promise<Record<string, unknown>> {
   const sessionId = String((job.input as { session_id?: string }).session_id ?? '');
-  if (!sessionId) throw new Error('Falta session_id');
+  if (!sessionId) throw new Error('session_id is missing');
   const providers = providerStatus();
-  if (!providers.gemini.configured) throw new Error('Gemini no está configurado (GEMINI_API_KEY o AI Gateway).');
+  if (!providers.gemini.configured) throw new Error('Gemini is not configured (GEMINI_API_KEY or AI Gateway).');
 
   // A retried job never duplicates evidence: reuse a finished run, discard a crashed one.
   const previous = await worker.from('analysis_runs').select('id, status').eq('job_id', job.id);
@@ -137,7 +137,7 @@ export async function runAnalysisJob(worker: SupabaseClient, job: JobRow): Promi
   if (done) return { analysis_run_id: done.id, reused: true };
   for (const r of previous.data ?? []) {
     await worker.from('evidence').delete().eq('analysis_run_id', r.id);
-    await worker.from('analysis_runs').update({ status: 'failed', error: 'Reintento: ejecución anterior incompleta', finished_at: new Date().toISOString() }).eq('id', r.id).eq('status', 'running');
+    await worker.from('analysis_runs').update({ status: 'failed', error: 'Retry: previous run incomplete', finished_at: new Date().toISOString() }).eq('id', r.id).eq('status', 'running');
   }
 
   const l = await load(worker, sessionId);
@@ -163,12 +163,12 @@ export async function runAnalysisJob(worker: SupabaseClient, job: JobRow): Promi
     })
     .select('id')
     .single();
-  if (run.error) throw new Error(`Registrar análisis: ${run.error.message}`);
+  if (run.error) throw new Error(`Record analysis: ${run.error.message}`);
   await syncStudyStatus(worker, l.session.study_id);
 
   try {
     if (!l.recording && prompt.events.length === 0 && prompt.moments.length === 0 && prompt.answers.length === 0) {
-      throw new Error('La sesión no tiene material para analizar');
+      throw new Error('The session has no material to analyze');
     }
     const out = providers.gemini.via === 'gemini-api' ? await analyzeWithGeminiApi(worker, l, prompt) : await analyzeWithGateway(worker, l, prompt);
     const proposed = fromModelOutput(out.raw);
@@ -197,10 +197,10 @@ export async function runAnalysisJob(worker: SupabaseClient, job: JobRow): Promi
         })
         .select('id')
         .single();
-      if (ev.error) throw new Error(`Guardar hallazgo: ${ev.error.message}`);
+      if (ev.error) throw new Error(`Save finding: ${ev.error.message}`);
       if (v.sources.length) {
         const src = await worker.from('evidence_sources').insert(v.sources.map((s) => ({ evidence_id: ev.data.id, kind: s.kind, source_id: s.source_id, t_ms: s.t_ms, verified: s.verified, note: s.note })));
-        if (src.error) throw new Error(`Guardar fuentes: ${src.error.message}`);
+        if (src.error) throw new Error(`Save sources: ${src.error.message}`);
       }
     }
     const counts = { total: validated.length, verified: 0, partial: 0, unsupported: 0 } as Record<string, number>;

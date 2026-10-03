@@ -35,36 +35,36 @@ const ACTIVE_STUDY = ['published', 'collecting', 'analyzing', 'evidence_ready', 
 
 /** Resolves an invite token. The token is the tester's only credential. */
 export async function resolveInvite(worker: SupabaseClient, token: string): Promise<InviteContext> {
-  if (!looksLikeToken(token, 'flt')) throw new TesterError('invalid_token', 'La invitación no es válida.', 404);
+  if (!looksLikeToken(token, 'flt')) throw new TesterError('invalid_token', 'The invite is not valid.', 404);
   const inv = await worker.from('invitations').select('id, study_id, bounty_id, label, expires_at, revoked_at').eq('token_hash', hashToken(token)).maybeSingle();
-  if (inv.error) throw new Error(`Invitación: ${inv.error.message}`);
-  if (!inv.data) throw new TesterError('invalid_token', 'La invitación no es válida.', 404);
-  if (inv.data.revoked_at) throw new TesterError('revoked', 'Esta invitación fue revocada por el equipo del estudio.', 410);
+  if (inv.error) throw new Error(`Invite: ${inv.error.message}`);
+  if (!inv.data) throw new TesterError('invalid_token', 'The invite is not valid.', 404);
+  if (inv.data.revoked_at) throw new TesterError('revoked', 'This invite was revoked by the study team.', 410);
   const [study, bounty, assignment] = await Promise.all([
     worker.from('studies').select('id, title, question, status, protocol, session_minutes, tester_payment_cents, currency, is_rehearsal').eq('id', inv.data.study_id).single(),
     worker.from('bounties').select('id, title, instructions, deliverable, criteria, reward_cents, slots, status').eq('id', inv.data.bounty_id).single(),
     worker.from('assignments').select('id, participant_code, status, order_seed').eq('invitation_id', inv.data.id).maybeSingle(),
   ]);
-  if (study.error || bounty.error) throw new Error('No se pudo leer el estudio');
-  if (!assignment.data && new Date(inv.data.expires_at).getTime() < Date.now()) throw new TesterError('expired', 'La invitación venció.', 410);
+  if (study.error || bounty.error) throw new Error('Could not read the study');
+  if (!assignment.data && new Date(inv.data.expires_at).getTime() < Date.now()) throw new TesterError('expired', 'The invite has expired.', 410);
   return { invitation: inv.data, study: study.data as InviteContext['study'], bounty: bounty.data as InviteContext['bounty'], assignment: assignment.data };
 }
 
 export async function requireAssignment(worker: SupabaseClient, token: string) {
   const ctx = await resolveInvite(worker, token);
-  if (!ctx.assignment) throw new TesterError('not_accepted', 'Primero aceptá la invitación.', 409);
-  if (ctx.assignment.status === 'withdrawn') throw new TesterError('withdrawn', 'Te retiraste de este estudio.', 409);
+  if (!ctx.assignment) throw new TesterError('not_accepted', 'Accept the invite first.', 409);
+  if (ctx.assignment.status === 'withdrawn') throw new TesterError('withdrawn', 'You left this study.', 409);
   return { ...ctx, assignment: ctx.assignment };
 }
 
 export async function acceptInvite(worker: SupabaseClient, token: string, consents: { participation: boolean; research: boolean; training: boolean }) {
   const ctx = await resolveInvite(worker, token);
   if (ctx.assignment) return ctx.assignment;
-  if (!ACTIVE_STUDY.includes(ctx.study.status)) throw new TesterError('closed', 'Este estudio no está recibiendo participantes.', 409);
-  if (!consents.participation) throw new TesterError('consent_required', 'Para participar hace falta aceptar la prueba y la grabación de la pestaña. Podés usar la alternativa escrita sin micrófono.', 400);
+  if (!ACTIVE_STUDY.includes(ctx.study.status)) throw new TesterError('closed', 'This study is not accepting participants.', 409);
+  if (!consents.participation) throw new TesterError('consent_required', 'To take part you must accept the test and the tab recording. You can still use the written alternative, without a microphone.', 400);
   const count = await worker.from('assignments').select('id', { count: 'exact', head: true }).eq('study_id', ctx.study.id);
   const n = (count.count ?? 0) + 1;
-  if (n > ctx.bounty.slots) throw new TesterError('full', 'Ya se completaron los lugares de este estudio.', 409);
+  if (n > ctx.bounty.slots) throw new TesterError('full', 'All places in this study are taken.', 409);
 
   const ins = await worker
     .from('assignments')
@@ -76,7 +76,7 @@ export async function acceptInvite(worker: SupabaseClient, token: string, consen
       const again = await worker.from('assignments').select('id, participant_code, status, order_seed').eq('invitation_id', ctx.invitation.id).single();
       if (again.data) return again.data;
     }
-    throw new Error(`Aceptar invitación: ${ins.error.message}`);
+    throw new Error(`Accept invite: ${ins.error.message}`);
   }
   const assignment = ins.data;
   // Reserve the playtest payment before accepting paid work.
@@ -86,11 +86,11 @@ export async function acceptInvite(worker: SupabaseClient, token: string, consen
     p_amount: ctx.study.tester_payment_cents,
     p_key: `reserve:${assignment.id}:playtest`,
     p_assignment: assignment.id,
-    p_note: `Reserva de pago (modo prueba) para ${assignment.participant_code}, prueba`,
+    p_note: `Payment reservation (test mode) for ${assignment.participant_code}, playtest`,
   });
   if (reserve.error || !reserve.data?.ok) {
     await worker.from('assignments').delete().eq('id', assignment.id);
-    throw new TesterError('budget_exhausted', 'El presupuesto del estudio está agotado. No se aceptan más participantes por ahora.', 409);
+    throw new TesterError('budget_exhausted', 'The study budget is exhausted. No more participants are accepted for now.', 409);
   }
   const consentRows = (
     [
@@ -107,7 +107,7 @@ export async function acceptInvite(worker: SupabaseClient, token: string, consen
     text_version: CONSENT_TEXTS[purpose].version,
   }));
   const c = await worker.from('consent_records').insert(consentRows);
-  if (c.error) throw new Error(`Registrar consentimiento: ${c.error.message}`);
+  if (c.error) throw new Error(`Record consent: ${c.error.message}`);
   await syncStudyStatus(worker, ctx.study.id);
   return assignment;
 }
@@ -115,7 +115,7 @@ export async function acceptInvite(worker: SupabaseClient, token: string, consen
 export async function setResearchConsent(worker: SupabaseClient, token: string, purpose: 'research_sharing' | 'model_training', granted: boolean) {
   const ctx = await requireAssignment(worker, token);
   const c = await worker.from('consent_records').insert({ study_id: ctx.study.id, assignment_id: ctx.assignment.id, subject: 'participant', purpose, granted, text_version: CONSENT_TEXTS[purpose].version });
-  if (c.error) throw new Error(`Consentimiento: ${c.error.message}`);
+  if (c.error) throw new Error(`Consent: ${c.error.message}`);
   return { purpose, granted };
 }
 
@@ -159,7 +159,7 @@ export async function testerState(worker: SupabaseClient, token: string) {
       phase: s.phase,
       position: s.position,
       neutral_label: s.neutral_label,
-      play_url: `/jugar/s/${s.id}`,
+      play_url: `/play/s/${s.id}`,
       status: s.status,
       recording_status: (s.recordings as unknown as { status: string } | null)?.status ?? null,
     })),
@@ -175,25 +175,25 @@ export async function startPhase(worker: SupabaseClient, token: string, phase: '
   const ctx = await requireAssignment(worker, token);
   const existing = await worker.from('sessions').select('id, position, neutral_label, status, recordings(status)').eq('assignment_id', ctx.assignment.id).eq('phase', phase).order('position');
   const map = (rows: typeof existing.data) =>
-    (rows ?? []).map((s) => ({ id: s.id, position: s.position, neutral_label: s.neutral_label, play_url: `/jugar/s/${s.id}`, status: s.status, recording_status: (s.recordings as unknown as { status: string } | null)?.status ?? null }));
+    (rows ?? []).map((s) => ({ id: s.id, position: s.position, neutral_label: s.neutral_label, play_url: `/play/s/${s.id}`, status: s.status, recording_status: (s.recordings as unknown as { status: string } | null)?.status ?? null }));
   if (existing.data && existing.data.length) return map(existing.data);
 
   const { baseline, variant } = await baselineAndVariant(worker, ctx.study.id);
-  if (!baseline) throw new TesterError('no_version', 'El estudio todavía no tiene una versión para jugar.', 409);
+  if (!baseline) throw new TesterError('no_version', 'The study does not have a version to play yet.', 409);
   let rows: Array<{ version_id: string; position: number; neutral_label: string }>;
   if (phase === 'playtest') {
     rows = [{ version_id: baseline, position: 1, neutral_label: 'Gravity Room' }];
   } else {
-    if (ctx.study.status !== 'comparing' || !variant) throw new TesterError('comparison_closed', 'La comparación todavía no está abierta.', 409);
+    if (ctx.study.status !== 'comparing' || !variant) throw new TesterError('comparison_closed', 'The comparison is not open yet.', 409);
     const reservation = await worker.rpc('reserve_budget', {
       p_study: ctx.study.id,
       p_kind: 'reservation',
       p_amount: ctx.study.tester_payment_cents,
       p_key: `reserve:${ctx.assignment.id}:comparison`,
       p_assignment: ctx.assignment.id,
-      p_note: `Reserva de pago (modo prueba) para ${ctx.assignment.participant_code}, comparación`,
+      p_note: `Payment reservation (test mode) for ${ctx.assignment.participant_code}, comparison`,
     });
-    if (reservation.error || !reservation.data?.ok) throw new TesterError('budget_exhausted', 'El presupuesto del estudio está agotado para nuevas comparaciones.', 409);
+    if (reservation.error || !reservation.data?.ok) throw new TesterError('budget_exhausted', 'The study budget is exhausted for new comparisons.', 409);
     const order = ctx.assignment.order_seed === 0 ? [baseline, variant] : [variant, baseline];
     rows = order.map((version_id, i) => ({ version_id, position: i + 1, neutral_label: NEUTRAL_LABELS[i] }));
   }
@@ -206,7 +206,7 @@ export async function startPhase(worker: SupabaseClient, token: string, phase: '
       const again = await worker.from('sessions').select('id, position, neutral_label, status, recordings(status)').eq('assignment_id', ctx.assignment.id).eq('phase', phase).order('position');
       return map(again.data);
     }
-    throw new Error(`Crear sesiones: ${ins.error.message}`);
+    throw new Error(`Create sessions: ${ins.error.message}`);
   }
   await worker.from('assignments').update({ status: 'active' }).eq('id', ctx.assignment.id);
   return map(ins.data.sort((a, b) => a.position - b.position));
@@ -214,7 +214,7 @@ export async function startPhase(worker: SupabaseClient, token: string, phase: '
 
 async function ownSession(worker: SupabaseClient, assignmentId: string, sessionId: string) {
   const s = await worker.from('sessions').select('id, study_id, assignment_id, phase, status, started_at').eq('id', sessionId).maybeSingle();
-  if (!s.data || s.data.assignment_id !== assignmentId) throw new TesterError('not_found', 'Sesión no encontrada.', 404);
+  if (!s.data || s.data.assignment_id !== assignmentId) throw new TesterError('not_found', 'Session not found.', 404);
   return s.data;
 }
 
@@ -234,7 +234,7 @@ export async function appendEvents(worker: SupabaseClient, token: string, sessio
   }));
   if (!rows.length) return { stored: 0 };
   const ins = await worker.from('game_events').upsert(rows, { onConflict: 'session_id,seq', ignoreDuplicates: true });
-  if (ins.error) throw new Error(`Guardar eventos: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Save events: ${ins.error.message}`);
   return { stored: rows.length };
 }
 
@@ -242,13 +242,13 @@ export async function addMoment(worker: SupabaseClient, token: string, sessionId
   const ctx = await requireAssignment(worker, token);
   const s = await ownSession(worker, ctx.assignment.id, sessionId);
   const text = body.trim().slice(0, 4000);
-  if (!text) throw new TesterError('empty', 'El comentario está vacío.');
+  if (!text) throw new TesterError('empty', 'The comment is empty.');
   const ins = await worker
     .from('feedback')
     .insert({ study_id: s.study_id, session_id: s.id, assignment_id: ctx.assignment.id, kind: 'moment', t_ms: tMs === null ? null : Math.max(0, Math.floor(tMs)), body: text })
     .select('id, t_ms, body, created_at')
     .single();
-  if (ins.error) throw new Error(`Guardar comentario: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Save comment: ${ins.error.message}`);
   return ins.data;
 }
 
@@ -258,19 +258,19 @@ export async function createUploadUrl(worker: SupabaseClient, token: string, ses
   const ctx = await requireAssignment(worker, token);
   const s = await ownSession(worker, ctx.assignment.id, sessionId);
   const mime = mimeType.split(';')[0].trim().toLowerCase();
-  if (!MIME_OK.includes(mime)) throw new TesterError('bad_type', 'Formato de video no admitido. Usá WebM o MP4.');
+  if (!MIME_OK.includes(mime)) throw new TesterError('bad_type', 'Video format not supported. Use WebM or MP4.');
   const ext = mime === 'video/mp4' ? 'mp4' : mime === 'video/quicktime' ? 'mov' : 'webm';
   const path = `${s.study_id}/${s.id}/recording.${ext}`;
   const methodOk = ['tab_capture', 'window_capture', 'screen_capture', 'manual_upload'].includes(method) ? method : 'manual_upload';
   const existing = await worker.from('recordings').select('id, status, storage_path').eq('session_id', s.id).maybeSingle();
-  if (existing.data && ['uploaded', 'verified'].includes(existing.data.status)) throw new TesterError('already_uploaded', 'Esta sesión ya tiene una grabación.', 409);
+  if (existing.data && ['uploaded', 'verified'].includes(existing.data.status)) throw new TesterError('already_uploaded', 'This session already has a recording.', 409);
   if (existing.data && existing.data.storage_path !== path) {
     await worker.from('recordings').delete().eq('id', existing.data.id);
   }
   const up = await worker.from('recordings').upsert({ study_id: s.study_id, session_id: s.id, storage_path: path, mime_type: mime, method: methodOk, status: 'pending' }, { onConflict: 'session_id' });
-  if (up.error) throw new Error(`Preparar grabación: ${up.error.message}`);
+  if (up.error) throw new Error(`Prepare recording: ${up.error.message}`);
   const signed = await worker.storage.from('recordings').createSignedUploadUrl(path, { upsert: true });
-  if (signed.error) throw new Error(`URL de subida: ${signed.error.message}`);
+  if (signed.error) throw new Error(`Upload URL: ${signed.error.message}`);
   return { path, token: signed.data.token, signedUrl: signed.data.signedUrl };
 }
 
@@ -278,7 +278,7 @@ export async function confirmRecording(worker: SupabaseClient, token: string, se
   const ctx = await requireAssignment(worker, token);
   const s = await ownSession(worker, ctx.assignment.id, sessionId);
   const rec = await worker.from('recordings').select('id, storage_path, status').eq('session_id', s.id).single();
-  if (rec.error) throw new TesterError('no_recording', 'No hay una subida pendiente para esta sesión.', 404);
+  if (rec.error) throw new TesterError('no_recording', 'There is no pending upload for this session.', 404);
   const folder = rec.data.storage_path.split('/').slice(0, -1).join('/');
   const name = rec.data.storage_path.split('/').pop()!;
   const listed = await worker.storage.from('recordings').list(folder, { search: name, limit: 5 });
@@ -294,11 +294,11 @@ export async function confirmRecording(worker: SupabaseClient, token: string, se
       has_audio: Boolean(meta.has_audio),
       uploaded_at: new Date().toISOString(),
       verified_at: verified ? new Date().toISOString() : null,
-      verify_note: verified ? null : 'El archivo no aparece en el almacenamiento',
+      verify_note: verified ? null : 'The file does not appear in storage',
     })
     .eq('id', rec.data.id);
-  if (upd.error) throw new Error(`Confirmar grabación: ${upd.error.message}`);
-  if (!verified) throw new TesterError('upload_missing', 'El archivo no se pudo subir. Reintentar.', 409);
+  if (upd.error) throw new Error(`Confirm recording: ${upd.error.message}`);
+  if (!verified) throw new TesterError('upload_missing', 'The file could not be uploaded. Try again.', 409);
   await worker.from('sessions').update({ status: 'recorded', ended_at: new Date().toISOString(), capture: { surface: meta.surface ?? null, cropped: Boolean(meta.cropped), microphone: Boolean(meta.has_audio) } }).eq('id', s.id);
   return { recording_id: rec.data.id, bytes: size };
 }
@@ -315,7 +315,7 @@ export async function submitPlaytest(worker: SupabaseClient, token: string, sess
   if (already.data) return { delivery_id: already.data.id, duplicate: true };
   if (rows.length) {
     const ins = await worker.from('feedback').insert(rows);
-    if (ins.error) throw new Error(`Guardar respuestas: ${ins.error.message}`);
+    if (ins.error) throw new Error(`Save answers: ${ins.error.message}`);
   }
   const [rec, events, moments] = await Promise.all([
     worker.from('recordings').select('status, duration_ms').eq('session_id', s.id).maybeSingle(),
@@ -325,16 +325,16 @@ export async function submitPlaytest(worker: SupabaseClient, token: string, sess
   const hasRecording = rec.data?.status === 'verified';
   const auto = {
     usable_material: hasRecording || rows.length >= 2,
-    recording: hasRecording ? 'verificada' : 'sin grabación (alternativa escrita)',
+    recording: hasRecording ? 'verified' : 'no recording (written alternative)',
     recording_ms: rec.data?.duration_ms ?? null,
     game_events: events.count ?? 0,
     played: (events.count ?? 0) > 3,
     moments: moments.count ?? 0,
     answers: rows.length,
-    note: 'Sugerencia automática. La validez la confirma una persona del equipo; no depende de si le gustó el juego.',
+    note: 'Automatic suggestion. A team member confirms validity; it does not depend on whether the person liked the game.',
   };
   const del = await worker.from('deliveries').insert({ study_id: s.study_id, assignment_id: ctx.assignment.id, phase: 'playtest', auto_checks: auto }).select('id').single();
-  if (del.error) throw new Error(`Registrar entrega: ${del.error.message}`);
+  if (del.error) throw new Error(`Record submission: ${del.error.message}`);
   await worker.from('sessions').update({ status: 'submitted', ended_at: new Date().toISOString() }).eq('id', s.id);
   // Analysis runs on what was delivered: recording, events and comments.
   await enqueueJob(worker, { studyId: s.study_id, kind: 'analyze_session', key: `analyze:${s.id}:v1`, input: { session_id: s.id } });
@@ -345,9 +345,9 @@ export async function submitPlaytest(worker: SupabaseClient, token: string, sess
 export async function submitComparison(worker: SupabaseClient, token: string, choice: 'first' | 'second' | 'none', reason: string) {
   const ctx = await requireAssignment(worker, token);
   const sessions = await worker.from('sessions').select('id, version_id, position, neutral_label, status').eq('assignment_id', ctx.assignment.id).eq('phase', 'comparison').order('position');
-  if (!sessions.data || sessions.data.length !== 2) throw new TesterError('not_started', 'Primero jugá las dos versiones.', 409);
+  if (!sessions.data || sessions.data.length !== 2) throw new TesterError('not_started', 'Play both versions first.', 409);
   const text = reason.trim().slice(0, 2000);
-  if (!text) throw new TesterError('reason_required', 'Contanos el motivo, aunque no tengas preferencia.');
+  if (!text) throw new TesterError('reason_required', 'Tell us the reason, even if you have no preference.');
   const [first, second] = sessions.data;
   const preferred = choice === 'first' ? first.version_id : choice === 'second' ? second.version_id : null;
   const playtest = await worker.from('deliveries').select('id').eq('assignment_id', ctx.assignment.id).eq('phase', 'playtest').maybeSingle();
@@ -368,15 +368,15 @@ export async function submitComparison(worker: SupabaseClient, token: string, ch
     .select('id')
     .single();
   if (ins.error) {
-    if (ins.error.code === '23505') throw new TesterError('already', 'Ya registraste tu comparación.', 409);
-    throw new Error(`Guardar comparación: ${ins.error.message}`);
+    if (ins.error.code === '23505') throw new TesterError('already', 'You already recorded your comparison.', 409);
+    throw new Error(`Save comparison: ${ins.error.message}`);
   }
   const events = await worker.from('game_events').select('session_id', { count: 'exact', head: true }).in('session_id', [first.id, second.id]);
   await worker.from('deliveries').insert({
     study_id: ctx.study.id,
     assignment_id: ctx.assignment.id,
     phase: 'comparison',
-    auto_checks: { played_both: (events.count ?? 0) > 6, game_events: events.count ?? 0, reason_length: text.length, note: 'Elegir cualquiera de las versiones o ninguna es igual de válido.' },
+    auto_checks: { played_both: (events.count ?? 0) > 6, game_events: events.count ?? 0, reason_length: text.length, note: 'Choosing either version or neither is equally valid.' },
   });
   await worker.from('sessions').update({ status: 'submitted', ended_at: new Date().toISOString() }).in('id', [first.id, second.id]);
   return { comparison_id: ins.data.id };
@@ -399,12 +399,12 @@ export async function myEvidence(worker: SupabaseClient, token: string) {
 export async function participantNote(worker: SupabaseClient, token: string, evidenceId: string, note: string) {
   const ctx = await requireAssignment(worker, token);
   const text = note.trim().slice(0, 2000);
-  if (!text) throw new TesterError('empty', 'La corrección está vacía.');
+  if (!text) throw new TesterError('empty', 'The correction is empty.');
   const fb = await worker.from('feedback').select('id').eq('assignment_id', ctx.assignment.id);
   const ev = await worker.from('evidence').select('id, study_id, human_statement_feedback_id').eq('id', evidenceId).maybeSingle();
-  if (!ev.data || !(fb.data ?? []).some((f) => f.id === ev.data!.human_statement_feedback_id)) throw new TesterError('not_found', 'Hallazgo no encontrado.', 404);
+  if (!ev.data || !(fb.data ?? []).some((f) => f.id === ev.data!.human_statement_feedback_id)) throw new TesterError('not_found', 'Finding not found.', 404);
   const ins = await worker.from('evidence_reviews').insert({ evidence_id: evidenceId, study_id: ev.data.study_id, reviewer_kind: 'participant', assignment_id: ctx.assignment.id, action: 'participant_note', note: text });
-  if (ins.error) throw new Error(`Guardar corrección: ${ins.error.message}`);
+  if (ins.error) throw new Error(`Save correction: ${ins.error.message}`);
   return { ok: true };
 }
 

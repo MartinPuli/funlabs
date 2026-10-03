@@ -85,7 +85,7 @@ export type HeadlessGame = {
  */
 export function loadHeadless(html: string, opts: { timeoutMs?: number } = {}): HeadlessGame {
   const code = extractScript(html, 'game');
-  if (!code) throw new Error('El build no tiene <script id="game">');
+  if (!code) throw new Error('The build has no <script id="game">');
   const context = vm.createContext(Object.create(null), {
     name: 'funlabs-headless',
     codeGeneration: { strings: false, wasm: false },
