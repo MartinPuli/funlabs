@@ -11,7 +11,7 @@ import { deleteDraftStudy, processQueueAction, publishStudyAction, requestAnalys
 export default async function StudyOverview(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
   const supabase = await createUserClient();
-  const [study, versions, bounties, invites, assignments, deliveries, sessions, jobs, budget, evidence, comparisons] = await Promise.all([
+  const [study, versions, bounties, invites, assignments, deliveries, sessions, jobs, budget, evidence, comparisons, reviewTime] = await Promise.all([
     supabase.from('studies').select('*').eq('id', id).single(),
     supabase.from('study_versions').select('role, version_id, versions(id, label, status, content_sha256, origin, created_at)').eq('study_id', id),
     supabase.from('bounties').select('*').eq('study_id', id).order('created_at'),
@@ -23,6 +23,7 @@ export default async function StudyOverview(props: { params: Promise<{ id: strin
     supabase.rpc('study_budget', { p_study: id }),
     supabase.from('evidence').select('id, structural_status, review_status').eq('study_id', id),
     supabase.from('comparisons').select('id', { count: 'exact', head: true }).eq('study_id', id),
+    supabase.from('review_time').select('seconds').eq('study_id', id),
   ]);
   if (!study.data) return null;
   const s = study.data;
@@ -36,6 +37,7 @@ export default async function StudyOverview(props: { params: Promise<{ id: strin
   const waiting = Math.max(0, s.participants_target - playtestDeliveries.length);
   const variant = (versions.data ?? []).find((v) => v.role === 'variant');
   const reviewed = ev.filter((e) => e.review_status !== 'unreviewed').length;
+  const reviewMin = Math.round((reviewTime.data ?? []).reduce((a, r) => a + r.seconds, 0) / 60);
 
   let next: { title: string; body: string; action?: React.ReactNode } = { title: '', body: '' };
   if (status === 'draft') {
@@ -85,6 +87,7 @@ export default async function StudyOverview(props: { params: Promise<{ id: strin
           <div className="stat"><span className="stat-value">{playtestDeliveries.length}</span><span className="stat-label">entregas de prueba</span></div>
           <div className="stat"><span className="stat-value">{minutes(materialMs)}</span><span className="stat-label">de grabación</span></div>
           <div className="stat"><span className="stat-value">{ev.length}</span><span className="stat-label">hallazgos ({reviewed} revisados)</span></div>
+          <div className="stat"><span className="stat-value">{reviewMin} min</span><span className="stat-label">de revisión del equipo</span></div>
           <div className="stat"><span className="stat-value">{comparisons.count ?? 0}</span><span className="stat-label">comparaciones A/B</span></div>
         </div>
       </section>

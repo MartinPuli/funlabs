@@ -24,7 +24,7 @@ export type MaterializeInput = {
   baseVersionId: string;
   actor: string;
   objective: string;
-  proposal: Pick<Proposal, 'summary' | 'rationale' | 'evidence_ids' | 'preserve' | 'edits'> & { expected_effect?: string; risks?: string };
+  proposal: Pick<Proposal, 'summary' | 'rationale' | 'evidence_ids' | 'preserve'> & { edits: Array<{ find: string; replace: string; reason?: string }>; expected_effect?: string; risks?: string };
   model?: Record<string, unknown> | null;
   submissionId?: string | null;
   createdBy?: string | null;

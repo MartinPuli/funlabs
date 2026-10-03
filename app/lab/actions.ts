@@ -10,7 +10,7 @@ import { enqueueJob, retryJob } from '@/lib/jobs';
 import { settleDelivery } from '@/lib/budget';
 import { newToken } from '@/lib/tokens';
 import { CAPABILITIES, CREATOR_CONSENT_TEXT, type Capability } from '@/lib/catalog';
-import { EXPORT_FIELDS, exportPreflight } from '@/lib/export';
+import { EXPORT_FIELDS, requestExport } from '@/lib/export';
 
 export type ActionState = { ok: boolean; message?: string; errors?: Record<string, string>; data?: Record<string, unknown> };
 
@@ -291,6 +291,7 @@ const CredentialSchema = z.object({
   kind: z.enum(['creator_agent', 'participant_agent']),
   bounty_id: z.string().uuid().optional().or(z.literal('')),
   days: z.coerce.number().int().min(1).max(30),
+  scope: z.enum(['study', 'product']).optional().default('study'),
 });
 
 export async function createCredentialAction(_prev: ActionState, form: FormData): Promise<ActionState> {
@@ -300,17 +301,25 @@ export async function createCredentialAction(_prev: ActionState, form: FormData)
   const caps = form.getAll('capabilities').map(String).filter((c): c is Capability => c in CAPABILITIES);
   if (!caps.length) return fail('Elegí al menos una capacidad.');
   if (v.kind === 'participant_agent' && !v.bounty_id) return fail('Un agente participante trabaja sobre un bounty: elegilo.');
-  const { supabase, user, study } = await requireStudy(v.study_id, ['owner']);
+  const { user, study } = await requireStudy(v.study_id, ['owner']);
+  if (v.kind === 'participant_agent') {
+    const b = await (await workerClient()).from('bounties').select('id, kind').eq('id', v.bounty_id).eq('study_id', v.study_id).maybeSingle();
+    if (!b.data || !['agent_prediction', 'agent_analysis'].includes(b.data.kind)) return fail('El bounty elegido no admite agentes participantes en el MVP.');
+  }
   const t = newToken('fla');
-  const ins = await supabase.from('agent_credentials').insert({
+  const studyScoped = v.kind === 'participant_agent' || v.scope === 'study';
+  const allowed = v.kind === 'participant_agent' ? caps.filter((c) => c === 'evidence:read' || c === 'work:submit') : caps;
+  // Credentials are minted by the backend after the owner check: there is no insert policy for creators.
+  const worker = await workerClient();
+  const ins = await worker.from('agent_credentials').insert({
     product_id: study.product_id,
-    study_id: v.study_id,
+    study_id: studyScoped ? v.study_id : null,
     bounty_id: v.kind === 'participant_agent' ? v.bounty_id : null,
     kind: v.kind,
     label: v.label,
     token_hash: t.hash,
     token_hint: t.hint,
-    capabilities: v.kind === 'participant_agent' ? caps.filter((c) => c === 'evidence:read' || c === 'work:submit') : caps,
+    capabilities: allowed,
     created_by: user.id,
     expires_at: new Date(Date.now() + v.days * 86400_000).toISOString(),
   });
@@ -356,23 +365,12 @@ export async function requestExportAction(_prev: ActionState, form: FormData): P
   const fields = form.getAll('fields').map(String).filter((f) => (EXPORT_FIELDS as readonly string[]).includes(f));
   if (purpose.length < 5) return fail('Describí la finalidad del export.', { purpose: 'Mínimo 5 caracteres.' });
   if (!fields.length) return fail('Elegí al menos un campo.');
-  const { supabase, user } = await requireStudy(studyId, ['owner', 'collaborator', 'researcher']);
+  const { user } = await requireStudy(studyId, ['owner', 'collaborator', 'researcher']);
   const worker = await workerClient();
-  const pre = await exportPreflight(worker, studyId, false);
-  const ins = await worker
-    .from('dataset_exports')
-    .insert({ study_id: studyId, requested_by: user.id, purpose, fields, format, status: pre.ok ? 'preparing' : 'blocked', blocked_reason: pre.ok ? null : pre.reasons.join(' ') })
-    .select('id')
-    .single();
-  if (ins.error) return fail(ins.error.message);
-  void supabase;
-  if (!pre.ok) {
-    refresh(studyId);
-    return fail(`Export bloqueado: ${pre.reasons.join(' ')}`);
-  }
-  await enqueueJob(worker, { studyId, kind: 'export_dataset', key: `export:${ins.data.id}`, input: { export_id: ins.data.id }, createdBy: user.id });
+  const exp = await requestExport(worker, { studyId, userId: user.id, purpose, fields, format, via: 'ui' });
   refresh(studyId);
-  return { ok: true, message: 'Export en preparación.', data: { export_id: ins.data.id } };
+  if (exp.status === 'blocked') return fail(`Export bloqueado: ${exp.blocked_reason}`);
+  return { ok: true, message: 'Export en preparación.', data: { export_id: exp.id } };
 }
 
 export async function exportDownloadUrl(studyId: string, exportId: string): Promise<ActionState> {

@@ -2,9 +2,9 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { JobRow } from './jobs.ts';
 import { comparisonSummary, evaluatePrediction, type PredictionPayload } from './results.ts';
 import { env } from './env.ts';
+import { enqueueJob } from './jobs.ts';
 
-export const EXPORT_FIELDS = ['protocol', 'versions', 'predictions', 'sessions', 'events', 'comments', 'evidence', 'interventions', 'comparisons'] as const;
-export type ExportField = (typeof EXPORT_FIELDS)[number];
+export { EXPORT_FIELDS, type ExportField } from './export-fields.ts';
 
 type Consents = Map<string, { research: boolean; training: boolean }>;
 
@@ -19,6 +19,31 @@ async function participantConsents(worker: SupabaseClient, studyId: string): Pro
     out.set(r.assignment_id, cur);
   }
   return out;
+}
+
+/** Creates an export request (blocked with the missing permissions, or queued as a job). */
+export async function requestExport(
+  worker: SupabaseClient,
+  input: { studyId: string; userId: string | null; purpose: string; fields: string[]; format: 'json' | 'jsonl'; via: 'ui' | 'agent_api' },
+) {
+  const pre = await exportPreflight(worker, input.studyId, false);
+  const ins = await worker
+    .from('dataset_exports')
+    .insert({
+      study_id: input.studyId,
+      requested_by: input.userId,
+      requested_via: input.via,
+      purpose: input.purpose,
+      fields: input.fields,
+      format: input.format,
+      status: pre.ok ? 'preparing' : 'blocked',
+      blocked_reason: pre.ok ? null : pre.reasons.join(' '),
+    })
+    .select('id, status, blocked_reason')
+    .single();
+  if (ins.error) throw new Error(`Crear export: ${ins.error.message}`);
+  if (pre.ok) await enqueueJob(worker, { studyId: input.studyId, kind: 'export_dataset', key: `export:${ins.data.id}`, input: { export_id: ins.data.id }, createdBy: input.userId });
+  return ins.data as { id: string; status: string; blocked_reason: string | null };
 }
 
 /** Decides whether an export can run, without building it. */

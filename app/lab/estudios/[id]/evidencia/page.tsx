@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { createUserClient } from '@/lib/supabase/server';
 import { EvidenceDesk, type DeskEvidence, type DeskSession } from '@/components/lab/EvidenceDesk';
+import { ReviewTimer } from '@/components/lab/ReviewTimer';
 
 export const metadata: Metadata = { title: 'Evidencia' };
 
@@ -71,6 +72,8 @@ export default async function EvidencePage(props: { params: Promise<{ id: string
   }));
 
   return (
+    <>
+    <ReviewTimer studyId={id} />
     <EvidenceDesk
       studyId={id}
       canIntervene={Boolean(study.data.check_suite_id)}
@@ -102,5 +105,6 @@ export default async function EvidencePage(props: { params: Promise<{ id: string
         startedAt: r.started_at,
       }))}
     />
+    </>
   );
 }
