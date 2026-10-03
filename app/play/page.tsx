@@ -33,19 +33,27 @@ export default async function PlayPage(props: { searchParams: Promise<{ v?: stri
   return (
     <>
       <SiteHeader current="/play" />
-      <main id="content" className="page" style={{ paddingTop: 32, paddingBottom: 64 }}>
-        <div className="stack" style={{ ['--gap' as string]: 'var(--s-5)' }}>
-          <header className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-            <h1>Gravity Room</h1>
-            <p className="muted measure">Escape three rooms by flipping gravity. Playing here records nothing. Taking part in a study requires an invite.</p>
+      <main id="content" className="page" style={{ paddingTop: 24, paddingBottom: 32 }}>
+        <div className="stack" style={{ ['--gap' as string]: 'var(--s-4)' }}>
+          <header className="split">
+            <div className="stack" style={{ ['--gap' as string]: '8px' }}>
+              <h1>Gravity Room</h1>
+              <div className="cluster" style={{ ['--gap' as string]: '6px' }}>
+                <span className="tag">Puzzle</span>
+                <span className="tag">3 rooms</span>
+                <span className="tag tag-outline">Playing here records nothing</span>
+              </div>
+            </div>
+            {versions.length > 1 && (
+              <nav aria-label="Playable versions" className="cluster" style={{ ['--gap' as string]: '6px' }}>
+                {versions.map((x) => (
+                  <Link key={x.key} className={`btn ${x.key === current.key ? 'btn-primary' : ''}`} href={x.key === 'a' ? '/play' : `/play?v=${x.key}`} aria-current={x.key === current.key ? 'true' : undefined}>
+                    Version {x.label}
+                  </Link>
+                ))}
+              </nav>
+            )}
           </header>
-          <nav aria-label="Playable versions" className="cluster">
-            {versions.map((x) => (
-              <Link key={x.key} className={`btn ${x.key === current.key ? 'btn-primary' : ''}`} href={x.key === 'a' ? '/play' : `/play?v=${x.key}`} aria-current={x.key === current.key ? 'true' : undefined}>
-                Version {x.label}
-              </Link>
-            ))}
-          </nav>
           <div className="game-frame-wrap">
             <iframe key={current.key} className="game-frame" src={current.src} title={`Gravity Room, version ${current.label}`} sandbox="allow-scripts" />
           </div>
@@ -56,14 +64,12 @@ export default async function PlayPage(props: { searchParams: Promise<{ v?: stri
               <dt>Identified URL</dt><dd><a className="mono" href={current.src} target="_blank" rel="noreferrer">{current.src}</a></dd>
               <dt>What changes</dt><dd>{current.note}</dd>
             </dl>
-            <div className="stack small" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-              <strong>Controls</strong>
-              <span>Arrow keys or A and D: move</span>
-              <span>Space: flip gravity (while standing on the floor or ceiling)</span>
-              <span>E: activate a nearby switch</span>
-              <span>R: restart the room</span>
-              <span className="muted">The game runs isolated: no network, no cookies and no FUNLABS data.</span>
-            </div>
+            <dl className="kv small">
+              <dt className="mono">← → · A D</dt><dd>Move</dd>
+              <dt className="mono">Space</dt><dd>Flip gravity, standing on the floor or ceiling</dd>
+              <dt className="mono">E</dt><dd>Activate a nearby switch</dd>
+              <dt className="mono">R</dt><dd>Restart the room</dd>
+            </dl>
           </div>
         </div>
       </main>

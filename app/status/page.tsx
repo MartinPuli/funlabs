@@ -23,20 +23,24 @@ export default async function StatusPage() {
         <div className="stack" style={{ ['--gap' as string]: 'var(--s-6)' }}>
           <header className="stack" style={{ ['--gap' as string]: 'var(--s-3)' }}>
             <h1>Integration status</h1>
-            <p className="muted measure">What is connected in this deployment and how it was checked. Anything unverified is labeled as such; there are no decorative logos.</p>
+            <p className="muted measure">What is connected here and how it was checked. Anything unverified says so.</p>
             <p className="small muted">Environment: {s.environment.vercel ? `Vercel (${s.environment.vercelEnv}, ${s.environment.region})` : 'local'}. Jobs run on <span className="mono">{s.environment.runner}</span>. Checked {dateTime(s.generatedAt)}.</p>
           </header>
           <div className="table-wrap">
             <table className="table">
-              <thead><tr><th scope="col">Integration</th><th scope="col">Status</th><th scope="col">What it does here</th><th scope="col">Details</th><th scope="col">How it was checked</th></tr></thead>
+              <thead><tr><th scope="col">Integration</th><th scope="col">Status</th><th scope="col">Details</th></tr></thead>
               <tbody>
                 {s.integrations.map((i) => (
                   <tr key={i.key}>
-                    <th scope="row">{i.name}</th>
+                    <th scope="row">
+                      <span>{i.name}</span>
+                      <div className="small muted" style={{ fontWeight: 400 }}>{i.role}</div>
+                    </th>
                     <td><span className={`tag ${STATE[i.state].cls}`}>{STATE[i.state].label}</span></td>
-                    <td className="small">{i.role}</td>
-                    <td className="small">{i.detail}</td>
-                    <td className="small muted">{i.checkedBy}</td>
+                    <td className="small">
+                      {i.detail}
+                      <div className="tiny muted">Checked by: {i.checkedBy}</div>
+                    </td>
                   </tr>
                 ))}
               </tbody>

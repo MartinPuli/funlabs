@@ -214,7 +214,7 @@ A large player, a timeline and cards for observation, comment and hypothesis. Se
 
 A documented export with permissions, versions, order, protocol and results. In the MVP it is a private download of authorized examples, not a public data marketplace.
 
-Visual direction: a game studio and video editing suite; light background, dark type, a lively accent and large controls. The center of the interface is the people, their sessions and the decisions they make possible.
+Visual direction: a dark game storefront, like a game library at night. Blue-slate surfaces, one blue for links and focus, one green for the main action, small uppercase labels and flat panels. Less is more: few borders, little copy, nothing decorative. The center of the interface is the people, their sessions and the decisions they make possible.
 
 ### How humans and agents request data
 
@@ -314,32 +314,34 @@ Main states: `draft → published → collecting → analyzing → evidence_read
 
 ### Design system
 
-The identity combines a playful brand with a precise workbench. **FUNLABS** is the wordmark. Landing headline: "Give your agent human evidence". Description: "Request playtests, review recorded sessions and check which changes people prefer".
+The identity is a storefront for a game library with the precision of a workbench. It borrows the layout language of game stores (dark navy surfaces, tag chips, a featured block, a green play button), not any brand, logo or name. **FUNLABS** is the wordmark. Landing headline: "Give your agent human evidence". Description: "Request playtests, review recorded sessions and check which changes people prefer".
 
-The [Taste skill by Leonxlnx](https://github.com/Leonxlnx/taste-skill) guides the brand and the landing page. Do not confuse it with the company TasteLabs. For video, forms, tables and product states, use consistent tokens and components. Anti AI-slop writing keeps the copy concrete: tasks, sources and results; no unproven superlatives.
+The [Taste skill by Leonxlnx](https://github.com/Leonxlnx/taste-skill) is the intended reference for the brand and the landing page. Do not confuse it with the company TasteLabs. The current build applies the direction below with Emil Kowalski's design-engineering rules (press feedback, explicit transitions, ease-out under 200 ms, hover only where a real hover exists) and a landing-page anti-slop checklist; it has not been audited against the Taste skill itself. For video, forms, tables and product states, use consistent tokens and components. Anti AI-slop writing keeps the copy concrete: tasks, sources and results; no unproven superlatives.
 
 #### Reference tokens
 
 These are specifications to implement and verify on real screens. They are not an accessibility audit of an existing interface.
 
-| Token | Light theme | Dark theme | Use |
-| --- | --- | --- | --- |
-| `background` | `#F5F6F2` | `#141C18` | Application background. |
-| `surface` | `#FCFCF8` | `#1D2821` | Forms and panels. |
-| `text` | `#1F2923` | `#EEF3EA` | Main content. |
-| `text-secondary` | `#536156` | `#B0BCAE` | Metadata and help. |
-| `accent` | `#D5E987` | `#D5E987` | Primary action and selection, with `#1F2923` text. |
-| `border` | `#BBC4B8` | `#526250` | Separation of surfaces; do not use as the only indicator of a control. |
-| `focus` | `#315C45` | `#D5E987` | Visible keyboard focus. |
-| `success` | `#286142` | `#98D1A4` | Valid submission or passed check, accompanied by text. |
-| `warning` | `#875515` | `#E4C584` | Pending review, accompanied by text. |
-| `error` | `#A33431` | `#F0A5A1` | Recoverable failure, with an explanation and an action. |
+| Token | Value | Use |
+| --- | --- | --- |
+| `background` | `#101722` | Application background, with a faint blue glow at the top. |
+| `chrome` | `#0A1018` | Header and footer. |
+| `surface` | `#172233` | Forms and panels. |
+| `surface-sunk` | `#0D1520` | Inputs, code blocks, table headers. |
+| `text` | `#D8E4F0` | Main content. Headings use `#FFFFFF`. |
+| `text-secondary` | `#8FA4BA` | Metadata, labels and help. |
+| `link` | `#66BDF2` | Links, selection, current step and keyboard focus (`#8AD0FF`). |
+| `action` | `#3F8118` to `#2F650F` | Main action button, with white text. |
+| `border` | `#2D4259` (`#1C2A3D` soft) | Separation of surfaces; do not use as the only indicator of a control. |
+| `success` | `#B4E64A` on `#24391A` | Valid submission or passed check, accompanied by text. |
+| `warning` | `#F0C05A` on `#38290F` | Pending review and technical rehearsal, accompanied by text. |
+| `error` | `#FF9B92` on `#3B1B1D` | Recoverable failure, with an explanation and an action. |
 
-A single lime accent; the rest of the color communicates state. Do not use green to label a version as "more fun" without a human result. "No preference" and "B was liked less" carry the same visual weight as an improvement.
+One green for the main action and one blue for links and focus; the rest of the color communicates state. Green is the color of the action, not of a result: do not use it to label a version as "more fun" without a human result. "No preference" and "B was liked less" carry the same visual weight as an improvement.
 
-Typography: **Bricolage Grotesque** for brand/headings, **DM Sans** in the product and **IBM Plex Mono** for times/IDs. Self-host resources when implementing, with system fonts as a fallback. Base text 16 px, help 14 px, section headings 24–32 px; reserve 48–72 px for the landing headline, without carrying it over to the dashboard.
+Typography: **Figtree** for brand, headings and product text, and **IBM Plex Mono** for times, IDs and code. Self-host resources with `next/font`, with system fonts as a fallback. Base text 15 px, help 13 px, page titles 24–28 px and 12 px uppercase labels with letter spacing for shelf titles; reserve 28–36 px for the landing headline, without carrying it over to the dashboard.
 
-Spacing on a 4/8/12/16/24/32/48/64 px scale. Radii: 8 px on controls, 12 px on panels; pill shape only for short labels. Interactive controls of at least 44 px as a design policy. Automatic theme with an explicit light/dark preference; check both, including focus and states. Targets: 4.5:1 contrast for normal text and 3:1 for large text and non-text elements where applicable.
+Spacing on a 4/8/12/16/24/32/48/64 px scale. Radii: 3 px on controls and tags, 4 px on panels. Controls are 40 px high, and 44 px on touch devices. There is a single dark theme (`color-scheme: dark`) and no theme switch: this version dropped the light theme to keep the interface small. Targets: 4.5:1 contrast for normal text and 3:1 for large text and non-text elements where applicable.
 
 The evidence desk uses video as the main surface and a findings panel beside it on desktop. On mobile, stack video, sources and comments, keeping the selection. Do not turn the dashboard into a landing page of decorative cards. Tables for jobs/budget; a timeline for moments; evidence lists for observations.
 

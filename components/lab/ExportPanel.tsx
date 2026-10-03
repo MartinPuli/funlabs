@@ -59,11 +59,13 @@ export function ExportForm({ studyId }: { studyId: string }) {
         <label htmlFor="exp-purpose">Purpose</label>
         <input id="exp-purpose" name="purpose" className="input" required minLength={5} maxLength={500} placeholder="Evaluate whether an agent anticipates an audience's preference" />
       </div>
-      <fieldset className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
+      <fieldset>
         <legend>Fields</legend>
-        {EXPORT_FIELDS.map((f) => (
-          <label key={f} className="choice"><input type="checkbox" name="fields" value={f} defaultChecked /><span>{FIELD_LABEL[f]}</span></label>
-        ))}
+        <div className="choice-grid">
+          {EXPORT_FIELDS.map((f) => (
+            <label key={f} className="choice"><input type="checkbox" name="fields" value={f} defaultChecked /><span>{FIELD_LABEL[f]}</span></label>
+          ))}
+        </div>
       </fieldset>
       <fieldset>
         <legend>Format</legend>

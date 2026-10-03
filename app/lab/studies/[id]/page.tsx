@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createUserClient } from '@/lib/supabase/server';
-import { BOUNTY_KIND_LABEL, STATUS_LABEL, type StudyStatus } from '@/lib/catalog';
-import { dateTime, JOB_KIND_LABEL, JOB_STATUS_LABEL, minutes, mmss, money, shortSha } from '@/lib/format';
+import { BOUNTY_KIND_LABEL, type StudyStatus } from '@/lib/catalog';
+import { dateTime, JOB_KIND_LABEL, JOB_STATUS_LABEL, minutes, mmss, money } from '@/lib/format';
 import type { BudgetSummary } from '@/lib/budget';
 import { ActionButton } from '@/components/lab/ActionButton';
 import { InviteManager } from '@/components/lab/InviteManager';
@@ -77,7 +77,7 @@ export default async function StudyOverview(props: { params: Promise<{ id: strin
       <section className="panel stack" aria-labelledby="next-step">
         <div className="split">
           <div className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-            <h2 id="next-step" className="section-title">{next.title}</h2>
+            <h2 id="next-step" className="title-lg">{next.title}</h2>
             <p className="muted measure">{next.body}</p>
           </div>
           {next.action}
@@ -221,9 +221,9 @@ export default async function StudyOverview(props: { params: Promise<{ id: strin
         </section>
       </div>
 
-      <section className="stack" aria-labelledby="bounties">
-        <h2 id="bounties" className="section-title">Bounties</h2>
-        <p className="field-help">Each kind of work has its own criteria. People and agents are not compared with a single score.</p>
+      <details>
+        <summary id="bounties">Bounties ({(bounties.data ?? []).length})</summary>
+        <p className="field-help" style={{ marginBottom: 'var(--s-3)' }}>Each kind of work has its own criteria. People and agents are not compared with a single score.</p>
         <div className="table-wrap">
           <table className="table">
             <thead><tr><th scope="col">Work</th><th scope="col">Evaluation criteria</th><th scope="col" className="num">Pay</th><th scope="col">Status</th></tr></thead>
@@ -247,33 +247,10 @@ export default async function StudyOverview(props: { params: Promise<{ id: strin
             </tbody>
           </table>
         </div>
-      </section>
+      </details>
 
-      <section className="stack" aria-labelledby="versions">
-        <h2 id="versions" className="section-title">Versions</h2>
-        <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th scope="col">Version</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col">Hash</th><th scope="col">Play</th></tr></thead>
-            <tbody>
-              {(versions.data ?? []).map((v) => {
-                const ver = v.versions as unknown as { id: string; label: string; status: string; content_sha256: string; origin: string };
-                return (
-                  <tr key={v.version_id}>
-                    <td><strong>{ver.label}</strong> <span className="small muted">{ver.origin === 'repository' ? 'repository' : 'intervention'}</span></td>
-                    <td>{v.role === 'baseline' ? 'Baseline' : 'Variant'}</td>
-                    <td>{ver.status === 'ready' ? 'Ready' : ver.status === 'checking' ? 'Checking' : 'Rejected'}</td>
-                    <td className="mono small">{shortSha(ver.content_sha256)}</td>
-                    <td>{ver.status === 'ready' ? <a href={`/play/v/${ver.id}`} target="_blank" rel="noreferrer">Open version {ver.label}</a> : '-'}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="stack" aria-labelledby="jobs">
-        <h2 id="jobs" className="section-title">Jobs</h2>
+      <details open={(jobs.data ?? []).some((j) => j.status === 'failed' || j.status === 'queued')}>
+        <summary id="jobs">Jobs ({(jobs.data ?? []).length})</summary>
         {(jobs.data ?? []).length === 0 ? (
           <p className="muted">No jobs yet.</p>
         ) : (
@@ -298,16 +275,13 @@ export default async function StudyOverview(props: { params: Promise<{ id: strin
             </table>
           </div>
         )}
-      </section>
+      </details>
 
       {status === 'draft' && (
-        <section className="stack">
-          <h2 className="section-title">Draft</h2>
-          <p className="muted">Current status: {STATUS_LABEL[status]}. A draft can be deleted.</p>
-          <form action={deleteDraftStudy.bind(null, id)}>
-            <button className="btn btn-danger" type="submit">Delete draft</button>
-          </form>
-        </section>
+        <form action={deleteDraftStudy.bind(null, id)} className="split">
+          <p className="muted small">This study is a draft. A draft can be deleted.</p>
+          <button className="btn btn-danger btn-sm" type="submit">Delete draft</button>
+        </form>
       )}
     </div>
   );

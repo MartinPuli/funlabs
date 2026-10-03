@@ -14,7 +14,7 @@ export default async function SignInPage(props: { searchParams: Promise<{ next?:
         <div className="stack" style={{ ['--gap' as string]: 'var(--s-5)' }}>
           <div className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
             <h1>Sign in to the lab</h1>
-            <p className="muted">Create studies, review evidence and approve spending. People who playtest don't need an account: they join with their invite.</p>
+            <p className="muted">People who playtest don't need an account: they join with their invite.</p>
           </div>
           {sp.error && <p className="callout callout-error" role="alert">{sp.error}</p>}
           <SignInForm next={next} />

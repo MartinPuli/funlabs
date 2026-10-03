@@ -191,7 +191,7 @@ export function EvidenceDesk(props: {
 
         <aside className="desk-side stack" aria-label="Findings">
           <div className="split">
-            <h2 className="section-title" style={{ fontSize: 20 }}>Findings ({props.evidence.length})</h2>
+            <h2 className="title-lg">Findings ({props.evidence.length})</h2>
             <label className="small cluster" style={{ ['--gap' as string]: '6px' }}>
               <span>Show</span>
               <select className="select" style={{ width: 'auto', minHeight: 36 }} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>

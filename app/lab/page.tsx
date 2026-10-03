@@ -16,10 +16,7 @@ export default async function LabHome() {
   return (
     <div className="stack" style={{ ['--gap' as string]: 'var(--s-6)' }}>
       <div className="split">
-        <div className="stack" style={{ ['--gap' as string]: 'var(--s-2)' }}>
-          <h1>Studies</h1>
-          <p className="muted measure">Each study fixes a question and an objective, requests human playtests and connects the evidence to changes and comparisons.</p>
-        </div>
+        <h1>Studies</h1>
         <div className="cluster">
           <form action={createDemoStudy}>
             <button className="btn" type="submit">Example study</button>
@@ -30,9 +27,9 @@ export default async function LabHome() {
 
       {list.length === 0 ? (
         <div className="empty">
-          <h2 style={{ fontSize: 20 }}>No studies yet</h2>
+          <h2>No studies yet</h2>
           <p className="muted measure">
-            The example study uses Gravity Room, a short game from this repository, with the MVP question: improve clarity while keeping the challenge. It stays a draft until you publish it.
+            The example study uses Gravity Room with the MVP question: improve clarity while keeping the challenge. It stays a draft until you publish it.
           </p>
         </div>
       ) : (

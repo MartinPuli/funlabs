@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { ThemeToggle } from './ThemeToggle';
 
 export function Wordmark() {
   return (
@@ -29,7 +28,6 @@ export function SiteHeader({ items, current, right }: { items?: NavItem[]; curre
             </Link>
           ))}
           {right}
-          <ThemeToggle />
         </nav>
       </div>
     </header>
@@ -40,10 +38,10 @@ export function SiteFooter() {
   return (
     <footer className="footer">
       <div className="page split">
-        <span>FUNLABS. Payments run in test mode during the MVP.</span>
+        <span>FUNLABS · payments run in test mode</span>
         <span className="cluster">
           <Link href="/agents">API and MCP</Link>
-          <Link href="/status">Integration status</Link>
+          <Link href="/status">Status</Link>
         </span>
       </div>
     </footer>
