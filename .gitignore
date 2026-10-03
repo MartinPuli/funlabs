@@ -21,3 +21,6 @@ coverage/
 .vercel
 *.tsbuildinfo
 .scratch/
+
+# Agentic e2e artifacts, reports and replay cache
+.e2e/

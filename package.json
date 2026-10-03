@@ -20,7 +20,8 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "vitest run tests/db",
-    "gen:builds": "node scripts/gen-builds.mjs"
+    "gen:builds": "node scripts/gen-builds.mjs",
+    "test:agentic": "node scripts/run-agentic.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "0.131.0",
@@ -35,11 +36,14 @@
     "zod": "4.6.5"
   },
   "devDependencies": {
+    "@ai-sdk/anthropic": "^4.0.71",
+    "@e2e-dev/web": "^0.11.2",
     "@modelcontextprotocol/sdk": "1.32.0",
     "@playwright/test": "1.56.1",
     "@types/node": "22.19.1",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
+    "e2e": "^0.16.0",
     "supabase": "2.119.0",
     "typescript": "5.9.3",
     "vitest": "5.0.3"

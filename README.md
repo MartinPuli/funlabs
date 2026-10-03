@@ -24,4 +24,4 @@ cp .env.example .env.local   # fill in keys; see docs/ARCHITECTURE.md for the ba
 npm run dev
 ```
 
-Tests: `npm test`, `npm run db:test`, `npx vitest run tests/integration`, `npm run test:e2e`.
+Tests: `npm test`, `npm run db:test`, `npx vitest run tests/integration`, `npm run test:e2e`, and `npm run test:agentic` (TesterArmy `e2e`: Claude drives the real interface from goals, with locator assertions for exact results; needs the app running and `ANTHROPIC_API_KEY`).

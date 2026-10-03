@@ -48,6 +48,7 @@ npm test                  # unit
 npm run db:test           # RLS and integrity (needs the local stack)
 npx vitest run tests/integration   # agent API + MCP (needs the app and the stack)
 npm run test:e2e          # Playwright: human circuit and A/B circuit
+npm run test:agentic      # TesterArmy e2e: an agent drives the creator flow (needs ANTHROPIC_API_KEY)
 ```
 
 ## Environment variables
