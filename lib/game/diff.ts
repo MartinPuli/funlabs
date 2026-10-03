@@ -11,7 +11,7 @@ export function unifiedDiff(a: string, b: string, opts: { context?: number; from
   const a2 = A.slice(pre, A.length - suf);
   const b2 = B.slice(pre, B.length - suf);
   const n = a2.length, m = b2.length;
-  if (n * m > 4_000_000) return `--- ${opts.fromLabel ?? 'a'}\n+++ ${opts.toLabel ?? 'b'}\n@@ diff demasiado grande para mostrar @@\n`;
+  if (n * m > 4_000_000) return `--- ${opts.fromLabel ?? 'a'}\n+++ ${opts.toLabel ?? 'b'}\n@@ diff too large to display @@\n`;
   const dp: Uint32Array[] = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
   for (let i = n - 1; i >= 0; i--) for (let j = m - 1; j >= 0; j--) dp[i][j] = a2[i] === b2[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
 

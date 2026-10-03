@@ -30,7 +30,7 @@ function countOccurrences(haystack: string, needle: string): number[] {
 export function applyScopedEdits(baseline: string, edits: Edit[]): PatchResult {
   const errors: string[] = [];
   if (!Array.isArray(edits) || edits.length === 0) return { ok: false, errors: ['The intervention contains no changes'] };
-  if (edits.length > PATCH_LIMITS.maxEdits) return { ok: false, errors: [`Demasiados cambios (${edits.length} > ${PATCH_LIMITS.maxEdits})`] };
+  if (edits.length > PATCH_LIMITS.maxEdits) return { ok: false, errors: [`Too many changes (${edits.length} > ${PATCH_LIMITS.maxEdits})`] };
 
   let current = baseline;
   const applied: AppliedEdit[] = [];
@@ -40,7 +40,7 @@ export function applyScopedEdits(baseline: string, edits: Edit[]): PatchResult {
     if (!e.find.length) { errors.push(`Change ${i + 1}: the text to find is empty`); continue; }
     if (e.find.length > PATCH_LIMITS.maxFindLength || e.replace.length > PATCH_LIMITS.maxReplaceLength) { errors.push(`Change ${i + 1}: exceeds the allowed size`); continue; }
     if (e.find.includes('@funlabs:') || e.replace.includes('@funlabs:')) { errors.push(`Change ${i + 1}: cannot touch the region markers`); continue; }
-    if (/<\/?script/i.test(e.replace)) { errors.push(`Cambio ${i + 1}: no puede agregar ni cerrar etiquetas <script>`); continue; }
+    if (/<\/?script/i.test(e.replace)) { errors.push(`Change ${i + 1}: cannot add or close <script> tags`); continue; }
 
     const hits = countOccurrences(current, e.find);
     if (hits.length === 0) { errors.push(`Change ${i + 1}: the text to replace was not found`); continue; }

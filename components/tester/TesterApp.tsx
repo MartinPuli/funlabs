@@ -80,8 +80,12 @@ export function TesterApp({ token }: { token: string }) {
     }
   }, [state, token, evidence]);
 
+  // Move focus to the heading when the phase changes, not on the first load.
+  const lastPhase = useRef<string | undefined>(undefined);
   useEffect(() => {
-    headingRef.current?.focus();
+    const phase = state?.phase;
+    if (phase && lastPhase.current && lastPhase.current !== phase) headingRef.current?.focus();
+    if (phase) lastPhase.current = phase;
   }, [state?.phase]);
 
   async function run<T>(fn: () => Promise<T>): Promise<T | null> {
@@ -137,7 +141,7 @@ export function TesterApp({ token }: { token: string }) {
           <dt>What is recorded</dt>
           <dd>The game tab, game events and what you write. Microphone optional. No camera.</dd>
         </dl>
-        {study.rehearsal && <p className="tag tag-warning">Technical rehearsal: this data does not count as a real study</p>}
+        {study.rehearsal && <p className="callout callout-warning small">Technical rehearsal: this data does not count as a real study</p>}
       </div>
       <div className="panel panel-tight">
         <h3 className="visually-hidden">Steps</h3>
@@ -317,7 +321,7 @@ export function TesterApp({ token }: { token: string }) {
             <div className="callout callout-success">
               <p>
                 Your submission has been recorded{playtestDone ? '' : ''}. The team checks that the material is usable; your pay does not depend on whether you liked the game.
-                <span className="test-mode" style={{ marginLeft: 8 }}>Pagos en modo prueba</span>
+                <span className="test-mode" style={{ marginLeft: 8 }}>Payments in test mode</span>
               </p>
             </div>
             {!state.comparison.open && !state.comparison.done && (

@@ -122,9 +122,9 @@
       }
       grid.push(row);
     }
-    if (!start) throw new Error(def.id + ': falta inicio P');
-    if (!door.length) throw new Error(def.id + ': falta puerta D');
-    if (!switches.length) throw new Error(def.id + ': falta interruptor S');
+    if (!start) throw new Error(def.id + ': missing start P');
+    if (!door.length) throw new Error(def.id + ': missing door D');
+    if (!switches.length) throw new Error(def.id + ': missing switch S');
     var dx0 = Infinity, dy0 = Infinity, dx1 = -Infinity, dy1 = -Infinity;
     for (var i = 0; i < door.length; i++) {
       dx0 = Math.min(dx0, door[i].col * TILE); dy0 = Math.min(dy0, door[i].row * TILE);

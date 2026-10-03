@@ -48,7 +48,7 @@
     { "do": "expect", "cond": { "doorOpen": true } },
     { "do": "release", "frames": 5 },
     { "do": "press", "action": "flip" },
-    { "do": "until", "cond": { "status": "complete" }, "max": 300, "note": "Fin" }
+    { "do": "until", "cond": { "status": "complete" }, "max": 300, "note": "End" }
   ],
   "deathRoute": [
     { "do": "press", "action": "start" },

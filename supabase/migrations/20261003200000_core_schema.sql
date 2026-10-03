@@ -63,7 +63,7 @@ set search_path = ''
 as $$
 begin
   insert into public.profiles (id, display_name)
-  values (new.id, coalesce(nullif(new.raw_user_meta_data ->> 'display_name', ''), split_part(coalesce(new.email, 'persona'), '@', 1)))
+  values (new.id, coalesce(nullif(new.raw_user_meta_data ->> 'display_name', ''), split_part(coalesce(new.email, 'person'), '@', 1)))
   on conflict (id) do nothing;
   return new;
 end;

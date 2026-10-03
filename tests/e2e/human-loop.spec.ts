@@ -112,7 +112,11 @@ test('human loop: publish, invite, record, deliver, review', async ({ browser })
 
     // Valid delivery → test-mode payout recorded.
     await page.getByRole('button', { name: 'Valid', exact: true }).click();
-    await expect(page.getByText(/Payout recorded in test mode/)).toBeVisible();
+    // The success toast disappears when the page refreshes, so check the durable state and the ledger.
+    await expect(page.getByText('Valid, test payout recorded')).toBeVisible();
+    const payout = await admin.from('budget_entries').select('amount_cents').eq('study_id', studyId).eq('kind', 'payout');
+    expect(payout.data?.length).toBe(1);
+    expect(payout.data?.[0].amount_cents).toBeGreaterThan(0);
 
     await page.goto(`/lab/studies/${studyId}/evidence`);
     await expect(page.locator('video')).toBeVisible();

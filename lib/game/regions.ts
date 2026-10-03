@@ -90,7 +90,7 @@ export type ScopeComparison = {
 export function compareScope(baseline: string, candidate: string): ScopeComparison {
   const base = parseRegions(baseline);
   const cand = parseRegions(candidate);
-  const errors = [...base.errors.map((e) => `Base: ${e}`), ...cand.errors.map((e) => `Variante: ${e}`)];
+  const errors = [...base.errors.map((e) => `Base: ${e}`), ...cand.errors.map((e) => `Variant: ${e}`)];
   const sig = (rs: Region[]) => rs.map((r) => `${r.kind}:${r.name}`).join(',');
   if (sig(base.regions) !== sig(cand.regions)) errors.push('The marked regions do not match the baseline version');
   if (frameOf(baseline, base.regions) !== frameOf(candidate, cand.regions)) {

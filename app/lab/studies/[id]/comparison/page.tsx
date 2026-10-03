@@ -8,6 +8,8 @@ import { setStudyPhase } from '@/app/lab/actions';
 
 export const metadata: Metadata = { title: 'Comparison' };
 
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 function Row({ label, n, total }: { label: string; n: number; total: number }) {
   const pct = total ? Math.round((n / total) * 100) : 0;
   return (
@@ -78,11 +80,11 @@ export default async function ComparisonPage(props: { params: Promise<{ id: stri
               <table className="table">
                 <caption className="visually-hidden">Preferences by presentation order</caption>
                 <thead>
-                  <tr><th scope="col">Order shown</th><th scope="col" className="num">People</th><th scope="col" className="num">{vName}</th><th scope="col" className="num">{bName}</th><th scope="col" className="num">No preference</th></tr>
+                  <tr><th scope="col">Order shown</th><th scope="col" className="num">People</th><th scope="col" className="num">{cap(vName)}</th><th scope="col" className="num">{cap(bName)}</th><th scope="col" className="num">No preference</th></tr>
                 </thead>
                 <tbody>
-                  <tr><th scope="row">{bName} first</th><td className="num">{summary.byOrder.baselineFirst.total}</td><td className="num">{summary.byOrder.baselineFirst.preferVariant}</td><td className="num">{summary.byOrder.baselineFirst.preferBaseline}</td><td className="num">{summary.byOrder.baselineFirst.none}</td></tr>
-                  <tr><th scope="row">{vName} first</th><td className="num">{summary.byOrder.variantFirst.total}</td><td className="num">{summary.byOrder.variantFirst.preferVariant}</td><td className="num">{summary.byOrder.variantFirst.preferBaseline}</td><td className="num">{summary.byOrder.variantFirst.none}</td></tr>
+                  <tr><th scope="row">{cap(bName)} first</th><td className="num">{summary.byOrder.baselineFirst.total}</td><td className="num">{summary.byOrder.baselineFirst.preferVariant}</td><td className="num">{summary.byOrder.baselineFirst.preferBaseline}</td><td className="num">{summary.byOrder.baselineFirst.none}</td></tr>
+                  <tr><th scope="row">{cap(vName)} first</th><td className="num">{summary.byOrder.variantFirst.total}</td><td className="num">{summary.byOrder.variantFirst.preferVariant}</td><td className="num">{summary.byOrder.variantFirst.preferBaseline}</td><td className="num">{summary.byOrder.variantFirst.none}</td></tr>
                 </tbody>
               </table>
             </div>
@@ -108,7 +110,7 @@ export default async function ComparisonPage(props: { params: Promise<{ id: stri
                 {summary.reasons.map((r) => (
                   <tr key={r.participant + r.created_at}>
                     <td><strong>{r.participant}</strong>{r.prior_exposure && <div className="small muted">Had already played the baseline</div>}</td>
-                    <td>{r.preferred === 'baseline' ? bName : r.preferred === 'variant' ? vName : 'No preference'}</td>
+                    <td>{r.preferred === 'baseline' ? cap(bName) : r.preferred === 'variant' ? cap(vName) : 'No preference'}</td>
                     <td className="small">{r.presented}</td>
                     <td><q>{r.reason}</q></td>
                   </tr>
@@ -132,7 +134,7 @@ export default async function ComparisonPage(props: { params: Promise<{ id: stri
                 {(subs.data ?? []).map((p) => {
                   const payload = p.payload as PredictionPayload;
                   const ev = evaluatePrediction(payload, p.is_retrospective, summary);
-                  const chosen = payload.choice === 'baseline' ? bName : payload.choice === 'variant' ? vName : 'Sin preferencia';
+                  const chosen = payload.choice === 'baseline' ? cap(bName) : payload.choice === 'variant' ? cap(vName) : 'No preference';
                   return (
                     <tr key={p.id}>
                       <td>{p.actor}</td>

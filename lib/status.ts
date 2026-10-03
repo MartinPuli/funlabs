@@ -29,7 +29,7 @@ export type PlatformStatus = {
 let cache: { at: number; value: PlatformStatus } | null = null;
 
 async function timed<T>(fn: () => Promise<T>, ms = 6000): Promise<T> {
-  return await Promise.race([fn(), new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), ms))]);
+  return await Promise.race([fn(), new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timed out')), ms))]);
 }
 
 /** Facts about this deployment. Provider checks are free metadata calls, cached for a minute. */

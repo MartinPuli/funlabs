@@ -347,7 +347,7 @@ begin
   -- Leases older than 10 minutes are considered abandoned.
   update public.jobs
      set status = case when attempts >= max_attempts then 'failed' else 'queued' end,
-         last_error = coalesce(last_error, '') || case when last_error is null then '' else E'\n' end || 'Lease vencido: el trabajo se reintenta',
+         last_error = coalesce(last_error, '') || case when last_error is null then '' else E'\n' end || 'Lease expired: the job is retried',
          locked_at = null, locked_by = null,
          finished_at = case when attempts >= max_attempts then now() else null end
    where status = 'running' and locked_at < now() - interval '10 minutes';
