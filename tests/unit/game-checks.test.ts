@@ -101,3 +101,11 @@ describe('scoped edits', () => {
     expect(suitePassed(results)).toBe(false);
   }, 60_000);
 });
+
+describe('generated builds module', () => {
+  it('is in sync with games/gravity-room', async () => {
+    const mod = await import('../../lib/game/builds.generated.ts');
+    expect(mod.GRAVITY_ROOM_A_HTML).toBe(baseline);
+    expect(mod.GRAVITY_ROOM_ROUTE.route).toEqual(routeFile.route);
+  });
+});
