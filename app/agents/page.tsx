@@ -51,7 +51,7 @@ export default function AgentDocs() {
           <div className="stack" style={{ ['--gap' as string]: 'var(--s-6)' }}>
             <header className="stack" style={{ ['--gap' as string]: 'var(--s-3)' }}>
               <h1>Tools for agents</h1>
-              <p className="muted measure">An authenticated API and an MCP server expose the same contract, without duplicating rules. The agent gets structured inputs and outputs: it does not need to read a dashboard or copy a summary. Payments are in test mode.</p>
+              <p className="muted measure">One contract over an authenticated API and an MCP server. Structured inputs and outputs: no dashboard to read, no summary to copy. Payments are in test mode.</p>
             </header>
 
             <section id="connect" className="stack" aria-labelledby="h-connect">
