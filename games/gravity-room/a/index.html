@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gravity Room</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0b1118; overflow: hidden; }
+  body { display: grid; place-items: center; }
+  canvas {
+    display: block;
+    width: min(100vw, calc(100vh * 960 / 540));
+    height: auto;
+    aspect-ratio: 960 / 540;
+    outline: none;
+    background: #0f1720;
+  }
+  canvas:focus-visible { box-shadow: 0 0 0 3px #d5e987; }
+</style>
+</head>
+<body>
+<canvas id="screen" width="960" height="540" tabindex="0" aria-label="Gravity Room: juego. Flechas para moverse, Espacio invierte la gravedad, E para usar, R reinicia la sala."></canvas>
+<script id="game">
+(function (root) {
+  'use strict';
+
+  /* @funlabs:locked:start levels */
+  // Mapas de 30 x 16 casillas. # muro, = plataforma, ^ pinchos en el piso,
+  // v pinchos en el techo, S interruptor, D puerta de salida, P inicio.
+  var LEVELS = [
+    {
+      id: 'sala-1',
+      name: 'Sala 1',
+      map: [
+        '##############################',
+        '#.....S.............vvv......#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#..........................D.#',
+        '#P.........^^^^^^^^........D.#',
+        '##############################'
+      ]
+    },
+    {
+      id: 'sala-2',
+      name: 'Sala 2',
+      map: [
+        '##############################',
+        '#...................vvv....D.#',
+        '#..........................D.#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#.........==========.........#',
+        '#.........==========.........#',
+        '#..............S.............#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#P...^^^............^^^......#',
+        '##############################'
+      ]
+    },
+    {
+      id: 'sala-3',
+      name: 'Sala 3',
+      map: [
+        '##############################',
+        '#S...........vvvv............#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#...........======...........#',
+        '#...........======...........#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#............................#',
+        '#D...........................#',
+        '#D....^^^^.......P...^^^^...S#',
+        '##############################'
+      ]
+    }
+  ];
+  /* @funlabs:locked:end levels */
+
+  /* @funlabs:locked:start rules */
+  var TILE = 32, COLS = 30, ROWS = 16, HUD = 28;
+  var WIDTH = COLS * TILE, HEIGHT = ROWS * TILE + HUD;
+  var PW = 20, PH = 26;
+  var ACCEL = 0.6, MAX_VX = 3.4, FRICTION = 0.72;
+  var G = 0.5, MAX_VY = 8.5;
+  var DEATH_FRAMES = 40, CLEAR_FRAMES = 50, IDLE_FRAMES = 360;
+  var FRAME_MS = 1000 / 60;
+
+  function parseLevel(def) {
+    if (def.map.length !== ROWS) throw new Error(def.id + ': se esperaban ' + ROWS + ' filas');
+    var grid = [], switches = [], door = [], start = null;
+    for (var r = 0; r < ROWS; r++) {
+      var line = def.map[r];
+      if (line.length !== COLS) throw new Error(def.id + ': fila ' + r + ' con ' + line.length + ' columnas');
+      var row = [];
+      for (var c = 0; c < COLS; c++) {
+        var ch = line.charAt(c);
+        if (ch === 'P') { start = { col: c, row: r }; ch = '.'; }
+        if (ch === 'S') { switches.push({ id: def.id + ':s' + switches.length, col: c, row: r }); }
+        if (ch === 'D') { door.push({ col: c, row: r }); }
+        row.push(ch);
+      }
+      grid.push(row);
+    }
+    if (!start) throw new Error(def.id + ': falta inicio P');
+    if (!door.length) throw new Error(def.id + ': falta puerta D');
+    if (!switches.length) throw new Error(def.id + ': falta interruptor S');
+    var dx0 = Infinity, dy0 = Infinity, dx1 = -Infinity, dy1 = -Infinity;
+    for (var i = 0; i < door.length; i++) {
+      dx0 = Math.min(dx0, door[i].col * TILE); dy0 = Math.min(dy0, door[i].row * TILE);
+      dx1 = Math.max(dx1, (door[i].col + 1) * TILE); dy1 = Math.max(dy1, (door[i].row + 1) * TILE);
+    }
+    return {
+      id: def.id, name: def.name, grid: grid, switches: switches, start: start,
+      doorRect: { x: dx0, y: dy0, w: dx1 - dx0, h: dy1 - dy0 },
+      doorCeiling: door[0].row < ROWS / 2
+    };
+  }
+
+  function overlaps(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+  }
+
+  function createGame(env) {
+    env = env || {};
+    var ctx = env.ctx || null;
+    var emit = typeof env.emit === 'function' ? env.emit : function () {};
+    var levels = LEVELS.map(parseLevel);
+    var pending = [];
+    var s = {
+      status: 'title', levelIndex: 0, level: levels[0], frame: 0, levelFrame: 0, timer: 0,
+      totalFrames: 0, deaths: 0, levelDeaths: 0, attempt: 1,
+      player: null, switchesOn: {}, doorOpen: false,
+      keys: { left: false, right: false }, queued: { flip: false, interact: false, restart: false },
+      lastDir: 'stop', lastInputFrame: 0, idleSent: false, stepEvents: [], lastEvents: []
+    };
+
+    function send(type, payload) {
+      var evt = { type: type, frame: s.totalFrames, payload: payload || {} };
+      s.stepEvents.push(evt);
+      pending.push(evt);
+      try { emit(type, payload || {}); } catch (e) { /* el puente nunca rompe el juego */ }
+    }
+
+    function tileAt(col, row) {
+      if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return '#';
+      return s.level.grid[row][col];
+    }
+    function solid(col, row) { var t = tileAt(col, row); return t === '#' || t === '='; }
+    function cellOf(px, py) { return { col: Math.floor(px / TILE), row: Math.floor(py / TILE) }; }
+    function playerCell() { var p = s.player; return cellOf(p.x + PW / 2, p.y + PH / 2); }
+
+    function resetPlayer() {
+      var st = s.level.start;
+      s.player = { x: st.col * TILE + (TILE - PW) / 2, y: (st.row + 1) * TILE - PH, vx: 0, vy: 0, gdir: 1, grounded: true, facing: 1 };
+    }
+
+    function startLevel(index, reason) {
+      s.levelIndex = index;
+      s.level = levels[index];
+      s.levelFrame = 0;
+      s.levelDeaths = 0;
+      s.switchesOn = {};
+      s.doorOpen = false;
+      s.status = 'playing';
+      resetPlayer();
+      send('level_start', { level: index + 1, id: s.level.id, reason: reason || 'next' });
+    }
+
+    function hitSolidBox(x, y, w, h) {
+      var c0 = Math.floor(x / TILE), c1 = Math.floor((x + w - 0.001) / TILE);
+      var r0 = Math.floor(y / TILE), r1 = Math.floor((y + h - 0.001) / TILE);
+      for (var r = r0; r <= r1; r++) for (var c = c0; c <= c1; c++) if (solid(c, r)) return { col: c, row: r };
+      return null;
+    }
+
+    function touchingSpikes() {
+      var p = s.player, box = { x: p.x + 3, y: p.y + 3, w: PW - 6, h: PH - 6 };
+      var c0 = Math.floor(box.x / TILE), c1 = Math.floor((box.x + box.w) / TILE);
+      var r0 = Math.floor(box.y / TILE), r1 = Math.floor((box.y + box.h) / TILE);
+      for (var r = r0; r <= r1; r++) {
+        for (var c = c0; c <= c1; c++) {
+          var t = tileAt(c, r), hit = null;
+          if (t === '^') hit = { x: c * TILE + 4, y: r * TILE + 16, w: TILE - 8, h: 16 };
+          if (t === 'v') hit = { x: c * TILE + 4, y: r * TILE, w: TILE - 8, h: 16 };
+          if (hit && overlaps(box, hit)) return true;
+        }
+      }
+      return false;
+    }
+
+    function nearbySwitch() {
+      var p = s.player, box = { x: p.x - 6, y: p.y - 6, w: PW + 12, h: PH + 12 };
+      for (var i = 0; i < s.level.switches.length; i++) {
+        var sw = s.level.switches[i];
+        if (overlaps(box, { x: sw.col * TILE, y: sw.row * TILE, w: TILE, h: TILE })) return sw;
+      }
+      return null;
+    }
+
+    function allSwitchesOn() {
+      for (var i = 0; i < s.level.switches.length; i++) if (!s.switchesOn[s.level.switches[i].id]) return false;
+      return true;
+    }
+
+    function die(cause) {
+      var cell = playerCell();
+      s.deaths += 1; s.levelDeaths += 1;
+      s.status = 'dying'; s.timer = DEATH_FRAMES;
+      send('death', { cause: cause, col: cell.col, row: cell.row, level: s.levelIndex + 1, deaths_in_level: s.levelDeaths });
+    }
+
+    function markInput() {
+      s.lastInputFrame = s.totalFrames;
+      s.idleSent = false;
+    }
+
+    function stepPlaying() {
+      var p = s.player;
+      // Dirección horizontal
+      var dir = (s.keys.right ? 1 : 0) - (s.keys.left ? 1 : 0);
+      var dirName = dir > 0 ? 'right' : dir < 0 ? 'left' : 'stop';
+      if (dirName !== s.lastDir) { s.lastDir = dirName; send('move', { dir: dirName }); }
+      if (dir !== 0) { p.vx += dir * ACCEL; p.facing = dir; } else { p.vx *= FRICTION; if (Math.abs(p.vx) < 0.05) p.vx = 0; }
+      if (p.vx > MAX_VX) p.vx = MAX_VX; if (p.vx < -MAX_VX) p.vx = -MAX_VX;
+
+      // Inversión de gravedad: solo apoyado
+      if (s.queued.flip) {
+        var cellF = playerCell();
+        if (p.grounded) {
+          p.gdir = -p.gdir; p.vy = p.gdir * 1.5; p.grounded = false;
+          send('flip', { gravity: p.gdir > 0 ? 'down' : 'up', col: cellF.col, row: cellF.row });
+        } else {
+          send('flip_denied', { reason: 'airborne', col: cellF.col, row: cellF.row });
+        }
+      }
+
+      p.vy += G * p.gdir;
+      if (p.vy > MAX_VY) p.vy = MAX_VY; if (p.vy < -MAX_VY) p.vy = -MAX_VY;
+
+      // Movimiento X
+      p.x += p.vx;
+      var hx = hitSolidBox(p.x, p.y, PW, PH);
+      if (hx) {
+        if (p.vx > 0) p.x = hx.col * TILE - PW; else if (p.vx < 0) p.x = (hx.col + 1) * TILE;
+        p.vx = 0;
+      }
+      // Movimiento Y
+      p.y += p.vy;
+      var hy = hitSolidBox(p.x, p.y, PW, PH);
+      if (hy) {
+        if (p.vy > 0) p.y = hy.row * TILE - PH; else if (p.vy < 0) p.y = (hy.row + 1) * TILE;
+        p.vy = 0;
+      }
+      var probe = p.gdir > 0 ? hitSolidBox(p.x, p.y + PH, PW, 1) : hitSolidBox(p.x, p.y - 1, PW, 1);
+      var wasGrounded = p.grounded;
+      p.grounded = !!probe && Math.abs(p.vy) < 0.001;
+      if (p.grounded && !wasGrounded) {
+        var cl = playerCell();
+        send('land', { surface: p.gdir > 0 ? 'floor' : 'ceiling', col: cl.col, row: cl.row });
+      }
+
+      // Interacción
+      if (s.queued.interact) {
+        var sw = nearbySwitch(), ci = playerCell();
+        if (!sw) {
+          send('interact', { result: 'nothing', col: ci.col, row: ci.row });
+        } else if (s.switchesOn[sw.id]) {
+          send('interact', { result: 'already_on', switch: sw.id, col: ci.col, row: ci.row });
+        } else {
+          s.switchesOn[sw.id] = true;
+          var on = 0;
+          for (var k = 0; k < s.level.switches.length; k++) if (s.switchesOn[s.level.switches[k].id]) on++;
+          send('interact', { result: 'switch_on', switch: sw.id, col: ci.col, row: ci.row });
+          send('switch_on', { switch: sw.id, on: on, total: s.level.switches.length, level: s.levelIndex + 1 });
+          if (allSwitchesOn() && !s.doorOpen) { s.doorOpen = true; send('door_open', { level: s.levelIndex + 1 }); }
+        }
+      }
+
+      // Peligros y salida
+      if (p.y < -TILE || p.y > ROWS * TILE + TILE || p.x < -TILE || p.x > COLS * TILE + TILE) { die('out_of_bounds'); return; }
+      if (touchingSpikes()) { die('spikes'); return; }
+      if (s.doorOpen) {
+        var d = s.level.doorRect;
+        var inter = Math.min(p.x + PW, d.x + d.w) - Math.max(p.x, d.x);
+        if (inter >= PW * 0.5 && p.y < d.y + d.h && p.y + PH > d.y) {
+          s.status = 'clear'; s.timer = CLEAR_FRAMES;
+          send('level_complete', { level: s.levelIndex + 1, ms: Math.round(s.levelFrame * FRAME_MS), deaths: s.levelDeaths });
+        }
+      }
+
+      // Inactividad
+      if (!s.idleSent && s.totalFrames - s.lastInputFrame >= IDLE_FRAMES) {
+        var cid = playerCell();
+        s.idleSent = true;
+        send('idle', { seconds: Math.round(IDLE_FRAMES / 60), col: cid.col, row: cid.row, level: s.levelIndex + 1 });
+      }
+    }
+
+    function step() {
+      s.stepEvents = [];
+      s.frame += 1;
+      if (s.status !== 'title' && s.status !== 'complete') { s.totalFrames += 1; s.levelFrame += 1; }
+      if (s.queued.restart && (s.status === 'playing' || s.status === 'dying')) {
+        send('restart', { level: s.levelIndex + 1, manual: true });
+        startLevel(s.levelIndex, 'restart');
+      } else if (s.status === 'playing') {
+        stepPlaying();
+      } else if (s.status === 'dying') {
+        s.timer -= 1;
+        if (s.timer <= 0) {
+          s.status = 'playing';
+          resetPlayer();
+          send('respawn', { level: s.levelIndex + 1 });
+        }
+      } else if (s.status === 'clear') {
+        s.timer -= 1;
+        if (s.timer <= 0) {
+          if (s.levelIndex + 1 < levels.length) startLevel(s.levelIndex + 1, 'next');
+          else { s.status = 'complete'; send('game_complete', { ms: Math.round(s.totalFrames * FRAME_MS), deaths: s.deaths, levels: levels.length }); }
+        }
+      }
+      s.queued.flip = false; s.queued.interact = false; s.queued.restart = false;
+      s.lastEvents = s.stepEvents;
+    }
+
+    function setKey(name, down) {
+      if (name !== 'left' && name !== 'right') return;
+      if (s.keys[name] === !!down) return;
+      s.keys[name] = !!down;
+      if (down) { markInput(); if (s.status === 'title') begin(); }
+    }
+
+    function begin() {
+      if (s.status !== 'title') return;
+      send('game_start', { levels: levels.length });
+      startLevel(0, 'start');
+      markInput();
+    }
+
+    function press(action) {
+      if (s.status === 'title') { begin(); return; }
+      if (s.status === 'complete') return;
+      markInput();
+      if (action === 'flip' || action === 'interact' || action === 'restart') s.queued[action] = true;
+    }
+
+    function view() {
+      var p = s.player;
+      return {
+        status: s.status, frame: s.frame, levelFrame: s.levelFrame, timer: s.timer,
+        levelIndex: s.levelIndex, levelCount: levels.length, level: s.level,
+        player: p ? { x: p.x, y: p.y, vx: p.vx, vy: p.vy, gdir: p.gdir, grounded: p.grounded, facing: p.facing, w: PW, h: PH } : null,
+        switchesOn: s.switchesOn, doorOpen: s.doorOpen,
+        nearSwitch: p && s.status === 'playing' ? nearbySwitch() : null,
+        deaths: s.deaths, levelDeaths: s.levelDeaths, elapsedMs: Math.round(s.totalFrames * FRAME_MS),
+        events: s.lastEvents, firstRun: s.deaths === 0 && s.levelIndex === 0,
+        TILE: TILE, COLS: COLS, ROWS: ROWS, HUD: HUD, WIDTH: WIDTH, HEIGHT: HEIGHT
+      };
+    }
+
+    function render() {
+      if (!ctx) return;
+      Presentation.render(ctx, view());
+    }
+
+    function getState() {
+      var p = s.player, cell = p ? playerCell() : null;
+      return {
+        status: s.status, level: s.levelIndex + 1, levelCount: levels.length,
+        col: cell ? cell.col : null, row: cell ? cell.row : null,
+        x: p ? p.x : null, y: p ? p.y : null, vx: p ? p.vx : 0, vy: p ? p.vy : 0,
+        gravity: p ? (p.gdir > 0 ? 'down' : 'up') : 'down', grounded: p ? p.grounded : false,
+        doorOpen: s.doorOpen, switchesOn: Object.keys(s.switchesOn).length, switchesTotal: s.level.switches.length,
+        deaths: s.deaths, levelDeaths: s.levelDeaths, totalFrames: s.totalFrames
+      };
+    }
+
+    function drainEvents() { var out = pending; pending = []; return out; }
+
+    return { step: step, render: render, setKey: setKey, press: press, getState: getState, drainEvents: drainEvents, view: view };
+  }
+  /* @funlabs:locked:end rules */
+
+  /* @funlabs:editable:start presentation */
+  var Presentation = (function () {
+    var palette = {
+      bg: '#0f1720', grid: 'rgba(255,255,255,0.035)', hud: '#0b1118', hudText: '#cfd8e3', hudDim: '#7d8b99',
+      wall: '#2b3a4a', wallEdge: '#3d5166', wallShade: '#223040', platform: '#344759', platformEdge: '#4a6178',
+      spike: '#c9d3dd', spikeShade: '#8a97a4',
+      panel: '#334354', panelEdge: '#3f5163', ledOff: '#6e3434', ledOn: '#59d68a',
+      doorFrame: '#4b5d70', doorClosed: '#1b2632', doorBar: '#5b6e82', doorOpen: '#ffd166',
+      player: '#e8eef3', playerShade: '#b8c4cf', visor: '#1f2a36', eye: '#5ad1ff',
+      overlay: 'rgba(8,12,18,0.72)', title: '#f4f7fa', accent: '#ffd166', danger: '#ff6b6b'
+    };
+    var font = function (size, weight) { return (weight || 600) + ' ' + size + 'px system-ui, -apple-system, Segoe UI, sans-serif'; };
+    var deathFlash = 0, clearFlash = 0, switchFlash = 0;
+
+    function hash(c, r) { var h = (c * 73856093) ^ (r * 19349663); return Math.abs(h) % 97; }
+
+    function drawTiles(ctx, v) {
+      var T = v.TILE, g = v.level.grid;
+      for (var r = 0; r < v.ROWS; r++) {
+        for (var c = 0; c < v.COLS; c++) {
+          var t = g[r][c], x = c * T, y = r * T + v.HUD;
+          if (t === '#') {
+            ctx.fillStyle = palette.wall; ctx.fillRect(x, y, T, T);
+            ctx.fillStyle = palette.wallShade; ctx.fillRect(x, y + T - 4, T, 4);
+            ctx.fillStyle = palette.wallEdge; ctx.fillRect(x, y, T, 2);
+            if (hash(c, r) < 9) { ctx.fillStyle = palette.wallShade; ctx.fillRect(x + 8, y + 10, 10, 3); }
+          } else if (t === '=') {
+            ctx.fillStyle = palette.platform; ctx.fillRect(x, y, T, T);
+            ctx.fillStyle = palette.platformEdge; ctx.fillRect(x, y, T, 3); ctx.fillRect(x, y + T - 3, T, 3);
+          } else if (t === '^' || t === 'v') {
+            drawSpikes(ctx, x, y, T, t === '^');
+          }
+        }
+      }
+    }
+
+    function drawSpikes(ctx, x, y, T, up) {
+      ctx.fillStyle = palette.spike;
+      for (var i = 0; i < 2; i++) {
+        var bx = x + i * (T / 2);
+        ctx.beginPath();
+        if (up) { ctx.moveTo(bx + 2, y + T); ctx.lineTo(bx + T / 4, y + T / 2); ctx.lineTo(bx + T / 2 - 2, y + T); }
+        else { ctx.moveTo(bx + 2, y); ctx.lineTo(bx + T / 4, y + T / 2); ctx.lineTo(bx + T / 2 - 2, y); }
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = palette.spikeShade;
+      ctx.fillRect(x, up ? y + T - 3 : y, T, 3);
+    }
+
+    function drawSwitches(ctx, v) {
+      var T = v.TILE;
+      for (var i = 0; i < v.level.switches.length; i++) {
+        var sw = v.level.switches[i], on = !!v.switchesOn[sw.id];
+        var x = sw.col * T, y = sw.row * T + v.HUD;
+        var top = sw.row < v.ROWS / 2;
+        var py = top ? y + 4 : y + T - 14;
+        ctx.fillStyle = palette.panel; ctx.fillRect(x + 9, py, 14, 10);
+        ctx.fillStyle = palette.panelEdge; ctx.fillRect(x + 9, py, 14, 2);
+        ctx.fillStyle = on ? palette.ledOn : palette.ledOff;
+        ctx.fillRect(x + 14, py + 4, 4, 3);
+      }
+    }
+
+    function drawDoor(ctx, v) {
+      var d = v.level.doorRect, x = d.x, y = d.y + v.HUD;
+      ctx.fillStyle = palette.doorFrame; ctx.fillRect(x + 2, y, d.w - 4, d.h);
+      if (v.doorOpen) {
+        ctx.fillStyle = palette.doorOpen; ctx.globalAlpha = 0.85; ctx.fillRect(x + 6, y + 4, d.w - 12, d.h - 8); ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = palette.doorClosed; ctx.fillRect(x + 6, y + 4, d.w - 12, d.h - 8);
+        ctx.fillStyle = palette.doorBar;
+        for (var b = 0; b < 3; b++) ctx.fillRect(x + 9 + b * 6, y + 6, 2, d.h - 12);
+      }
+    }
+
+    function drawPlayer(ctx, v) {
+      var p = v.player; if (!p) return;
+      if (v.status === 'dying') return;
+      var x = Math.round(p.x), y = Math.round(p.y) + v.HUD, up = p.gdir < 0;
+      ctx.save();
+      ctx.translate(x + p.w / 2, y + p.h / 2);
+      if (up) ctx.scale(1, -1);
+      ctx.fillStyle = palette.player; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.fillStyle = palette.playerShade; ctx.fillRect(-p.w / 2, p.h / 2 - 5, p.w, 5);
+      ctx.fillStyle = palette.visor; ctx.fillRect(-p.w / 2 + 3, -p.h / 2 + 5, p.w - 6, 8);
+      ctx.fillStyle = palette.eye; ctx.fillRect(p.facing > 0 ? 2 : -7, -p.h / 2 + 7, 5, 4);
+      ctx.restore();
+    }
+
+    function drawHud(ctx, v) {
+      ctx.fillStyle = palette.hud; ctx.fillRect(0, 0, v.WIDTH, v.HUD);
+      ctx.font = font(13, 600); ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      ctx.fillStyle = palette.hudText;
+      var secs = Math.floor(v.elapsedMs / 1000), mm = Math.floor(secs / 60), ss = secs % 60;
+      ctx.fillText(v.level.name + ' / ' + v.levelCount, 12, v.HUD / 2);
+      ctx.fillStyle = palette.hudDim;
+      ctx.fillText('Caídas ' + v.deaths, 120, v.HUD / 2);
+      ctx.textAlign = 'right';
+      ctx.fillText(mm + ':' + (ss < 10 ? '0' : '') + ss, v.WIDTH - 12, v.HUD / 2);
+    }
+
+    function centerText(ctx, v, text, y, size, color, weight) {
+      ctx.font = font(size, weight); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = color; ctx.fillText(text, v.WIDTH / 2, y);
+    }
+
+    function drawOverlays(ctx, v) {
+      if (v.status === 'title') {
+        ctx.fillStyle = palette.overlay; ctx.fillRect(0, 0, v.WIDTH, v.HEIGHT);
+        centerText(ctx, v, 'GRAVITY ROOM', v.HEIGHT / 2 - 40, 44, palette.title, 800);
+        centerText(ctx, v, 'Escapá de las salas invirtiendo la gravedad.', v.HEIGHT / 2 + 8, 18, palette.hudText, 500);
+        centerText(ctx, v, 'Presioná cualquier tecla para empezar', v.HEIGHT / 2 + 48, 15, palette.accent, 600);
+        return;
+      }
+      // Instrucciones breves al comenzar la primera sala.
+      if (v.firstRun && v.levelFrame < 300) {
+        ctx.globalAlpha = v.levelFrame < 240 ? 1 : Math.max(0, (300 - v.levelFrame) / 60);
+        centerText(ctx, v, '← → moverse   ·   Espacio invertir gravedad   ·   E usar   ·   R reiniciar', v.HEIGHT - 18, 13, palette.hudDim, 500);
+        ctx.globalAlpha = 1;
+      }
+      if (deathFlash > 0) {
+        ctx.globalAlpha = deathFlash / 20 * 0.35; ctx.fillStyle = palette.danger; ctx.fillRect(0, v.HUD, v.WIDTH, v.HEIGHT - v.HUD); ctx.globalAlpha = 1;
+      }
+      if (v.status === 'clear') {
+        centerText(ctx, v, 'Sala superada', v.HEIGHT / 2, 28, palette.accent, 800);
+      }
+      if (v.status === 'complete') {
+        ctx.fillStyle = palette.overlay; ctx.fillRect(0, 0, v.WIDTH, v.HEIGHT);
+        var secs = Math.round(v.elapsedMs / 1000);
+        centerText(ctx, v, '¡Escapaste!', v.HEIGHT / 2 - 30, 40, palette.title, 800);
+        centerText(ctx, v, 'Tiempo ' + secs + ' s   ·   Caídas ' + v.deaths, v.HEIGHT / 2 + 16, 18, palette.hudText, 500);
+        centerText(ctx, v, 'Gracias por jugar', v.HEIGHT / 2 + 52, 15, palette.accent, 600);
+      }
+    }
+
+    function render(ctx, v) {
+      for (var i = 0; i < v.events.length; i++) {
+        var e = v.events[i];
+        if (e.type === 'death') deathFlash = 20;
+        if (e.type === 'level_complete') clearFlash = 30;
+        if (e.type === 'switch_on') switchFlash = 20;
+      }
+      ctx.fillStyle = palette.bg; ctx.fillRect(0, 0, v.WIDTH, v.HEIGHT);
+      ctx.fillStyle = palette.grid;
+      for (var gx = 0; gx < v.WIDTH; gx += v.TILE) ctx.fillRect(gx, v.HUD, 1, v.HEIGHT - v.HUD);
+      for (var gy = v.HUD; gy < v.HEIGHT; gy += v.TILE) ctx.fillRect(0, gy, v.WIDTH, 1);
+      drawTiles(ctx, v);
+      drawDoor(ctx, v);
+      drawSwitches(ctx, v);
+      drawPlayer(ctx, v);
+      drawHud(ctx, v);
+      drawOverlays(ctx, v);
+      if (deathFlash > 0) deathFlash -= 1;
+      if (clearFlash > 0) clearFlash -= 1;
+      if (switchFlash > 0) switchFlash -= 1;
+    }
+
+    return { render: render, palette: palette };
+  })();
+  /* @funlabs:editable:end presentation */
+
+  root.GravityRoom = { createGame: createGame, LEVELS: LEVELS, WIDTH: WIDTH, HEIGHT: HEIGHT };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script id="boot">
+(function () {
+  'use strict';
+  var canvas = document.getElementById('screen');
+  var ctx = canvas.getContext('2d');
+  var t0 = performance.now();
+  var log = [];
+  var embedded = window.parent && window.parent !== window;
+
+  function post(type, payload) {
+    var evt = { source: 'funlabs-game', v: 1, type: type, t: Math.round(performance.now() - t0), payload: payload || {} };
+    log.push(evt);
+    if (log.length > 5000) log.shift();
+    if (embedded) { try { window.parent.postMessage(evt, '*'); } catch (e) { /* sin anfitrión */ } }
+  }
+
+  var game = window.GravityRoom.createGame({ ctx: ctx, emit: post });
+  var HOLD = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right' };
+  var PRESS = { Space: 'flip', ArrowUp: 'flip', KeyW: 'flip', ArrowDown: 'flip', KeyS: 'flip', KeyE: 'interact', Enter: 'interact', KeyR: 'restart' };
+
+  window.addEventListener('keydown', function (e) {
+    if (HOLD[e.code]) { game.setKey(HOLD[e.code], true); e.preventDefault(); return; }
+    if (PRESS[e.code]) { e.preventDefault(); if (!e.repeat) game.press(PRESS[e.code]); return; }
+    if (!e.metaKey && !e.ctrlKey && !e.altKey) game.press('start');
+  });
+  window.addEventListener('keyup', function (e) {
+    if (HOLD[e.code]) { game.setKey(HOLD[e.code], false); e.preventDefault(); }
+  });
+  window.addEventListener('blur', function () { game.setKey('left', false); game.setKey('right', false); });
+  canvas.addEventListener('pointerdown', function () { canvas.focus(); game.press('start'); });
+  document.addEventListener('visibilitychange', function () { post(document.hidden ? 'hidden' : 'visible', {}); });
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d || d.source !== 'funlabs-host') return;
+    if (d.type === 'focus') canvas.focus();
+  });
+
+  var STEP = 1000 / 60, acc = 0, last = performance.now();
+  function frame(now) {
+    acc += Math.min(250, now - last); last = now;
+    while (acc >= STEP) { game.step(); acc -= STEP; }
+    game.render();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  canvas.focus();
+  window.__funlabs = { game: game, events: log, ready: true };
+  post('ready', { embedded: embedded });
+})();
+</script>
+</body>
+</html>
