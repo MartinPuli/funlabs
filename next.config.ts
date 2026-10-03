@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   // Next 16 blocks cross-origin dev resources; the e2e runner opens 127.0.0.1.
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
   poweredByHeader: false,
+  devIndicators: false,
   serverExternalPackages: [],
   experimental: {
     serverActions: { bodySizeLimit: '2mb' },

@@ -2,9 +2,9 @@
 
 ## Producto, evidencia, sistema de diseño y plan de implementación
 
-Versión de planificación · 3 de octubre de 2026 · Supabase Select Hackathon
+Plan de producto y estado de implementación · 3 de octubre de 2026 · Supabase Select Hackathon
 
-Este documento define el producto que vamos a construir. El repositorio parte vacío: los flujos, contratos e integraciones descritos son especificaciones, no funciones implementadas. En esta etapa no se creó el video ni se activaron pagos o servicios externos.
+Este documento define el producto. Las secciones 1 a 16 son la especificación; la sección 17 registra qué está implementado y verificado y qué no. No se creó el video del hackathon, los pagos son de modo prueba y ninguna persona real usó todavía el producto: todo el material de los ensayos viene de bots y está marcado como tal.
 
 ## 1. Qué es FUNLABS
 
@@ -468,7 +468,32 @@ No basar la novedad en «contratar humanos mediante API» ni en «resumir un vid
 
 El MVP está listo cuando una persona y un agente pueden completar sus trabajos, sus entregas se evalúan por separado, se inspecciona la evidencia original, una variante funciona y se guarda una comparación humana honesta. Deben existir permisos correctos, estados de fallo visibles y un export limitado a ejemplos autorizados.
 
-Todavía pendientes: construcción y ensayo; comprobar APIs y aprovisionamiento con el acceso ofrecido a Supabase Compute; validar dependencias, duración/costo de procesamiento y sandboxes; criterios específicos del premio de compute; economía de subsidios; demanda de creadores y researchers. Estas dependencias no están resueltas por este plan.
+Todavía pendientes: ensayo con personas reales; comprobar APIs y aprovisionamiento con el acceso ofrecido a Supabase Compute; validar dependencias, duración/costo de procesamiento y sandboxes; criterios específicos del premio de compute; economía de subsidios; demanda de creadores y researchers. Estas dependencias no están resueltas por este plan.
+
+## 17. Estado de implementación
+
+Fecha: 3 de octubre de 2026. Guía técnica en [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Los estados son los que se comprobaron, no los que se esperan.
+
+| Requisito de la especificación | Estado | Qué se comprobó |
+| --- | --- | --- |
+| Juego propio con versiones inmutables (§12) | Implementado | Gravity Room A en `games/gravity-room`. Cada versión se guarda con su hash SHA-256, solo para agregar, y se sirve aislada (`sandbox`, CSP sin red). |
+| Bounty humano y bounties de agente con criterios distintos (§3, §4) | Implementado | Cuatro tipos con plantillas y criterios propios. Entrega válida de persona, predicción fechada, análisis verificado y mejora con comprobaciones se evalúan por separado. |
+| Captura de la pestaña con alternativa escrita (§8, §10) | Implementado | Región de pestaña, micrófono opcional, subida manual y texto. Probado en Chromium con captura automática; no probado en los navegadores de personas reales. La ruta de subida manual no tiene prueba automática. |
+| Análisis con Gemini y evidencia revisable (§6) | Implementado y probado con la API real | Un video de 36 s y uno de 12 s con `gemini-3.8-flash`. Cada referencia se valida contra la sesión (9 pruebas unitarias). La declaración humana es siempre copia textual del comentario. |
+| Cambio de Claude, comprobación fija y comparación A/B (§5, §11) | Implementado y probado con un bot | Claude (`claude-opus-5-5`) devolvió un parche dentro del alcance que pasó las 8 comprobaciones. El circuito completo (variante, comprobaciones, comparación ciega, resultados) corre en una prueba de Playwright. |
+| Tablero de resultados, presupuesto etiquetado y export autorizado (§9, §12) | Implementado | Denominador, orden, motivos y límites. Libro de presupuesto con reservas atómicas bajo el tope. El export se bloquea sin los permisos del titular y de la persona, y nunca incluye video. |
+| Herramientas para humanos y agentes (§10) | Implementado y probado | Nueve herramientas más `get_export`, por REST y por MCP con las mismas reglas. 14 pruebas de integración, incluido un cliente MCP oficial. |
+| Predicción registrada antes de revelar preferencias (§3, §12) | Implementado | Fechada; se marca retrospectiva si ya existían resultados o la credencial los vio; una por credencial; la recompensa no depende de acertar. |
+| RLS y Storage privado (§10) | Implementado y probado | 32 de 32 tablas con RLS, buckets privados, 10 pruebas de privacidad e integridad (otro creador, researcher sin acceso a video, trabajos con reintentos). |
+| Supabase: Auth, Postgres, Storage, Realtime | Implementado | Además `pg_cron` + `pg_net` + Vault: al encolar un trabajo la base avisa al backend; `pg_cron` revisa cada minuto como respaldo. Verificado en el stack local. |
+| Vercel | Proyecto creado y conectado | Cada push compila y despliega la interfaz y la API. |
+| Supabase alojado | Pendiente | Hace falta un proyecto alojado para la demo en línea (límite de 2 proyectos gratis de la cuenta). Hasta entonces la aplicación completa corre con el stack local. |
+| Stripe en modo prueba (§11) | No implementado | Sin clave de prueba. Las reservas y pagos se registran en un libro interno etiquetado; la base impide valores que no sean modo prueba. |
+| Supabase Compute (§11) | No usado | No se verificó el aprovisionamiento. Los trabajos corren en la función de Vercel o con `scripts/worker.mjs`, y cada uno registra dónde corrió. |
+| Ejecución aislada de variantes (§11) | Parcial | Las comprobaciones corren en un contexto `vm` de Node dentro del servidor, que no es un límite de seguridad. Por eso solo el agente creador interviene y no se aceptan envíos de código de agentes externos. |
+| Personas reales | Ninguna todavía | El único material es de ensayos con bots, marcado `is_rehearsal` y etiquetado en la interfaz. |
+
+Qué se puede mostrar hoy frente a los cuatro criterios (§14): **funcionalidad** (encargo, material, análisis, entrega de agente, cambio ejecutado, comprobación y comparación, que persisten tras recargar), **diseño** (de un hallazgo al segundo de la grabación con un clic; las mismas herramientas para agentes), **impacto** (minutos de material y tiempo activo de revisión registrados; preferencias con denominador y motivos) e **innovación** (trabajos de humanos y agentes evaluados por separado y evidencia conectada a decisiones y versiones). Lo que falta para presentarlo con honestidad es material de personas reales obtenido durante el evento.
 
 ## Fuentes de referencia
 
